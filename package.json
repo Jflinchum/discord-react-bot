@@ -1,0 +1,27 @@
+{
+  "name": "discord-react-bot",
+  "version": "1.0.0",
+  "description": "A react bot for discord that stores images/audio clips and posts them based off of given trigger words.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "pretest": "eslint --ignore-path .gitignore .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jflinchum/discord-react-bot.git"
+  },
+  "author": "Jonathan Flinchum",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Jflinchum/discord-react-bot/issues"
+  },
+  "homepage": "https://github.com/Jflinchum/discord-react-bot#readme",
+  "devDependencies": {
+    "discord.io": "^2.5.3",
+    "discord.js": "^11.4.2",
+    "eslint": "^5.8.0",
+    "eslint-config-strongloop": "^2.1.0"
+  }
+}
