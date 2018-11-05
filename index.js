@@ -4,6 +4,8 @@ const { Client, Attachment } = require('discord.js');
 const fs = require('fs');
 const request = require('request');
 const mkdirp = require('mkdirp');
+const ytdl = require('ytdl-core');
+const ffmpeg = require('fluent-ffmpeg');
 
 const PATH = './reactions';
 const TOKEN = process.env.DISCORD_TOKEN;
@@ -58,21 +60,48 @@ bot.on('message', message => {
       fileName = cmd[2];
       url = cmd[1];
     }
-    // The extension of the file
-    exten = url.substr((url.lastIndexOf('.') + 1));
     if (!fileName) {
       message.channel.send('Please specify a name.');
       return;
-    } else if (!exten) {
-      message.channel.send('Could not find file extension');
     }
-    download(url, fileName, exten, (err) => {
-      if (err) {
-        message.channel.send(err);
-      } else {
-        message.channel.send('Successfully added!');
+    // Check for youtube videos
+    if (url.includes('www.youtube.com') || url.includes('youtu.be')) {
+      const files = fs.readdirSync(PATH);
+      for (let i = 0; i < files.length; i++) {
+        if (files[i].includes(fileName)) {
+          message.channel.send('File name already exists');
+          return;
+        }
       }
-    });
+      if (ytdl.validateURL(url)) {
+        const stream = ytdl(url, {
+          quality: 'highestaudio',
+        });
+        ffmpeg(stream)
+          .audioBitrate(128)
+          .save(`${PATH}/${fileName}.mp3`)
+          .on('end', () => {
+            message.channel.send('Successfully added.');
+          });
+        return;
+      } else {
+        message.channel.send('Could not validate url.');
+        return;
+      }
+    } else {
+      // The extension of the file
+      exten = url.substr((url.lastIndexOf('.') + 1));
+      if (!exten) {
+        message.channel.send('Could not find file extension');
+      }
+      download(url, fileName, exten, (err) => {
+        if (err) {
+          message.channel.send(err);
+        } else {
+          message.channel.send('Successfully added!');
+        }
+      });
+    }
   } else if (botCommand === '!post') {
     // Posting files
     const files = fs.readdirSync(PATH);
