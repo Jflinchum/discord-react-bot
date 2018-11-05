@@ -24,6 +24,7 @@
     "eslint": "^5.8.0",
     "eslint-config-strongloop": "^2.1.0",
     "mkdirp": "^0.5.1",
+    "node-opus": "^0.3.1",
     "request": "^2.88.0"
   }
 }

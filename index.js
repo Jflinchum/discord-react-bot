@@ -77,22 +77,56 @@ bot.on('message', message => {
     // Posting files
     const files = fs.readdirSync(PATH);
     const name = cmd[1];
-    let attach;
+    if (!name) {
+      message.channel.send('Please specify a name.');
+      return;
+    }
+    let file;
     // Find the file associated with the name
     for (let i = 0; i < files.length; i++) {
       if (files[i].includes(name)) {
-        attach = new Attachment(`${PATH}/${files[i]}`);
+        file = files[i];
+        break;
       }
     }
-    if (!attach) {
-      message.channel.send('Could not find file.');
-      return;
-    }
-    // Send the attachment
-    message.channel.send(attach)
-      .catch(() => {
+    const exten = file.substr((file.lastIndexOf('.') + 1));
+    // Check to see if mp3 should be played in a channel
+    if (exten === 'mp3' && cmd[2]) {
+      const channel = cmd[2];
+      const channelList = bot.channels.array();
+      let vc;
+      for (let i = 0; i < channelList.length; i++) {
+        if (channelList[i].type === 'voice'
+          && channel === channelList[i].name) {
+          vc = channelList[i];
+        }
+      }
+      // Check if the voice channel exists
+      if (vc) {
+        vc.join()
+          .then((connection) => {
+            const dispatch = connection.playFile(`${PATH}/${file}`);
+            dispatch.on('end', () => {
+              vc.leave();
+            });
+          })
+          .catch((err) => {
+            message.channel.send('Could not join channel.');
+            console.log(err);
+          });
+      }
+    } else {
+      const attach = new Attachment(`${PATH}/${file}`);
+      if (!attach) {
         message.channel.send('Could not find file.');
-      });
+        return;
+      }
+      // Send the attachment
+      message.channel.send(attach)
+        .catch(() => {
+          message.channel.send('Could not find file.');
+        });
+    }
   } else if (botCommand === '!list') {
     // Listing files
     const files = fs.readdirSync(PATH);
@@ -107,6 +141,11 @@ bot.on('message', message => {
     }
     response += '```';
     message.channel.send(response);
+  } else if (botCommand === '!leave') {
+    // Leave any voice channels the bot is currently in
+    bot.voiceConnections.array().forEach((vc) => {
+      vc.channel.leave();
+    });
   }
 });
 
