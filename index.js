@@ -105,15 +105,15 @@ bot.on('message', message => {
   } else if (botCommand === '!post') {
     // Posting files
     const files = fs.readdirSync(PATH);
-    const name = cmd[1];
-    if (!name) {
+    const fileName = cmd[1];
+    if (!fileName) {
       message.channel.send('Please specify a name.');
       return;
     }
     let file;
     // Find the file associated with the name
     for (let i = 0; i < files.length; i++) {
-      if (files[i].includes(name)) {
+      if (files[i].substr(0, files[i].lastIndexOf('.')) === fileName) {
         file = files[i];
         break;
       }
@@ -175,6 +175,28 @@ bot.on('message', message => {
     bot.voiceConnections.array().forEach((vc) => {
       vc.channel.leave();
     });
+  } else if (botCommand === '!remove') {
+    // Delete any stored reactions
+    const files = fs.readdirSync(PATH);
+    const fileName = cmd[1];
+    let file;
+    if (!fileName) {
+      message.channel.send('Please specify a name.');
+    }
+    // Iterate through and find the file to delete
+    for (let i = 0; i < files.length; i++) {
+      if (files[i].substr(0, files[i].lastIndexOf('.')) === fileName) {
+        file = files[i];
+        break;
+      }
+    }
+    if (!file) {
+      message.channel.send('Could not find file.');
+    } else {
+      fs.unlink(`${PATH}/${file}`, () => {
+        message.channel.send('Successfully deleted.');
+      });
+    }
   }
 });
 
