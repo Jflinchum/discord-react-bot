@@ -38,15 +38,16 @@ bot.on('message', message => {
     return;
   }
   // Split the command by spaces
-  let cmd = message.content.split(' ');
-  console.log(message);
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+  // console.log(message);
   console.log(cmd);
 
   // Get any attachments associated with message
   const attach = message.attachments.array();
 
-  // Add
-  if (cmd[0] === '!add') {
+  // Adding files to bot list
+  if (botCommand === '!add') {
     let fileName, url, exten;
     if (attach.length > 0) {
       // Handling attachment images
@@ -72,7 +73,8 @@ bot.on('message', message => {
         message.channel.send('Successfully added!');
       }
     });
-  } else if (cmd[0] === '!post') {
+  } else if (botCommand === '!post') {
+    // Posting files
     const files = fs.readdirSync(PATH);
     const name = cmd[1];
     let attach;
@@ -91,6 +93,20 @@ bot.on('message', message => {
       .catch(() => {
         message.channel.send('Could not find file.');
       });
+  } else if (botCommand === '!list') {
+    // Listing files
+    const files = fs.readdirSync(PATH);
+    let response = '```\n';
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      // Ignore hidden files
+      if (file[0] === '.') {
+        continue;
+      }
+      response += file.substr(0, file.lastIndexOf('.')) + '\n';
+    }
+    response += '```';
+    message.channel.send(response);
   }
 });
 
