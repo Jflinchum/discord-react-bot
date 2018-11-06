@@ -3,6 +3,7 @@ A react bot for discord that stores images/audio clips and posts them based off 
 
 ## How to run
 * Install dependencies with `npm install`
+* Put your bot token under the environment variable DISCORD_TOKEN
 * Use `npm start` to launch the bot
 
 ## Current commands
