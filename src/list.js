@@ -2,7 +2,7 @@
 const fs = require('fs');
 const { PATH } = require('./util');
 
-exports.list = (message) => {
+exports.list = (type, message) => {
   const files = fs.readdirSync(PATH);
   let response = '```\n';
   for (let i = 0; i < files.length; i++) {

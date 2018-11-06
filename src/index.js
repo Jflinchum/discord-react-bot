@@ -7,6 +7,7 @@ const { post } = require('./post');
 const { list } = require('./list');
 const { remove } = require('./remove');
 const { help } = require('./help');
+const { stream } = require('./stream');
 const { PATH } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -48,22 +49,27 @@ bot.on('message', message => {
       message.channel.send('Please specify a name.');
       return;
     }
+
     exten = url.substr((url.lastIndexOf('.') + 1));
     if (!exten) {
       message.channel.send('Could not find file extension');
     }
+
     add(fileName, url, exten, message);
   } else if (botCommand === '!post') {
+    // Posting an image
     const fileName = cmd[1];
     const channel = cmd[2];
     if (!fileName) {
       message.channel.send('Please specify a name.');
       return;
     }
+
     post(fileName, channel, message, bot);
   } else if (botCommand === '!list') {
     // Listing files
-    list(message);
+    const fileType = cmd[1];
+    list(fileType, message);
   } else if (botCommand === '!leave') {
     // Leave any voice channels the bot is currently in
     bot.voiceConnections.array().forEach((vc) => {
@@ -74,7 +80,16 @@ bot.on('message', message => {
     const fileName = cmd[1];
     remove(fileName, message);
   } else if (botCommand === '!help') {
+    // Post a help page
     help(message);
+  } else if (botCommand === '!stream') {
+    const url = cmd[1];
+    const channel = cmd[2];
+    if (!url || !channel) {
+      message.channel.send('Please specify a url and channel name.');
+      return;
+    }
+    stream(url, channel, message, bot);
   }
 });
 

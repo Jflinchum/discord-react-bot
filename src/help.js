@@ -20,6 +20,12 @@ exports.help = (message) => {
     !list               --  Lists all files currently saved in
                             the local storage.
 
+    !leave              --  Leaves any voice channels the bot
+                            is currently in.
+
+    !stream <url> <vc>  --  Streams the audio of a youtube
+                            video directly to a channel.
+
     !help               --  Displays this help screen!
   \`\`\``);
 };
