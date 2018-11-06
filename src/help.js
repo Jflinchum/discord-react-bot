@@ -17,8 +17,11 @@ exports.help = (message) => {
     !remove <name>      --  Deletes the file from the local
                             storage.
 
-    !list               --  Lists all files currently saved in
-                            the local storage.
+    !list [image/music/text]
+                        --  Lists all files currently saved in
+                            the local storage. If a file type
+                            is requested, it will only list
+                            files under that type.
 
     !leave              --  Leaves any voice channels the bot
                             is currently in.
