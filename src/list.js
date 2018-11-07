@@ -2,22 +2,8 @@
 const fs = require('fs');
 const { PATH } = require('./util');
 
-exports.list = (type, message) => {
-  const files = fs.readdirSync(PATH);
-  let regex = (/[\s\S]*/i);
-  if (type) {
-    switch (type.toLowerCase()) {
-      case 'image':
-        regex = (/\.(gif|jpg|jpeg|tiff|png)$/i);
-        break;
-      case 'music':
-        regex = (/\.(mp3)$/i);
-        break;
-      case 'text':
-        regex = (/\.(txt|pdf)$/i);
-    }
-  }
-  let response = '```\n';
+const findFiles = (regex, files) => {
+  let response = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     // Ignore hidden files
@@ -25,9 +11,39 @@ exports.list = (type, message) => {
       continue;
     }
     if (regex.test(file)) {
-      response += file.substr(0, file.lastIndexOf('.')) + '\n';
+      response.push(file.substr(0, file.lastIndexOf('.')) + '\n');
     }
   }
+  return response;
+};
+
+exports.list = (type, message) => {
+  const files = fs.readdirSync(PATH);
+  let response = '```\n';
+  const imageRegex = (/\.(gif|jpg|jpeg|tiff|png|mp4)$/i);
+  const musicRegex = (/\.(mp3)$/i);
+  const textRegex = (/\.(txt|pdf)$/i);
+  let imageList = [];
+  let musicList = [];
+  let textList = [];
+
+  if (!type || type === 'image') {
+    imageList = findFiles(imageRegex, files);
+    response += 'Images:\n';
+    response += '  ' + imageList.join('  ');
+  }
+  if (!type || type === 'music') {
+    musicList = findFiles(musicRegex, files);
+    response += 'Music:\n';
+    response += '  ' + musicList.join('  ');
+  }
+  if (!type || type === 'text') {
+    textList = findFiles(textRegex, files);
+    response += 'Text:\n';
+    response += '  ' + textList.join(' ');
+  }
+
+
   response += '```';
   message.channel.send(response);
 };
