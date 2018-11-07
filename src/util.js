@@ -10,6 +10,7 @@ const PATH = `${appDir}/../reactions`;
 
 exports.PATH = PATH;
 exports.COLOR = 0x9400D3;
+exports.MAX_YT_TIME = 150; // In seconds
 
 exports.download = (url, fileName, extension, cb) => {
   const fullPath = `${PATH}/${fileName}.${extension}`;
@@ -42,7 +43,7 @@ exports.ytdownload = (url, fileName, cb) => {
       .audioBitrate(128)
       .save(`${PATH}/${fileName}.mp3`)
       .on('end', () => {
-        cb('Successfully added.');
+        cb(`Added ${fileName}`);
       });
     return;
   } else {

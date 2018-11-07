@@ -27,7 +27,6 @@ exports.stream = (url, channel, message, bot) => {
         ytdl.getBasicInfo(url, (err, info) => {
           if (err)
             console.log(err);
-          console.log(info);
           message.channel.send({
             embed: {
               thumbnail: {
