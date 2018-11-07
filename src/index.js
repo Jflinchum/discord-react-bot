@@ -92,7 +92,7 @@ bot.on('message', message => {
     }
     stream(url, channel, message, bot);
   } else if (botCommand === '!markov') {
-	const user = message.mentions.users.first();
+    const user = message.mentions.users.first();
     if (!user) {
       message.channel.send('Please specify a User to markov.');
       return;

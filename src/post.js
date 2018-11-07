@@ -5,6 +5,7 @@ const { PATH } = require('./util');
 
 exports.post = (fileName, channel, message, bot) => {
   // Posting files
+  message.delete();
   const files = fs.readdirSync(PATH);
   if (!fileName) {
     message.channel.send('Please specify a name.');
@@ -18,6 +19,11 @@ exports.post = (fileName, channel, message, bot) => {
       break;
     }
   }
+  if (!file) {
+    message.channel.send('Could not find file.');
+    return;
+  }
+
   const exten = file.substr((file.lastIndexOf('.') + 1));
   // Check to see if mp3 should be played in a channel
   if (exten === 'mp3' && channel) {
@@ -30,25 +36,29 @@ exports.post = (fileName, channel, message, bot) => {
       }
     }
     // Check if the voice channel exists
-    if (vc) {
-      vc.join()
-        .then((connection) => {
-          const dispatch = connection.playFile(`${PATH}/${file}`);
-          dispatch.on('end', () => {
-            vc.leave();
-          });
-        })
-        .catch((err) => {
-          message.channel.send('Could not join channel.');
-          console.log(err);
-        });
+    if (!vc) {
+      message.channel.send('Could not find voice channel.');
+      return;
     }
+    vc.join()
+      .then((connection) => {
+        const dispatch = connection.playFile(`${PATH}/${file}`);
+        message.channel.send(`${message.author.username}: Play ${file}.`);
+        dispatch.on('end', () => {
+          vc.leave();
+        });
+      })
+      .catch((err) => {
+        message.channel.send('Could not join channel.');
+        console.log(err);
+      });
   } else {
     const attach = new Attachment(`${PATH}/${file}`);
     if (!attach) {
       message.channel.send('Could not find file.');
       return;
     }
+
     // Send the attachment
     message.channel.send(attach)
       .catch(() => {
