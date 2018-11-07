@@ -28,6 +28,9 @@ exports.help = (message) => {
 
     !stream <url> <vc>  --  Streams the audio of a youtube
                             video directly to a channel.
+							
+	!markov <user>		--	Generates a message based off of a
+							user's history.
 
     !help               --  Displays this help screen!
   \`\`\``);

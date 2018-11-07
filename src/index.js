@@ -8,6 +8,7 @@ const { list } = require('./list');
 const { remove } = require('./remove');
 const { help } = require('./help');
 const { stream } = require('./stream');
+const { markov } = require('./markov');
 const { PATH } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -90,6 +91,13 @@ bot.on('message', message => {
       return;
     }
     stream(url, channel, message, bot);
+  } else if (botCommand === '!markov') {
+	const user = message.mentions.users.first();
+    if (!user) {
+      message.channel.send('Please specify a User to markov.');
+      return;
+    }
+    markov(user, message.guild, message.channel);
   }
 });
 
