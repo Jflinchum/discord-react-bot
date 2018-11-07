@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { Attachment } = require('discord.js');
-const { PATH } = require('./util');
+const { PATH, COLOR } = require('./util');
 
 exports.post = (fileName, channel, message, bot) => {
   // Posting files
@@ -43,7 +43,18 @@ exports.post = (fileName, channel, message, bot) => {
     vc.join()
       .then((connection) => {
         const dispatch = connection.playFile(`${PATH}/${file}`);
-        message.channel.send(`${message.author.username}: Play ${file}.`);
+        message.channel.send({
+          embed: {
+            thumbnail: {
+              url: `${message.author.avatarURL}`,
+            },
+            description: `Playing: ${file}\nTo: ${channel}`,
+            color: COLOR,
+            author: {
+              name: message.author.username,
+            },
+          },
+        });
         dispatch.on('end', () => {
           vc.leave();
         });
@@ -60,9 +71,26 @@ exports.post = (fileName, channel, message, bot) => {
     }
 
     // Send the attachment
-    message.channel.send(attach)
+    message.channel.send({
+      embed: {
+        thumbnail: {
+          url: `${message.author.avatarURL}`,
+        },
+        image: {
+          url: `attachment://${file}`,
+        },
+        color: 0x9400D3,
+        author: {
+          name: message.author.username,
+        },
+      },
+      files: [{
+        attachment: `${PATH}/${file}`,
+        name: file,
+      }],
+    })
       .catch(() => {
-        message.channel.send('Could not find file.');
+        message.channel.send('Could not find user posting.');
       });
   }
 };

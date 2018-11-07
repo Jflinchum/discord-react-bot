@@ -1,8 +1,9 @@
 'use strict';
 const fs = require('fs');
-const { PATH } = require('./util');
+const { PATH, COLOR } = require('./util');
 
 exports.remove = (fileName, message) => {
+  message.delete();
   const files = fs.readdirSync(PATH);
   let file;
   if (!fileName) {
@@ -19,7 +20,18 @@ exports.remove = (fileName, message) => {
     message.channel.send('Could not find file.');
   } else {
     fs.unlink(`${PATH}/${file}`, () => {
-      message.channel.send('Successfully deleted.');
+      message.channel.send({
+        embed: {
+          thumbnail: {
+            url: `${message.author.avatarURL}`,
+          },
+          description: `Removed: ${file}`,
+          color: COLOR,
+          author: {
+            name: message.author.username,
+          },
+        },
+      });
     });
   }
 };

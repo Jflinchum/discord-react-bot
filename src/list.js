@@ -18,6 +18,7 @@ const findFiles = (regex, files) => {
 };
 
 exports.list = (type, message) => {
+  message.delete();
   const files = fs.readdirSync(PATH);
   let response = '```\n';
   const imageRegex = (/\.(gif|jpg|jpeg|tiff|png|mp4)$/i);

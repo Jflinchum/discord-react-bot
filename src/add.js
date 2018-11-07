@@ -1,5 +1,5 @@
 'use strict';
-const { download, ytdownload } = require('./util');
+const { download, ytdownload, COLOR } = require('./util');
 
 exports.add = (fileName, url, exten, message) => {
   if (!fileName) {
@@ -20,7 +20,18 @@ exports.add = (fileName, url, exten, message) => {
         console.log(err);
         message.channel.send(err);
       } else {
-        message.channel.send('Successfully added!');
+        message.channel.send({
+          embed: {
+            thumbnail: {
+              url: `${message.author.avatarURL}`,
+            },
+            description: `Added: ${fileName}`,
+            color: COLOR,
+            author: {
+              name: message.author.username,
+            },
+          },
+        });
       }
     });
   }

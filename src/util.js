@@ -9,6 +9,7 @@ const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
 
 exports.PATH = PATH;
+exports.COLOR = 0x9400D3;
 
 exports.download = (url, fileName, extension, cb) => {
   const fullPath = `${PATH}/${fileName}.${extension}`;

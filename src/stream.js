@@ -1,5 +1,6 @@
 'use strict';
 const ytdl = require('ytdl-core');
+const { COLOR } = require('./util');
 
 exports.stream = (url, channel, message, bot) => {
   const channelList = bot.channels.array();
@@ -22,6 +23,24 @@ exports.stream = (url, channel, message, bot) => {
     vc.join()
       .then((connection) => {
         const dispatch = connection.playStream(ytStream);
+        message.delete();
+        ytdl.getBasicInfo(url, (err, info) => {
+          if (err)
+            console.log(err);
+          console.log(info);
+          message.channel.send({
+            embed: {
+              thumbnail: {
+                url: `${message.author.avatarURL}`,
+              },
+              description: `Playing: ${info.title}\nTo: ${channel}`,
+              color: COLOR,
+              author: {
+                name: message.author.username,
+              },
+            },
+          });
+        });
         dispatch.on('end', () => {
           vc.leave();
         });
