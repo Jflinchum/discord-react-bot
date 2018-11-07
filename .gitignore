@@ -65,3 +65,5 @@ reactions/
 
 # Mac Stuff
 .DS_STORE
+package-lock.json
+build/config.gypi
