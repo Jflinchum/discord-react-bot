@@ -29,18 +29,24 @@ exports.list = (type, message) => {
 
   if (!type || type === 'image') {
     imageList = findFiles(imageRegex, files);
-    response += 'Images:\n';
-    response += '  ' + imageList.join('  ');
+    if (imageList.length > 0) {
+      response += 'Image:\n';
+      response += '  ' + imageList.join('  ');
+    }
   }
   if (!type || type === 'music') {
     musicList = findFiles(musicRegex, files);
-    response += 'Music:\n';
-    response += '  ' + musicList.join('  ');
+    if (musicList.length > 0) {
+      response += 'Music:\n';
+      response += '  ' + musicList.join('  ');
+    }
   }
   if (!type || type === 'text') {
     textList = findFiles(textRegex, files);
-    response += 'Text:\n';
-    response += '  ' + textList.join(' ');
+    if (textList.length > 0) {
+      response += 'Text:\n';
+      response += '  ' + textList.join(' ');
+    }
   }
 
 

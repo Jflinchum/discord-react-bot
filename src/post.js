@@ -31,7 +31,7 @@ exports.post = (fileName, channel, message, bot) => {
     let vc;
     for (let i = 0; i < channelList.length; i++) {
       if (channelList[i].type === 'voice'
-        && channel === channelList[i].name) {
+          && channel === channelList[i].name) {
         vc = channelList[i];
       }
     }
