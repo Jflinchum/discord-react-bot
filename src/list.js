@@ -2,6 +2,12 @@
 const fs = require('fs');
 const { PATH } = require('./util');
 
+/**
+ * Finds all files using the regex and returns an array of them
+ *
+ * @param {String} regex - Regex to use for matching files
+ * @param {Array} files - The array of file names to search through
+ */
 const findFiles = (regex, files) => {
   let response = [];
   for (let i = 0; i < files.length; i++) {
@@ -17,6 +23,15 @@ const findFiles = (regex, files) => {
   return response;
 };
 
+/**
+ * Finds all files under the given file type and sends a list of them.
+ * If no type is specified, list all files under each category.
+ * The current categories are Image, Music, and Text
+ *
+ * @param {String} type - The local file to post
+ * @param {String} message - The Discord Message Object that initiated
+ * the command
+ */
 exports.list = (type, message) => {
   message.delete();
   const files = fs.readdirSync(PATH);

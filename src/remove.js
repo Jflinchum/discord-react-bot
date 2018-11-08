@@ -2,6 +2,13 @@
 const fs = require('fs');
 const { PATH, makeEmbed } = require('./util');
 
+/**
+ * Removes a file from the local storage
+ *
+ * @param {String} fileName - The file to delete from the local storage
+ * @param {String} message - The Discord Message Object that initiated
+ * the command
+ */
 exports.remove = (fileName, message) => {
   message.delete();
   const files = fs.readdirSync(PATH);
