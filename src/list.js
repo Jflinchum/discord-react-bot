@@ -22,7 +22,7 @@ exports.list = (type, message) => {
   const files = fs.readdirSync(PATH);
   let response = '```\n';
   const imageRegex = (/\.(gif|jpg|jpeg|tiff|png|mp4)$/i);
-  const musicRegex = (/\.(mp3)$/i);
+  const musicRegex = (/\.(mp3|wav)$/i);
   const textRegex = (/\.(txt|pdf)$/i);
   let imageList = [];
   let musicList = [];

@@ -26,7 +26,7 @@ exports.post = (fileName, channel, message, bot) => {
 
   const exten = file.substr((file.lastIndexOf('.') + 1));
   // Check to see if mp3 should be played in a channel
-  if (exten === 'mp3' && channel) {
+  if ((exten === 'mp3' || exten === 'wav') && channel) {
     const channelList = bot.channels.array();
     let vc;
     for (let i = 0; i < channelList.length; i++) {
@@ -69,28 +69,66 @@ exports.post = (fileName, channel, message, bot) => {
       message.channel.send('Could not find file.');
       return;
     }
-
-    // Send the attachment
-    message.channel.send({
-      embed: {
-        thumbnail: {
-          url: `${message.author.avatarURL}`,
+    if (exten === 'mp3' || exten === 'wav') {
+      message.channel.send({
+        embed: {
+          thumbnail: {
+            url: `${message.author.avatarURL}`,
+          },
+          color: 0x9400D3,
+          description: fileName,
+          author: {
+            name: message.author.username,
+          },
         },
-        image: {
-          url: `attachment://${file}`,
+      })
+        .catch(() => {
+          message.channel.send('Could not find user posting.');
+        });
+      message.channel.send(attach);
+    } else if (exten === 'txt') {
+      const text = fs.readFileSync(`${PATH}/${file}`);
+      message.channel.send(text, {
+        tts: true,
+      })
+        .then(msg => {
+          msg.delete();
+          message.channel.send({
+            embed: {
+              thumbnail: {
+                url: `${message.author.avatarURL}`,
+              },
+              color: 0x9400D3,
+              description: text.toString(),
+              author: {
+                name: message.author.username,
+              },
+            },
+          });
+        });
+    } else {
+      // Send the attachment
+      message.channel.send({
+        embed: {
+          thumbnail: {
+            url: `${message.author.avatarURL}`,
+          },
+          image: {
+            url: `attachment://${file}`,
+          },
+          color: 0x9400D3,
+          author: {
+            name: message.author.username,
+          },
         },
-        color: 0x9400D3,
-        author: {
-          name: message.author.username,
-        },
-      },
-      files: [{
-        attachment: `${PATH}/${file}`,
-        name: file,
-      }],
-    })
-      .catch(() => {
-        message.channel.send('Could not find user posting.');
-      });
+        files: [{
+          attachment: `${PATH}/${file}`,
+          name: file,
+        }],
+      })
+        .catch(() => {
+          message.channel.send('Could not find user posting.');
+        });
+    }
   }
 };
