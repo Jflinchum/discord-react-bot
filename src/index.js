@@ -10,6 +10,7 @@ const { help } = require('./help');
 const { stream } = require('./stream');
 const { markov } = require('./markov');
 const { rename } = require('./rename');
+const { play } = require('./play');
 const { PATH } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -61,13 +62,12 @@ bot.on('message', message => {
   } else if (botCommand === '!post') {
     // Posting an image
     const fileName = cmd[1];
-    const channel = cmd[2];
     if (!fileName) {
       message.channel.send('Please specify a name.');
       return;
     }
 
-    post(fileName, channel, message, bot);
+    post(fileName, message, bot);
   } else if (botCommand === '!list') {
     // Listing files
     const fileType = cmd[1];
@@ -103,6 +103,10 @@ bot.on('message', message => {
     const oldFile = cmd[1];
     const newFile = cmd[2];
     rename(oldFile, newFile, message);
+  } else if (botCommand === '!play') {
+    const channel = cmd[1];
+    const media = cmd[2];
+    play(channel, media, message, bot);
   }
 });
 
