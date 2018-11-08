@@ -50,10 +50,22 @@ exports.postMarkov = (user, origChannel) => {
     ];
   };
 
-  origChannel.send(user.username +
+  let markovMessage = user.username +
     intros[Math.floor(Math.random() * intros.length)] +
     '"*' +
     markovGen.start(getAll).end().process() +
-    '*"'
-  );
+    '*"';
+
+  origChannel.send({
+    embed: {
+      thumbnail: {
+        url: `${user.avatarURL}`,
+      },
+      color: 0x9400D3,
+      description: markovMessage,
+      author: {
+        name: user.username,
+      },
+    },
+  });
 };
