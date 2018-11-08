@@ -1,6 +1,6 @@
 'use strict';
 const ytdl = require('ytdl-core');
-const { download, ytdownload, COLOR, MAX_YT_TIME } = require('./util');
+const { download, ytdownload, MAX_YT_TIME, makeEmbed } = require('./util');
 
 exports.add = (fileName, url, exten, message) => {
   message.channel.send('Loading...').then(msg => {
@@ -26,18 +26,9 @@ exports.add = (fileName, url, exten, message) => {
         } else {
           ytdownload(url, fileName, () => {
             msg.delete();
-            message.channel.send({
-              embed: {
-                thumbnail: {
-                  url: `${message.author.avatarURL}`,
-                },
-                description: `Added ${info.title} as ${fileName}`,
-                color: COLOR,
-                author: {
-                  name: message.author.username,
-                },
-              },
-            });
+            message.channel.send(
+              makeEmbed(`Added ${info.title} as ${fileName}`, message.author)
+            );
           });
         }
       });
@@ -53,18 +44,9 @@ exports.add = (fileName, url, exten, message) => {
           message.channel.send(err);
         } else {
           msg.delete();
-          message.channel.send({
-            embed: {
-              thumbnail: {
-                url: `${message.author.avatarURL}`,
-              },
-              description: `Added: ${fileName}`,
-              color: COLOR,
-              author: {
-                name: message.author.username,
-              },
-            },
-          });
+          message.channel.send(
+            makeEmbed(`Added: ${fileName}`, message.author)
+          );
         }
       });
     }

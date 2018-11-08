@@ -7,10 +7,26 @@ const path = require('path');
 
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
+const COLOR = 0x9400D3;
 
 exports.PATH = PATH;
-exports.COLOR = 0x9400D3;
+exports.COLOR = COLOR;
 exports.MAX_YT_TIME = 150; // In seconds
+
+exports.makeEmbed = (message, user) => {
+  return {
+    embed: {
+      thumbnail: {
+        url: `${user.avatarURL}`,
+      },
+      color: COLOR,
+      description: message,
+      author: {
+        name: user.username,
+      },
+    },
+  };
+};
 
 exports.download = (url, fileName, extension, cb) => {
   const fullPath = `${PATH}/${fileName}.${extension}`;

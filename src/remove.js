@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { PATH, COLOR } = require('./util');
+const { PATH, makeEmbed } = require('./util');
 
 exports.remove = (fileName, message) => {
   message.delete();
@@ -20,18 +20,9 @@ exports.remove = (fileName, message) => {
     message.channel.send('Could not find file.');
   } else {
     fs.unlink(`${PATH}/${file}`, () => {
-      message.channel.send({
-        embed: {
-          thumbnail: {
-            url: `${message.author.avatarURL}`,
-          },
-          description: `Removed: ${file}`,
-          color: COLOR,
-          author: {
-            name: message.author.username,
-          },
-        },
-      });
+      message.channel.send(
+        makeEmbed(`Removed ${file}`, message.author)
+      );
     });
   }
 };

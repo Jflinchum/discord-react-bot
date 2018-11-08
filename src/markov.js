@@ -1,5 +1,6 @@
 'use strict';
 const MarkovChain = require('markovchain');
+const { makeEmbed } = require('./util');
 
 var markovString = '';
 var channelLength = 0;
@@ -55,17 +56,7 @@ exports.postMarkov = (user, origChannel) => {
     '"*' +
     markovGen.start(getAll).end().process() +
     '*"';
-
-  origChannel.send({
-    embed: {
-      thumbnail: {
-        url: `${user.avatarURL}`,
-      },
-      color: 0x9400D3,
-      description: markovMessage,
-      author: {
-        name: user.username,
-      },
-    },
-  });
+  origChannel.send(
+    makeEmbed(markovMessage, user)
+  );
 };

@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { Attachment } = require('discord.js');
-const { PATH, COLOR } = require('./util');
+const { PATH, COLOR, makeEmbed } = require('./util');
 
 exports.post = (fileName, channel, message, bot) => {
   // Posting files
@@ -43,18 +43,9 @@ exports.post = (fileName, channel, message, bot) => {
     vc.join()
       .then((connection) => {
         const dispatch = connection.playFile(`${PATH}/${file}`);
-        message.channel.send({
-          embed: {
-            thumbnail: {
-              url: `${message.author.avatarURL}`,
-            },
-            description: `Playing: ${file}\nTo: ${channel}`,
-            color: COLOR,
-            author: {
-              name: message.author.username,
-            },
-          },
-        });
+        message.channel.send(
+          makeEmbed(`Playing: ${file}\nTo: ${channel}`, message.author)
+        );
         dispatch.on('end', () => {
           vc.leave();
         });
@@ -70,18 +61,9 @@ exports.post = (fileName, channel, message, bot) => {
       return;
     }
     if (exten === 'mp3' || exten === 'wav') {
-      message.channel.send({
-        embed: {
-          thumbnail: {
-            url: `${message.author.avatarURL}`,
-          },
-          color: 0x9400D3,
-          description: fileName,
-          author: {
-            name: message.author.username,
-          },
-        },
-      })
+      message.channel.send(
+        makeEmbed(fileName, message.author)
+      )
         .catch(() => {
           message.channel.send('Could not find user posting.');
         });
@@ -93,18 +75,9 @@ exports.post = (fileName, channel, message, bot) => {
       })
         .then(msg => {
           msg.delete();
-          message.channel.send({
-            embed: {
-              thumbnail: {
-                url: `${message.author.avatarURL}`,
-              },
-              color: 0x9400D3,
-              description: text.toString(),
-              author: {
-                name: message.author.username,
-              },
-            },
-          });
+          message.channel.send(
+            makeEmbed(text.toString(), message.author)
+          );
         });
     } else {
       // Send the attachment
@@ -116,7 +89,7 @@ exports.post = (fileName, channel, message, bot) => {
           image: {
             url: `attachment://${file}`,
           },
-          color: 0x9400D3,
+          color: COLOR,
           author: {
             name: message.author.username,
           },

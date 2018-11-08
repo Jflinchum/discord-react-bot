@@ -1,6 +1,6 @@
 'use strict';
 const ytdl = require('ytdl-core');
-const { COLOR } = require('./util');
+const { makeEmbed } = require('./util');
 
 exports.stream = (url, channel, message, bot) => {
   const channelList = bot.channels.array();
@@ -27,18 +27,9 @@ exports.stream = (url, channel, message, bot) => {
         ytdl.getBasicInfo(url, (err, info) => {
           if (err)
             console.log(err);
-          message.channel.send({
-            embed: {
-              thumbnail: {
-                url: `${message.author.avatarURL}`,
-              },
-              description: `Playing: ${info.title}\nTo: ${channel}`,
-              color: COLOR,
-              author: {
-                name: message.author.username,
-              },
-            },
-          });
+          message.channel.send(
+            makeEmbed(`Playing: ${info.title}\nTo: ${channel}`, message.author)
+          );
         });
         dispatch.on('end', () => {
           vc.leave();
