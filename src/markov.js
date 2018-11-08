@@ -20,7 +20,7 @@ exports.markov = (user, guild, origChannel) => {
   guild.channels.tap(channel => {
     if (channel.type === 'text') {
       channelLength++;
-      channel.fetchMessages()
+      channel.fetchMessages({ limit: 100 })
         .then(messages => exports.asyncMarkov(
           user,
           messages.filter(m => m.author.id === user.id),
