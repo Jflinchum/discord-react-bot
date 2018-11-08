@@ -9,6 +9,7 @@ const { remove } = require('./remove');
 const { help } = require('./help');
 const { stream } = require('./stream');
 const { markov } = require('./markov');
+const { rename } = require('./rename');
 const { PATH } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -98,6 +99,10 @@ bot.on('message', message => {
       return;
     }
     markov(user, message.guild, message.channel);
+  } else if (botCommand === '!rename') {
+    const oldFile = cmd[1];
+    const newFile = cmd[2];
+    rename(oldFile, newFile, message);
   }
 });
 
