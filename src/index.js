@@ -7,10 +7,9 @@ const { post } = require('./post');
 const { list } = require('./list');
 const { remove } = require('./remove');
 const { help } = require('./help');
-const { stream } = require('./stream');
 const { markov } = require('./markov');
 const { rename } = require('./rename');
-const { play } = require('./play');
+const { play, queue } = require('./play');
 const { PATH } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -74,9 +73,10 @@ bot.on('message', message => {
     list(fileType, message);
   } else if (botCommand === '!leave') {
     // Leave any voice channels the bot is currently in
-    bot.voiceConnections.array().forEach((vc) => {
-      vc.channel.leave();
-    });
+    const vcArray = bot.voiceConnections.array();
+    for (let i = 0; i < vcArray.length; i++) {
+      vcArray[i].channel.leave();
+    }
   } else if (botCommand === '!remove') {
     // Delete any stored reactions
     const fileName = cmd[1];
@@ -84,14 +84,6 @@ bot.on('message', message => {
   } else if (botCommand === '!help') {
     // Post a help page
     help(message);
-  } else if (botCommand === '!stream') {
-    const url = cmd[1];
-    const channel = cmd[2];
-    if (!url || !channel) {
-      message.channel.send('Please specify a url and channel name.');
-      return;
-    }
-    stream(url, channel, message, bot);
   } else if (botCommand === '!markov') {
     const user = message.mentions.users.first();
     if (!user) {
@@ -107,6 +99,8 @@ bot.on('message', message => {
     const channel = cmd[1];
     const media = cmd[2];
     play(channel, media, message, bot);
+  } else if (botCommand === '!queue') {
+    queue(message);
   }
 });
 
