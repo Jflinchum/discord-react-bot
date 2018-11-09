@@ -13,7 +13,7 @@
 !skip [<index>]
 - Skips the current song if no index is given. Skips the song listed in the queue at the index otherwise.
 
-!markov <user>
+!markov <@user>
 - Generates a message based off of a user's history.
 
 !rename <oldName> <newName>
