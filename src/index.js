@@ -56,6 +56,10 @@ bot.on('message', message => {
       }
       string = string.slice(1, string.length - 1);
       fileName = cmd[cmd.length - 1];
+      if (!fileName) {
+        message.channel.send('Please specify a name.');
+        return;
+      }
 
       addText(fileName, string, message);
     } else {

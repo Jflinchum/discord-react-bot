@@ -16,8 +16,8 @@ A react bot for discord that can download and store files locally and post them 
 
 ## Current commands
 ```
-!add [<url>] <name>
-- Adds the file to the local storage under the name given. If uploading an attachment, the url is not needed. Supports youtube urls for downloading mp3 files.
+!add [<url>/"Example String Here"] <name>
+- Adds the file to the local storage under the name given. If uploading an attachment, the url is not needed. Supports youtube urls for downloading mp3 files. To upload a string into a text file, wrap the string in quotation marks.
 
 !post <name>
 - Posts the file to the current channel.
