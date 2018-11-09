@@ -115,4 +115,5 @@ module.exports = {
   makeEmbed,
   ytdownload,
   download,
+  hasFile,
 };

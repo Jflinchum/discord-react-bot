@@ -7,6 +7,7 @@ const {
   download,
   ytdownload,
   makeEmbed,
+  hasFile,
 } = require('./util');
 
 /**
@@ -76,14 +77,18 @@ const add = (fileName, url, exten, message) => {
   });
 };
 
+/**
+ * Creates a text file in the local storage and writes the text into that file
+ *
+ * @param {String} fileName - The name to store the file as
+ * @param {String} text - The text to store in the file
+ * @param {Object} message - The Discord Message Object that initiated
+ * the command
+ */
 const addText = (fileName, text, message) => {
-  const files = fs.readdirSync(PATH);
-  // Check if the file already exists
-  for (let i = 0; i < files.length; i++) {
-    if (files[i].substr(0, files[i].lastIndexOf('.')) === fileName) {
-      message.channel.send('File already exists.');
-      return;
-    }
+  if (hasFile({fileName})) {
+    message.channel.send('File name already exists.');
+    return;
   }
   fs.writeFile(`${PATH}/${fileName}.txt`, text, (err) => {
     if (err) {
