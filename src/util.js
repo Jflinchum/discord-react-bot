@@ -50,7 +50,7 @@ exports.makeEmbed = (message, user) => {
 exports.download = (url, fileName, extension, cb) => {
   const fullPath = `${PATH}/${fileName}.${extension}`;
   // Check if the file exists
-  if (hasFile(PATH, fileName)) {
+  if (hasFile({fileName})) {
     return cb('File name already exists');
   }
   request.head(url, (err, res, body) => {
@@ -72,7 +72,7 @@ exports.download = (url, fileName, extension, cb) => {
  */
 exports.ytdownload = (url, fileName, cb) => {
   // Check if the file exists
-  if (hasFile(PATH, fileName)) {
+  if (hasFile({fileName})) {
     return cb('File name already exists');
   }
   // Make sure the url is valid
@@ -100,7 +100,7 @@ exports.ytdownload = (url, fileName, cb) => {
  * @param {String} fileName - The file to search for
  * @return {Boolean} - If the file exists in that directory
  */
-const hasFile = (path, fileName) => {
+const hasFile = ({path = PATH, fileName}) => {
   const files = fs.readdirSync(path);
   // Check if the file already exists
   for (let i = 0; i < files.length; i++) {
