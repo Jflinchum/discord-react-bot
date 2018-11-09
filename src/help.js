@@ -5,7 +5,7 @@ const path = require('path');
 /**
  * Posts the contents of the help file to the channel
  *
- * @param {String} message - The Discord Message Object that initiated
+ * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
 exports.help = (message) => {

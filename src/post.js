@@ -9,7 +9,7 @@ const { PATH, COLOR, makeEmbed } = require('./util');
  * with text to speech enabled.
  *
  * @param {String} fileName - The local file to post
- * @param {String} message - The Discord Message Object that initiated
+ * @param {Object} message - The Discord Message Object that initiated
  * the command
  * @param {Object} bot - The Discord Client object that represents the bot
  */

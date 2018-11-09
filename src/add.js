@@ -10,7 +10,7 @@ const { download, ytdownload, MAX_YT_TIME, makeEmbed } = require('./util');
  * @param {String} fileName - The name to store the file as
  * @param {String} url - The url of the file
  * @param {String} exten - The extension to save the file as
- * @param {String} message - The Discord Message Object that initiated
+ * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
 exports.add = (fileName, url, exten, message) => {

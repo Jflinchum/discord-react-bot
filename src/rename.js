@@ -7,7 +7,7 @@ const { PATH, makeEmbed } = require('./util');
  *
  * @param {String} oldName - The file to rename
  * @param {String} newName - The new name to give the file
- * @param {String} message - The Discord Message Object that initiated
+ * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
 exports.rename = (oldName, newName, message) => {

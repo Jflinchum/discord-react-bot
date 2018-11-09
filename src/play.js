@@ -10,6 +10,15 @@ let currentSong;
 let currentChannel;
 let playingQueue = [];
 
+/**
+ * Enqueues the song into the playing queue as a JSON
+ *
+ * @param {Object} channel - The Discord VoiceChannel object to play the media
+ * @param {String} media - The url to the music to enqueue
+ * @param {String} name - The title of the music to play
+ * @param {Object} message - The Discord Message Object that initiated
+ * the command
+ */
 const enqueue = (channel, media, name, message) => {
   playingQueue.push({
     channel: channel,
@@ -19,10 +28,25 @@ const enqueue = (channel, media, name, message) => {
   });
 };
 
+/**
+ * Dequeues the next song in the playing queue.
+ *
+ * @returns {Object} - The next song in the queue.
+ */
 const dequeue = () => {
   return playingQueue.shift();
 };
 
+/**
+ * Joins the voice channel specified and streams the media into the channel.
+ * Supports any arbitrary file (mp3, url, etc.)
+ *
+ * @param {Object} channel - The Discord VoiceChannel object to play the media
+ * @param {String} media - The url to the music to enqueue
+ * @param {String} name - The title of the music to play
+ * @param {Object} message - The Discord Message Object that initiated
+ * the command
+ */
 const joinAndPlay = (vc, media, name, message) => {
   if (!message.deleted)
     message.delete();
@@ -89,6 +113,15 @@ const joinAndPlay = (vc, media, name, message) => {
   }
 };
 
+/**
+ * Skips the song in the queue. If no index is given, it will stop playing the
+ * current song. Otherwise, it will skip the song at the index in the playing
+ * queue.
+ *
+ * @param {Number} number - The index to skip. Can be undefined
+ * @param {Object} message - The Discord Message Object that initiated
+ * the command
+ */
 exports.skip = (number, message) => {
   let cutSongName;
   if (!number) {
@@ -128,6 +161,12 @@ exports.skip = (number, message) => {
   }
 };
 
+/**
+ * Prints out the current playing queue to the message's channel
+ *
+ * @param {Object} message - The Discord Message Object that initiated
+ * the command
+ */
 exports.queue = (message) => {
   let response = '\`\`\`\n';
   if (currentSong && currentChannel) {
@@ -141,6 +180,18 @@ exports.queue = (message) => {
   message.channel.send(response);
 };
 
+/**
+ * Parses the media into an attachment url, youtube url, or generic url and
+ * plays it into the specified channel
+ *
+ * @param {Object} Object.channel - The Discord VoiceChannel object to play
+ * the media
+ * @param {String} Object.media - The url to the music to enqueue
+ * @param {Object} Object.message - The Discord Message Object that initiated
+ * the command
+ * @param {Object} Object.bot - The Discord Client object that represents
+ * the bot
+ */
 exports.play = ({channel, media, message, bot}) => {
   if (!channel) {
     message.channel.send('Please specify a channel name.');

@@ -29,7 +29,7 @@ const findFiles = (regex, files) => {
  * The current categories are Image, Music, and Text
  *
  * @param {String} type - The local file to post
- * @param {String} message - The Discord Message Object that initiated
+ * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
 exports.list = (type, message) => {
@@ -61,7 +61,7 @@ exports.list = (type, message) => {
     textList = findFiles(textRegex, files);
     if (textList.length > 0) {
       response += 'Text:\n';
-      response += '  ' + textList.join(' ');
+      response += '  ' + textList.join('  ');
     }
   }
 
