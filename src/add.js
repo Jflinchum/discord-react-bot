@@ -20,7 +20,7 @@ const {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-exports.add = (fileName, url, exten, message) => {
+const add = (fileName, url, exten, message) => {
   // Send a loading message that will get deleted later since
   // downloading can take a while
   message.channel.send('Loading...').then(msg => {
@@ -76,7 +76,7 @@ exports.add = (fileName, url, exten, message) => {
   });
 };
 
-exports.addText = (fileName, text, message) => {
+const addText = (fileName, text, message) => {
   const files = fs.readdirSync(PATH);
   // Check if the file already exists
   for (let i = 0; i < files.length; i++) {
@@ -95,4 +95,9 @@ exports.addText = (fileName, text, message) => {
       makeEmbed(`Added: ${fileName}`, message.author)
     );
   });
+};
+
+module.exports = {
+  add,
+  addText,
 };

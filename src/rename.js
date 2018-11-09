@@ -10,7 +10,7 @@ const { PATH, makeEmbed } = require('./util');
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-exports.rename = (oldName, newName, message) => {
+const rename = (oldName, newName, message) => {
   message.delete();
   const files = fs.readdirSync(PATH);
   if (!oldName) {
@@ -49,4 +49,8 @@ exports.rename = (oldName, newName, message) => {
       );
     });
   }
+};
+
+module.exports = {
+  rename,
 };

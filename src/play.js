@@ -122,7 +122,7 @@ const joinAndPlay = (vc, media, name, message) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-exports.skip = (number, message) => {
+const skip = (number, message) => {
   let cutSongName;
   if (!number) {
     if (currentSong) {
@@ -167,7 +167,7 @@ exports.skip = (number, message) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-exports.queue = (message) => {
+const queue = (message) => {
   let response = '\`\`\`\n';
   if (currentSong && currentChannel) {
     response += `Currently playing ${currentSong} to ${currentChannel.name}.\n`;
@@ -192,7 +192,7 @@ exports.queue = (message) => {
  * @param {Object} Object.bot - The Discord Client object that represents
  * the bot
  */
-exports.play = ({channel, media, message, bot}) => {
+const play = ({channel, media, message, bot}) => {
   if (!channel) {
     message.channel.send('Please specify a channel name.');
     return;
@@ -255,4 +255,10 @@ exports.play = ({channel, media, message, bot}) => {
     const filePath = `${PATH}/${file}`;
     joinAndPlay(vc, filePath, media, message);
   }
+};
+
+module.exports = {
+  skip,
+  queue,
+  play,
 };

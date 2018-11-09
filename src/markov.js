@@ -15,13 +15,13 @@ var intros = [
   ' says: ',
 ];
 
-exports.markov = (user, guild, origChannel) => {
+const markov = (user, guild, origChannel) => {
   markovString = '';
   guild.channels.tap(channel => {
     if (channel.type === 'text') {
       channelLength++;
       channel.fetchMessages({ limit: 100 })
-        .then(messages => exports.asyncMarkov(
+        .then(messages => asyncMarkov(
           user,
           messages.filter(m => m.author.id === user.id),
           origChannel))
@@ -30,16 +30,16 @@ exports.markov = (user, guild, origChannel) => {
   });
 };
 
-exports.asyncMarkov = (user, messages, origChannel) => {
+const asyncMarkov = (user, messages, origChannel) => {
   messages.tap((message) => { markovString += (message.content + '\n'); });
 
   channelsDone++;
   if (channelsDone === channelLength) {
-    exports.postMarkov(user, origChannel);
+    postMarkov(user, origChannel);
   }
 };
 
-exports.postMarkov = (user, origChannel) => {
+const postMarkov = (user, origChannel) => {
   channelsDone = 0;
   channelLength = 0;
 
@@ -59,4 +59,8 @@ exports.postMarkov = (user, origChannel) => {
   origChannel.send(
     makeEmbed(markovMessage, user)
   );
+};
+
+module.exports = {
+  markov,
 };
