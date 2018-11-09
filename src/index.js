@@ -9,7 +9,7 @@ const { remove } = require('./remove');
 const { help } = require('./help');
 const { markov } = require('./markov');
 const { rename } = require('./rename');
-const { play, queue } = require('./play');
+const { play, queue, skip } = require('./play');
 const { PATH } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -71,12 +71,6 @@ bot.on('message', message => {
     // Listing files
     const fileType = cmd[1];
     list(fileType, message);
-  } else if (botCommand === '!leave') {
-    // Leave any voice channels the bot is currently in
-    const vcArray = bot.voiceConnections.array();
-    for (let i = 0; i < vcArray.length; i++) {
-      vcArray[i].channel.leave();
-    }
   } else if (botCommand === '!remove') {
     // Delete any stored reactions
     const fileName = cmd[1];
@@ -96,11 +90,20 @@ bot.on('message', message => {
     const newFile = cmd[2];
     rename(oldFile, newFile, message);
   } else if (botCommand === '!play') {
-    const channel = cmd[1];
-    const media = cmd[2];
-    play(channel, media, message, bot);
+    let media;
+    let channel;
+    if (cmd.length === 2) {
+      channel = cmd[1];
+    } else {
+      media = cmd[1];
+      channel = cmd[2];
+    }
+    play({channel, media, message, bot});
   } else if (botCommand === '!queue') {
     queue(message);
+  } else if (botCommand === '!skip') {
+    const num = cmd[1];
+    skip(num, message);
   }
 });
 
