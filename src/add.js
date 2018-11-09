@@ -1,6 +1,14 @@
 'use strict';
 const ytdl = require('ytdl-core');
-const { download, ytdownload, MAX_YT_TIME, makeEmbed } = require('./util');
+const fs = require('fs');
+const {
+  PATH,
+  MAX_YT_TIME,
+  download,
+  ytdownload,
+  makeEmbed,
+  hasFile,
+} = require('./util');
 
 /**
  * Adds a file to the local storage space. If the url is a youtube video,
@@ -13,7 +21,7 @@ const { download, ytdownload, MAX_YT_TIME, makeEmbed } = require('./util');
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-exports.add = (fileName, url, exten, message) => {
+const add = (fileName, url, exten, message) => {
   // Send a loading message that will get deleted later since
   // downloading can take a while
   message.channel.send('Loading...').then(msg => {
@@ -67,4 +75,34 @@ exports.add = (fileName, url, exten, message) => {
       });
     }
   });
+};
+
+/**
+ * Creates a text file in the local storage and writes the text into that file
+ *
+ * @param {String} fileName - The name to store the file as
+ * @param {String} text - The text to store in the file
+ * @param {Object} message - The Discord Message Object that initiated
+ * the command
+ */
+const addText = (fileName, text, message) => {
+  if (hasFile({fileName})) {
+    message.channel.send('File name already exists.');
+    return;
+  }
+  fs.writeFile(`${PATH}/${fileName}.txt`, text, (err) => {
+    if (err) {
+      message.channel.send('Could not write the text to a file');
+      return;
+    }
+    message.delete();
+    message.channel.send(
+      makeEmbed(`Added: ${fileName}`, message.author)
+    );
+  });
+};
+
+module.exports = {
+  add,
+  addText,
 };

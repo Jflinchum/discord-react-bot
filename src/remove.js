@@ -9,7 +9,7 @@ const { PATH, makeEmbed } = require('./util');
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-exports.remove = (fileName, message) => {
+const remove = (fileName, message) => {
   message.delete();
   const files = fs.readdirSync(PATH);
   let file;
@@ -32,4 +32,8 @@ exports.remove = (fileName, message) => {
       );
     });
   }
+};
+
+module.exports = {
+  remove,
 };

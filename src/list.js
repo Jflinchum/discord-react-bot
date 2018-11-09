@@ -32,7 +32,7 @@ const findFiles = (regex, files) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-exports.list = (type, message) => {
+const list = (type, message) => {
   message.delete();
   const files = fs.readdirSync(PATH);
   let response = '```\n';
@@ -65,7 +65,10 @@ exports.list = (type, message) => {
     }
   }
 
-
   response += '```';
   message.channel.send(response);
+};
+
+module.exports = {
+  list,
 };

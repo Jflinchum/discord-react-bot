@@ -8,10 +8,7 @@ const path = require('path');
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
 const COLOR = 0x9400D3;
-
-exports.PATH = PATH;
-exports.COLOR = COLOR;
-exports.MAX_YT_TIME = 150; // In seconds
+const MAX_YT_TIME = 150; // In seconds
 
 /**
  * Constructs an embeded message object
@@ -22,7 +19,7 @@ exports.MAX_YT_TIME = 150; // In seconds
  * username along with message
  * @return {Object} - Returns the constructed embeded message
  */
-exports.makeEmbed = (message, user) => {
+const makeEmbed = (message, user) => {
   return {
     embed: {
       thumbnail: {
@@ -47,10 +44,10 @@ exports.makeEmbed = (message, user) => {
  * @param {Function} cb - Callback function is called with a string of
  * any errors.
  */
-exports.download = (url, fileName, extension, cb) => {
+const download = (url, fileName, extension, cb) => {
   const fullPath = `${PATH}/${fileName}.${extension}`;
   // Check if the file exists
-  if (hasFile(PATH, fileName)) {
+  if (hasFile({fileName})) {
     return cb('File name already exists');
   }
   request.head(url, (err, res, body) => {
@@ -70,9 +67,9 @@ exports.download = (url, fileName, extension, cb) => {
  * @param {Function} cb - Callback function is called with a string of
  * any errors.
  */
-exports.ytdownload = (url, fileName, cb) => {
+const ytdownload = (url, fileName, cb) => {
   // Check if the file exists
-  if (hasFile(PATH, fileName)) {
+  if (hasFile({fileName})) {
     return cb('File name already exists');
   }
   // Make sure the url is valid
@@ -100,7 +97,7 @@ exports.ytdownload = (url, fileName, cb) => {
  * @param {String} fileName - The file to search for
  * @return {Boolean} - If the file exists in that directory
  */
-const hasFile = (path, fileName) => {
+const hasFile = ({path = PATH, fileName}) => {
   const files = fs.readdirSync(path);
   // Check if the file already exists
   for (let i = 0; i < files.length; i++) {
@@ -109,4 +106,14 @@ const hasFile = (path, fileName) => {
     }
   }
   return false;
+};
+
+module.exports = {
+  PATH,
+  COLOR,
+  MAX_YT_TIME,
+  makeEmbed,
+  ytdownload,
+  download,
+  hasFile,
 };

@@ -13,7 +13,7 @@ const { PATH, COLOR, makeEmbed } = require('./util');
  * the command
  * @param {Object} bot - The Discord Client object that represents the bot
  */
-exports.post = (fileName, message, bot) => {
+const post = (fileName, message, bot) => {
   // Posting files
   message.delete();
   const files = fs.readdirSync(PATH);
@@ -92,4 +92,8 @@ exports.post = (fileName, message, bot) => {
         message.channel.send('Could not find user posting.');
       });
   }
+};
+
+module.exports = {
+  post,
 };

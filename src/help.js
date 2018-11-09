@@ -8,10 +8,14 @@ const path = require('path');
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-exports.help = (message) => {
+const help = (message) => {
   message.delete();
   const helpText = fs.readFileSync(
     `${path.dirname(require.main.filename)}/help.txt`
   );
   message.channel.send(`\`\`\`${helpText}\`\`\``);
+};
+
+module.exports = {
+  help,
 };
