@@ -10,6 +10,7 @@ const { help } = require('./help');
 const { markovUser, markovChannel } = require('./markov');
 const { rename } = require('./rename');
 const { play, queue, skip } = require('./play');
+const { append } = require('./append');
 const { PATH } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -142,6 +143,19 @@ bot.on('message', message => {
   } else if (botCommand === '!skip') {
     const num = cmd[1];
     skip(num, message);
+  } else if (botCommand === '!append') {
+    const fileName = cmd[1];
+    let text = cmd.slice(2, cmd.length).join(' ');
+    if (text[0] !== '"' || text[text.length - 1] !== '"') {
+      message.channel.send('Please wrap text in quotation marks.');
+      return;
+    }
+    if (!fileName) {
+      message.channel.send('Please specify a name.');
+      return;
+    }
+    text = text.slice(1, text.length - 1);
+    append({fileName, text, message});
   }
 });
 
