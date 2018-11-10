@@ -96,12 +96,15 @@ bot.on('message', message => {
     // Post a help page
     help(message);
   } else if (botCommand === '!markov') {
-    let string = cmd.slice(2, cmd.length).join(' ');
-    if (string[string.length - 1] !== '"') {
-      message.channel.send('Please wrap text in quotation marks.');
-      return;
+    let string = '';
+    if (cmd[2] !== undefined && cmd[2] !== null) {
+      string = cmd.slice(2, cmd.length).join(' ');
+      if (string[string.length - 1] !== '"') {
+        message.channel.send('Please wrap text in quotation marks.');
+        return;
+      }
+      string = string.slice(1, string.length - 1);
     }
-    string = string.slice(1, string.length - 1);
     if (string == null) {
       string = '';
     }
