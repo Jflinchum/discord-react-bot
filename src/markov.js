@@ -118,10 +118,16 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
   };
 
   if (phrase !== null && phrase !== '') {
+    console.log(phrase);
     getAll = phrase.split(' ');
     getAll = getAll[getAll.length - 1];
     var lastIndex = phrase.lastIndexOf(' ');
-    phrase = phrase.substring(0, lastIndex);
+    if (lastIndex !== -1) {
+      phrase = phrase.substring(0, lastIndex);
+      phrase += ' ';
+    } else {
+      phrase = '';
+    }
   }
 
   if (user === null) {
@@ -129,7 +135,6 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     intros[Math.floor(Math.random() * intros.length)] +
     '"*' +
     phrase +
-    ' ' +
     markovGen.start(getAll).end().process() +
     '*"';
     origChannel.send(
@@ -140,7 +145,6 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     intros[Math.floor(Math.random() * intros.length)] +
     '"*' +
     phrase +
-    ' ' +
     markovGen.start(getAll).end().process() +
     '*"';
     origChannel.send(
@@ -165,14 +169,18 @@ const postMarkovChannel = (user, channel, origChannel, phrase) => {
     getAll = phrase.split(' ');
     getAll = getAll[getAll.length - 1];
     var lastIndex = phrase.lastIndexOf(' ');
-    phrase = phrase.substring(0, lastIndex);
+    if (lastIndex !== -1) {
+      phrase = phrase.substring(0, lastIndex);
+      phrase += ' ';
+    } else {
+      phrase = '';
+    }
   }
 
   let markovMessage = 'People in ' + channel.name +
   ' say things like: ' +
   '"*' +
   phrase +
-  ' ' +
   markovGen.start(getAll).end().process() +
   '*"';
   origChannel.send(
