@@ -253,7 +253,7 @@ const play = ({channel, media, message, bot}) => {
       return;
     }
     const filePath = `${PATH}/${file}`;
-    joinAndPlay(vc, filePath, media, message);
+    joinAndPlay(vc, fs.createReadStream(filePath), media, message);
   }
 };
 
