@@ -35,6 +35,27 @@ const makeEmbed = (message, user) => {
 };
 
 /**
+ * Constructs an embeded message object
+ *
+ * @param {String} message - Message to put in the description box of the
+ * embeded message
+ * @param {String} title - Message to put in the title area of the
+ * embeded message
+ * @return {Object} - Returns the constructed embeded message
+ */
+const makeEmbedNoUser = (message, title) => {
+  return {
+    embed: {
+      color: COLOR,
+      description: message,
+      author: {
+        name: title,
+      },
+    },
+  };
+};
+
+/**
  * Downloads a file given a url and saves it to the local storage space
  *
  * @param {String} url - URL of the file to download
@@ -113,6 +134,7 @@ module.exports = {
   COLOR,
   MAX_YT_TIME,
   makeEmbed,
+  makeEmbedNoUser,
   ytdownload,
   download,
   hasFile,

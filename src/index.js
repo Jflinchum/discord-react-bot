@@ -7,7 +7,7 @@ const { post } = require('./post');
 const { list } = require('./list');
 const { remove } = require('./remove');
 const { help } = require('./help');
-const { markov } = require('./markov');
+const { markovUser, markovChannel } = require('./markov');
 const { rename } = require('./rename');
 const { play, queue, skip } = require('./play');
 const { PATH } = require('./util');
@@ -96,12 +96,30 @@ bot.on('message', message => {
     // Post a help page
     help(message);
   } else if (botCommand === '!markov') {
-    const user = message.mentions.users.first();
-    if (!user) {
-      message.channel.send('Please specify a User to markov.');
+    let string = cmd.slice(2, cmd.length).join(' ');
+    if (string[string.length - 1] !== '"') {
+      message.channel.send('Please wrap text in quotation marks.');
       return;
     }
-    markov(user, message.guild, message.channel);
+    string = string.slice(1, string.length - 1);
+    if (string == null) {
+      string = '';
+    }
+    if (cmd[1] === 'all') {
+      markovUser(null, message.guild, message.channel, string);
+      return;
+    }
+    const channel = message.mentions.channels.first();
+    const user = message.mentions.users.first();
+    if (user != null) {
+      markovUser(user, message.guild, message.channel, string);
+      return;
+    }
+    if (channel != null) {
+      markovChannel(channel, message.guild, message.channel, string);
+      return;
+    }
+    message.channel.send('Please specify a User or Channel to markov.');
   } else if (botCommand === '!rename') {
     const oldFile = cmd[1];
     const newFile = cmd[2];
