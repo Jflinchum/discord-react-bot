@@ -37,7 +37,7 @@ bot.on('message', message => {
   const attach = message.attachments.array();
 
   // Adding files to bot list
-  if (botCommand === '!add') {
+  if (botCommand === '!add' || botCommand === '!a') {
     let url, fileName, exten;
     if (attach.length > 0) {
       // Handling attachment images
@@ -76,7 +76,7 @@ bot.on('message', message => {
 
       add(fileName, url, exten, message);
     }
-  } else if (botCommand === '!post') {
+  } else if (botCommand === '!post' || botCommand === '!p') {
     // Posting an image
     const fileName = cmd[1];
     if (!fileName) {
@@ -85,15 +85,15 @@ bot.on('message', message => {
     }
 
     post(fileName, message, bot);
-  } else if (botCommand === '!list') {
+  } else if (botCommand === '!list' || botCommand === '!l') {
     // Listing files
     const fileType = cmd[1];
     list(fileType, message);
-  } else if (botCommand === '!remove') {
+  } else if (botCommand === '!remove' || botCommand === '!r') {
     // Delete any stored reactions
     const fileName = cmd[1];
     remove(fileName, message);
-  } else if (botCommand === '!help') {
+  } else if (botCommand === '!help' || botCommand === '!h') {
     // Post a help page
     help(message);
   } else if (botCommand === '!markov') {
@@ -124,11 +124,11 @@ bot.on('message', message => {
       return;
     }
     message.channel.send('Please specify a User or Channel to markov.');
-  } else if (botCommand === '!rename') {
+  } else if (botCommand === '!rename' || botCommand === '!rn') {
     const oldFile = cmd[1];
     const newFile = cmd[2];
     rename(oldFile, newFile, message);
-  } else if (botCommand === '!play') {
+  } else if (botCommand === '!play' || botCommand === '!pl') {
     let media;
     let channel;
     if (cmd.length === 2) {
@@ -138,9 +138,9 @@ bot.on('message', message => {
       channel = cmd[2];
     }
     play({channel, media, message, bot});
-  } else if (botCommand === '!queue') {
+  } else if (botCommand === '!queue' || botCommand === '!q') {
     queue(message);
-  } else if (botCommand === '!skip') {
+  } else if (botCommand === '!skip' || botCommand === '!s') {
     const num = cmd[1];
     skip(num, message);
   } else if (botCommand === '!append') {
