@@ -32,7 +32,7 @@ const findFiles = (regex, files) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-const list = (type, message) => {
+const list = ({ type, message, emojis }) => {
   message.delete();
   const files = fs.readdirSync(PATH);
   let response = '```\n';
@@ -64,7 +64,20 @@ const list = (type, message) => {
       response += '  ' + textList.join('  ');
     }
   }
-
+  if (!type || type === 'emoji') {
+    response += 'Emojis:\n';
+    const words = Object.keys(emojis);
+    for (let index in words) {
+      let emojiList = emojis[words[index]];
+      response += `${words[index]}: `;
+      for (let emoji in emojiList) {
+        response +=
+        `(:${message.guild.emojis.get(emojiList[emoji].emoji).name}:,`
+        + ` ${emojiList[emoji].chance}) `;
+      }
+      response += '\n';
+    }
+  }
   response += '```';
   message.channel.send(response);
 };

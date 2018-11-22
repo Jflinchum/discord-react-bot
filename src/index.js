@@ -103,7 +103,7 @@ bot.on('message', message => {
   } else if (botCommand === '!list' || botCommand === '!l') {
     // Listing files
     const fileType = cmd[1];
-    list(fileType, message);
+    list({ type: fileType, message, emojis: emojiTriggers });
   } else if (botCommand === '!remove' || botCommand === '!r') {
     // Delete any stored reactions
     const fileName = cmd[1];
