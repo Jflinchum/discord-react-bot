@@ -2,6 +2,7 @@
 
 const { Client } = require('discord.js');
 const mkdirp = require('mkdirp');
+const fs = require('fs');
 const { add, addText } = require('./add');
 const { post } = require('./post');
 const { list } = require('./list');
@@ -11,10 +12,12 @@ const { markovUser, markovChannel } = require('./markov');
 const { rename } = require('./rename');
 const { play, queue, skip } = require('./play');
 const { append } = require('./append');
-const { PATH } = require('./util');
+const { trigger } = require('./trigger');
+const { PATH, EMOJI_PATH, EMOJI_REGEX } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
 const bot = new Client();
+let emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
 
 bot.on('ready', () => {
   console.log('Logged in');
@@ -23,6 +26,24 @@ bot.on('ready', () => {
 
 
 bot.on('message', message => {
+  // Ignore bot commands
+  if (message.author.bot) {
+    return;
+  }
+  const emojiKeys = Object.keys(emojiTriggers);
+  for (let i = 0; i < emojiKeys.length; i++) {
+    if (message.content.toLowerCase().includes(emojiKeys[i])) {
+      const random = Math.random();
+      let emojiArray = emojiTriggers[emojiKeys[i]];
+      emojiArray.forEach((emojiChance) => {
+        if (emojiChance.chance >= random) {
+          message.react(emojiChance.emoji).catch((err) => {
+            console.log(err);
+          });
+        }
+      });
+    }
+  }
   // Check to make sure the message is a command
   if (message.content[0] !== '!') {
     return;
@@ -37,7 +58,7 @@ bot.on('message', message => {
   const attach = message.attachments.array();
 
   // Adding files to bot list
-  if (botCommand === '!add') {
+  if (botCommand === '!add' || botCommand === '!a') {
     let url, fileName, exten;
     if (attach.length > 0) {
       // Handling attachment images
@@ -76,7 +97,7 @@ bot.on('message', message => {
 
       add(fileName, url, exten, message);
     }
-  } else if (botCommand === '!post') {
+  } else if (botCommand === '!post' || botCommand === '!p') {
     // Posting an image
     const fileName = cmd[1];
     if (!fileName) {
@@ -85,15 +106,17 @@ bot.on('message', message => {
     }
 
     post(fileName, message, bot);
-  } else if (botCommand === '!list') {
+  } else if (botCommand === '!list' || botCommand === '!l') {
     // Listing files
     const fileType = cmd[1];
-    list(fileType, message);
-  } else if (botCommand === '!remove') {
+    list({ type: fileType, message, emojis: emojiTriggers });
+  } else if (botCommand === '!remove' || botCommand === '!r') {
     // Delete any stored reactions
-    const fileName = cmd[1];
-    remove(fileName, message);
-  } else if (botCommand === '!help') {
+    const fileName = cmd.slice(1, cmd.length).join(' ');
+    remove({ fileName, message, emojis: emojiTriggers, cb: () => {
+      emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+    }});
+  } else if (botCommand === '!help' || botCommand === '!h') {
     // Post a help page
     help(message);
   } else if (botCommand === '!markov') {
@@ -124,11 +147,11 @@ bot.on('message', message => {
       return;
     }
     message.channel.send('Please specify a User or Channel to markov.');
-  } else if (botCommand === '!rename') {
+  } else if (botCommand === '!rename' || botCommand === '!rn') {
     const oldFile = cmd[1];
     const newFile = cmd[2];
     rename(oldFile, newFile, message);
-  } else if (botCommand === '!play') {
+  } else if (botCommand === '!play' || botCommand === '!pl') {
     let media;
     let channel;
     if (cmd.length === 2) {
@@ -138,9 +161,9 @@ bot.on('message', message => {
       channel = cmd[2];
     }
     play({channel, media, message, bot});
-  } else if (botCommand === '!queue') {
+  } else if (botCommand === '!queue' || botCommand === '!q') {
     queue(message);
-  } else if (botCommand === '!skip') {
+  } else if (botCommand === '!skip' || botCommand === '!s') {
     const num = cmd[1];
     skip(num, message);
   } else if (botCommand === '!append') {
@@ -156,6 +179,45 @@ bot.on('message', message => {
     }
     text = text.slice(1, text.length - 1);
     append({fileName, text, message});
+  } else if (botCommand === '!trigger') {
+    let text = cmd[3];
+    let emoji = cmd[1];
+    let chance = cmd[2];
+    // If the user is only uploading a string
+    if (text[0] === '"') {
+      let string = cmd.slice(3, cmd.length).join(' ');
+      if (string[string.length - 1] !== '"') {
+        message.channel.send('Please wrap text in quotation marks.');
+        return;
+      }
+      text = string.slice(1, string.length - 1);
+      if (!emoji) {
+        message.channel.send('Please specify an emoji.');
+        return;
+      } else if (isNaN(chance)) {
+        message.channel.send('Please specify an chance.');
+        return;
+      }
+    } else {
+      message.channel.send('Please wrap text in quotation marks.');
+      return;
+    }
+    if (!EMOJI_REGEX.test(emoji)) {
+      // If it is a custom emoji, parse the id of the string
+      emoji = emoji.slice(emoji.lastIndexOf(':') + 1, -1);
+    }
+    message.react(emoji).then(() => {
+      trigger({
+        text: text.toLowerCase(),
+        reaction: emoji,
+        chance,
+        message,
+        cb: () => { emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH)); },
+      });
+    }).catch((err) => {
+      console.log(err);
+      message.channel.send('Could not find emoji');
+    });
   }
 });
 
