@@ -169,6 +169,34 @@ const addJson = ({ path, key, value, cb }) => {
   });
 };
 
+/**
+ * Removes a json object from a file.
+ *
+ * @param {String} path - The path to the file
+ * @param {String} key - The key to add
+ * @param {Function} cb - The callback function
+ */
+const removeJson = ({ path, key, cb }) => {
+  // First check if the file exists
+  fs.exists(path, (exists) => {
+    if (exists) {
+      // Read the file and parse the data
+      fs.readFile(path, (err, data) => {
+        if (err) console.log(err);
+        else {
+          let file = JSON.parse(data);
+          delete file[key];
+          fs.writeFileSync(path, JSON.stringify(file));
+          return cb();
+        }
+      });
+    } else {
+      // If the file doesn't exists, return callback
+      return cb();
+    }
+  });
+};
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -181,4 +209,5 @@ module.exports = {
   download,
   hasFile,
   addJson,
+  removeJson,
 };

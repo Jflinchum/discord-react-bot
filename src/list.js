@@ -26,11 +26,12 @@ const findFiles = (regex, files) => {
 /**
  * Finds all files under the given file type and sends a list of them.
  * If no type is specified, list all files under each category.
- * The current categories are Image, Music, and Text
+ * The current categories are Image, Music, Text, and Emoji
  *
  * @param {String} type - The local file to post
  * @param {Object} message - The Discord Message Object that initiated
  * the command
+ * @param {Object} emojis - The emojis to search through and list
  */
 const list = ({ type, message, emojis }) => {
   message.delete();
@@ -69,11 +70,11 @@ const list = ({ type, message, emojis }) => {
     const words = Object.keys(emojis);
     for (let index in words) {
       let emojiList = emojis[words[index]];
-      response += `${words[index]}: `;
+      response += `  ${words[index]}: `;
       for (let emoji in emojiList) {
         response +=
         `(:${message.guild.emojis.get(emojiList[emoji].emoji).name}:,`
-        + ` ${emojiList[emoji].chance}) `;
+        + ` ${emojiList[emoji].chance}), `;
       }
       response += '\n';
     }

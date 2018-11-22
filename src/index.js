@@ -106,8 +106,10 @@ bot.on('message', message => {
     list({ type: fileType, message, emojis: emojiTriggers });
   } else if (botCommand === '!remove' || botCommand === '!r') {
     // Delete any stored reactions
-    const fileName = cmd[1];
-    remove(fileName, message);
+    const fileName = cmd.slice(1, cmd.length).join(' ');
+    remove({ fileName, message, emojis: emojiTriggers, cb: () => {
+      emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+    }});
   } else if (botCommand === '!help' || botCommand === '!h') {
     // Post a help page
     help(message);
