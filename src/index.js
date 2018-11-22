@@ -2,6 +2,7 @@
 
 const { Client } = require('discord.js');
 const mkdirp = require('mkdirp');
+const fs = require('fs');
 const { add, addText } = require('./add');
 const { post } = require('./post');
 const { list } = require('./list');
@@ -11,10 +12,12 @@ const { markovUser, markovChannel } = require('./markov');
 const { rename } = require('./rename');
 const { play, queue, skip } = require('./play');
 const { append } = require('./append');
-const { PATH } = require('./util');
+const { trigger } = require('./trigger');
+const { PATH, EMOJI_PATH, EMOJI_REGEX } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
 const bot = new Client();
+let emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
 
 bot.on('ready', () => {
   console.log('Logged in');
@@ -23,6 +26,18 @@ bot.on('ready', () => {
 
 
 bot.on('message', message => {
+  if (emojiTriggers[message.content.toLowerCase()]) {
+    const random = Math.random();
+    console.log(random);
+    let emojiArray = emojiTriggers[message.content.toLowerCase()];
+    emojiArray.forEach((emojiChance) => {
+      if (emojiChance.chance >= random) {
+        message.react(emojiChance.emoji).catch((err) => {
+          console.log(err);
+        });
+      }
+    });
+  }
   // Check to make sure the message is a command
   if (message.content[0] !== '!') {
     return;
@@ -156,6 +171,45 @@ bot.on('message', message => {
     }
     text = text.slice(1, text.length - 1);
     append({fileName, text, message});
+  } else if (botCommand === '!trigger') {
+    let text = cmd[3];
+    let emoji = cmd[1];
+    let chance = cmd[2];
+    // If the user is only uploading a string
+    if (text[0] === '"') {
+      let string = cmd.slice(3, cmd.length).join(' ');
+      if (string[string.length - 1] !== '"') {
+        message.channel.send('Please wrap text in quotation marks.');
+        return;
+      }
+      text = string.slice(1, string.length - 1);
+      if (!emoji) {
+        message.channel.send('Please specify an emoji.');
+        return;
+      } else if (isNaN(chance)) {
+        message.channel.send('Please specify an chance.');
+        return;
+      }
+    } else {
+      message.channel.send('Please wrap text in quotation marks.');
+      return;
+    }
+    if (!EMOJI_REGEX.test(emoji)) {
+      // If it is a custom emoji, parse the id of the string
+      emoji = emoji.slice(emoji.lastIndexOf(':') + 1, -1);
+    }
+    message.react(emoji).then(() => {
+      trigger({
+        text: text.toLowerCase(),
+        reaction: emoji,
+        chance,
+        message,
+        cb: () => { emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH)); },
+      });
+    }).catch((err) => {
+      console.log(err);
+      message.channel.send('Could not find emoji');
+    });
   }
 });
 
