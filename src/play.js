@@ -200,8 +200,11 @@ const play = ({channel, media, message, bot}) => {
   const channelList = bot.channels.array();
   let vc;
   for (let i = 0; i < channelList.length; i++) {
+    // Check if the channel is what we are searching for.
+    // If the channel is a ., then join the vc with any users in it
     if (channelList[i].type === 'voice'
-        && channel === channelList[i].name) {
+        && ((channel === channelList[i].name) ||
+        (channel === '.' && channelList[i].members.array().length > 0))) {
       vc = channelList[i];
     }
   }
