@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { PATH } = require('./util');
+const { PATH, EMOJI_REGEX } = require('./util');
 
 /**
  * Finds all files using the regex and returns an array of them
@@ -72,9 +72,17 @@ const list = ({ type, message, emojis }) => {
       let emojiList = emojis[words[index]];
       response += `  ${words[index]}: `;
       for (let emoji in emojiList) {
-        response +=
-        `(:${message.guild.emojis.get(emojiList[emoji].emoji).name}:,`
-        + ` ${emojiList[emoji].chance}), `;
+        let emojiString = emojiList[emoji].emoji;
+        if (EMOJI_REGEX.test(emojiString)) {
+          // Check to make sure it is not a custom emoji
+          response +=
+          `(${emojiString},`
+          + ` ${emojiList[emoji].chance}), `;
+        } else {
+          response +=
+          `(:${message.guild.emojis.get(emojiString).name}:,`
+          + ` ${emojiList[emoji].chance}), `;
+        }
       }
       response += '\n';
     }
