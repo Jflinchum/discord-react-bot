@@ -26,17 +26,23 @@ bot.on('ready', () => {
 
 
 bot.on('message', message => {
-  if (emojiTriggers[message.content.toLowerCase()]) {
-    const random = Math.random();
-    console.log(random);
-    let emojiArray = emojiTriggers[message.content.toLowerCase()];
-    emojiArray.forEach((emojiChance) => {
-      if (emojiChance.chance >= random) {
-        message.react(emojiChance.emoji).catch((err) => {
-          console.log(err);
-        });
-      }
-    });
+  // Ignore bot commands
+  if (message.author.bot) {
+    return;
+  }
+  const emojiKeys = Object.keys(emojiTriggers);
+  for (let i = 0; i < emojiKeys.length; i++) {
+    if (message.content.toLowerCase().includes(emojiKeys[i])) {
+      const random = Math.random();
+      let emojiArray = emojiTriggers[emojiKeys[i]];
+      emojiArray.forEach((emojiChance) => {
+        if (emojiChance.chance >= random) {
+          message.react(emojiChance.emoji).catch((err) => {
+            console.log(err);
+          });
+        }
+      });
+    }
   }
   // Check to make sure the message is a command
   if (message.content[0] !== '!') {

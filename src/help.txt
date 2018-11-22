@@ -25,5 +25,8 @@
 [!play/!pl] [<name>] <voiceChannel>
 - Plays an audio file to the specified channel. Name can be a name of a local file or a youtube video. If uploading an attachment, the name is not needed.
 
+!trigger <emoji> <decimalChance> <"Example Text">
+- Makes the bot react to the message with the supplied emoji. The decimal chance (between 0 and 1) is how often the bot will react.
+
 [!help/!h]
 - Displays this help screen!
