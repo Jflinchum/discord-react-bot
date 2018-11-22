@@ -17,7 +17,13 @@ const { PATH, EMOJI_PATH, EMOJI_REGEX } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
 const bot = new Client();
-let emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+let emojiTriggers;
+fs.exists(EMOJI_PATH, (exists) => {
+  if (!exists) {
+    fs.writeFileSync(EMOJI_PATH, '{}');
+  }
+  emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+});
 
 bot.on('ready', () => {
   console.log('Logged in');
