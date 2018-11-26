@@ -46,71 +46,104 @@ const dequeue = () => {
  * @param {String} name - The title of the music to play
  * @param {Object} message - The Discord Message Object that initiated
  * the command
+ * @param {Object|Optional} connection - A Discord Voice Connection Object
  */
-const joinAndPlay = (vc, media, name, message) => {
+const joinAndPlay = (vc, media, name, message, connection) => {
   if (!message.deleted)
     message.delete();
   if (!currentSong) {
     currentSong = name;
     currentChannel = vc;
-    vc.join()
-      .then((connection) => {
-        currentSong = name;
-        currentChannel = vc;
-        // On connecting to a voice channel, play the youtube stream
-        const dispatch = connection.playArbitraryInput(media);
-        // Delete the command message
-        message.channel.send(
-          makeEmbed(
-            `Playing: ${name}\nTo: ${vc.name}`,
-            message.author)
-        );
-        connection.on('disconnect', () => {
-          currentSong = undefined;
-          currentChannel = undefined;
+    if (connection) {
+      // If there is already a connection, play the song through it
+      const song = {
+        channel: vc,
+        media,
+        name,
+        message,
+      };
+      playSong({ connection, song, message });
+    } else {
+      // If there isn't a connection, join the voice channel
+      vc.join()
+        .then((connection) => {
+          const song = {
+            channel: vc,
+            media,
+            name,
+            message,
+          };
+          playSong({ connection, song, message });
+        })
+        .catch((err) => {
           const nextSong = dequeue();
-          setTimeout(() => {
-            if (nextSong) {
-              joinAndPlay(
-                nextSong.channel,
-                nextSong.media,
-                nextSong.name,
-                nextSong.message
-              );
-            }
-          }, nextSongDelay);
+          message.channel.send('Could not join channel.');
+          playNext(nextSong);
+          console.log(err);
         });
-        dispatch.on('end', (reason) => {
-          // Leave the voice channel after finishing the stream
-          vc.leave();
-        });
-        dispatch.on('error', (err) => {
-          console.log(`ERR: ${err}`);
-        });
-      })
-      .catch((err) => {
-        message.channel.send('Could not join channel.');
-        currentSong = undefined;
-        currentChannel = undefined;
-        const nextSong = dequeue();
-        setTimeout(() => {
-          if (nextSong) {
-            joinAndPlay(
-              nextSong.channel,
-              nextSong.media,
-              nextSong.name,
-              nextSong.message
-            );
-          }
-        }, nextSongDelay);
-        console.log(err);
-      });
+    }
   } else {
     enqueue(vc, media, name, message);
     message.channel.send(
       makeEmbed(`Added ${name} to the queue!`, message.author)
     );
   }
+};
+
+/**
+ * Plays the media through the connection and handles leaving the channel
+ *
+ * @param {Object} connection - The Discord Voice Connection object
+ * to play the song through
+ * @param {Object} song - The song object to play
+ * @param {Object} message - The Discord Message Object that initiated
+ * the command
+ */
+const playSong = ({ connection, song, message }) => {
+  // On connecting to a voice channel, play the youtube stream
+  const dispatch = connection.playArbitraryInput(song.media);
+  // Delete the command message
+  message.channel.send(
+    makeEmbed(
+      `Playing: ${song.name}\nTo: ${song.channel.name}`,
+      message.author)
+  );
+  dispatch.on('end', (reason) => {
+    const nextSong = dequeue();
+    if (nextSong && nextSong.channel.name === currentChannel.name) {
+      // If the next song is on the same channel
+      playNext(nextSong, connection);
+    } else {
+      playNext(nextSong);
+      // Leave the voice channel after finishing the stream
+      song.channel.leave();
+    }
+  });
+  dispatch.on('error', (err) => {
+    console.log(`ERR: ${err}`);
+  });
+};
+
+/**
+ * Plays the next song in the queue after a delay
+ *
+ * @param {Object} song - The song object to play
+ * @param {Object|Optional} connection - The Discord voice connection object
+ */
+const playNext = (song, connection) => {
+  currentSong = undefined;
+  currentChannel = undefined;
+  setTimeout(() => {
+    if (song) {
+      joinAndPlay(
+        song.channel,
+        song.media,
+        song.name,
+        song.message,
+        connection,
+      );
+    }
+  }, nextSongDelay);
 };
 
 /**
