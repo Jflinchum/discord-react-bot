@@ -90,6 +90,15 @@ const joinAndPlay = (vc, media, name, message, connection) => {
   }
 };
 
+/**
+ * Plays the media through the connection and handles leaving the channel
+ *
+ * @param {Object} connection - The Discord Voice Connection object
+ * to play the song through
+ * @param {Object} song - The song object to play
+ * @param {Object} message - The Discord Message Object that initiated
+ * the command
+ */
 const playSong = ({ connection, song, message }) => {
   // On connecting to a voice channel, play the youtube stream
   const dispatch = connection.playArbitraryInput(song.media);
@@ -117,6 +126,7 @@ const playSong = ({ connection, song, message }) => {
 
 /**
  * Plays the next song in the queue after a delay
+ *
  * @param {Object} song - The song object to play
  * @param {Object|Optional} connection - The Discord voice connection object
  */
