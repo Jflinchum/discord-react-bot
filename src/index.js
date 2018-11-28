@@ -65,15 +65,19 @@ bot.on('message', message => {
 
   // Adding files to bot list
   if (botCommand === '!add' || botCommand === '!a') {
-    let url, fileName, exten;
+    let url, fileName, exten, timeStart, timeStop;
     if (attach.length > 0) {
       // Handling attachment images
       fileName = cmd[1];
       url = attach[0].url;
+      timeStart = cmd[2];
+      timeStop = cmd[3];
     } else {
       // If the image is contained in url
       fileName = cmd[2];
       url = cmd[1];
+      timeStart = cmd[3];
+      timeStop = cmd[4];
     }
     // If the user is only uploading a string
     if (url[0] === '"') {
@@ -101,7 +105,7 @@ bot.on('message', message => {
         message.channel.send('Could not find file extension');
       }
 
-      add(fileName, url, exten, message);
+      add(fileName, url, exten, message, timeStart, timeStop);
     }
   } else if (botCommand === '!post' || botCommand === '!p') {
     // Posting an image

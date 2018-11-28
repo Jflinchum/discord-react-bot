@@ -66,10 +66,14 @@ const makeEmbedNoUser = (message, title) => {
  * @param {String} fileName - The name to save the file as
  * @param {String} extension - The extension to save the file as
  * (i.e txt, mp3, jpeg)
+ * @param {Number|Optional} timeStart - The start time to go to for
+ * music in seconds
+ * @param {Number|Optional} timeStop - The stop time to trim to for
+ * music in seconds
  * @param {Function} cb - Callback function is called with a string of
  * any errors.
  */
-const download = (url, fileName, extension, cb) => {
+const download = ({url, fileName, extension, timeStart, timeStop, cb}) => {
   const fullPath = `${PATH}/${fileName}.${extension}`;
   // Check if the file exists
   if (hasFile({fileName})) {
@@ -79,7 +83,20 @@ const download = (url, fileName, extension, cb) => {
     if (err) {
       return cb(err);
     }
-    request(url).pipe(fs.createWriteStream(fullPath)).on('close', cb);
+    if (extension === 'mp3' || extension === 'wav') {
+      const cmd = ffmpeg({source: url});
+      if (timeStart) {
+        cmd.seekInput(timeStart);
+      }
+      if (timeStop) {
+        cmd.seekInput(timeStop - timeStart);
+      }
+      cmd.save(`${PATH}/${fileName}.${extension}`)
+        .on('end', cb);
+      return;
+    } else {
+      request(url).pipe(fs.createWriteStream(fullPath)).on('close', cb);
+    }
   });
 };
 
@@ -89,10 +106,13 @@ const download = (url, fileName, extension, cb) => {
  *
  * @param {String} url - URL of the audio to download
  * @param {String} fileName - The name to save the file as
+ * @param {Number|Optional} timeStart - The start time to go to
+ * in the video in seconds
+ * @param {Number|Optional} duration - How long to download in seconds
  * @param {Function} cb - Callback function is called with a string of
  * any errors.
  */
-const ytdownload = (url, fileName, cb) => {
+const ytdownload = ({url, fileName, cb, timeStart, duration}) => {
   // Check if the file exists
   if (hasFile({fileName})) {
     return cb('File name already exists');
@@ -103,12 +123,17 @@ const ytdownload = (url, fileName, cb) => {
       quality: 'highestaudio',
     });
     // Set the audioBitrate and store it in local storage
-    ffmpeg(stream)
-      .audioBitrate(128)
-      .save(`${PATH}/${fileName}.mp3`)
-      .on('end', () => {
-        cb();
-      });
+    const cmd = ffmpeg(stream)
+      .audioBitrate(128);
+    if (timeStart) {
+      cmd.seekInput(timeStart || 0);
+    }
+    if (duration) {
+      cmd.duration(duration);
+    }
+
+    cmd.save(`${PATH}/${fileName}.mp3`)
+      .on('end', cb);
     return;
   } else {
     // If the url is not valid
