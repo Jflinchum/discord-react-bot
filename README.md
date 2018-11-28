@@ -16,8 +16,8 @@ A react bot for discord that can download and store files locally and post them 
 
 ## Current commands
 ```
-[!add/!a] [<url>/"Example String Here"] <name>
-- Adds the file to the local storage under the name given. If uploading an attachment, the url is not needed. Supports youtube urls for downloading mp3 files. To upload a string into a text file, wrap the string in quotation marks.
+[!add/!a] [<url>/"Example String Here"] <name> [<startTimeStamp>] [<stopTimeStamp>]
+- Adds the file to the local storage under the name given. If uploading an attachment, the url is not needed. Supports youtube urls for downloading mp3 files. To upload a string into a text file, wrap the string in quotation marks. Timestamps must be in seconds and only work for mp3/wav files.
 
 [!post/!p] <name>
 - Posts the file to the current channel.
@@ -40,8 +40,11 @@ A react bot for discord that can download and store files locally and post them 
 !append <name> <"Example Text">
 - Appends text to the end of a text file. Only works for .txt files.
 
-[!play/!pl] [<name>] <voiceChannel>
-- Plays an audio file to the specified channel. Name can be a name of a local file or a youtube video. If uploading an attachment, the name is not needed.
+[!play/!pl] [<name>] <voiceChannel>/.
+- Plays an audio file to the specified channel. Name can be a name of a local file or a youtube video. If uploading an attachment, the name is not needed. Supplying a . as the channel name will make the bot use the channel with any users with it.
+
+!trigger <emoji> <decimalChance> <"Example Text">
+- Makes the bot react to the message with the supplied emoji. The decimal chance (between 0 and 1) is how often the bot will react.
 
 [!help/!h]
 - Displays this help screen!

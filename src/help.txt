@@ -1,5 +1,5 @@
-[!add/!a] [<url>/"Example String Here"] <name>
-- Adds the file to the local storage under the name given. If uploading an attachment, the url is not needed. Supports youtube urls for downloading mp3 files. To upload a string into a text file, wrap the string in quotation marks.
+[!add/!a] [<url>/"Example String Here"] <name> [<startTimeStamp>] [<stopTimeStamp>]
+- Adds the file to the local storage under the name given. If uploading an attachment, the url is not needed. Supports youtube urls for downloading mp3 files. To upload a string into a text file, wrap the string in quotation marks. Timestamps must be in seconds and only work for mp3/wav files.
 
 [!post/!p] <name>
 - Posts the file to the current channel.

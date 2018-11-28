@@ -20,8 +20,12 @@ const {
  * @param {String} exten - The extension to save the file as
  * @param {Object} message - The Discord Message Object that initiated
  * the command
+ * @param {Number|Optional} startTime - The start time to go to for
+ * music in seconds
+ * @param {Number|Optional} stopTime - The stop time to trim to for
+ * music in seconds
  */
-const add = (fileName, url, exten, message) => {
+const add = (fileName, url, exten, message, startTime, stopTime) => {
   // Send a loading message that will get deleted later since
   // downloading can take a while
   message.channel.send('Loading...').then(msg => {
@@ -46,12 +50,24 @@ const add = (fileName, url, exten, message) => {
             'That video is too long! Keep it at 2:30 or below.'
           );
         } else {
-          // Download the audio from the video as mp3
-          ytdownload(url, fileName, () => {
-            msg.delete();
-            message.channel.send(
-              makeEmbed(`Added ${info.title} as ${fileName}`, message.author)
-            );
+          /**
+           * Download the audio from the video as mp3
+           *
+           * Duration is either stopTime - startTime or
+           * the video length - startTime/0
+           */
+          ytdownload({
+            url,
+            fileName,
+            timeStart: startTime,
+            duration: (stopTime - startTime) ||
+            (info.length_seconds - (startTime || 0)),
+            cb: () => {
+              msg.delete();
+              message.channel.send(
+                makeEmbed(`Added ${info.title} as ${fileName}`, message.author)
+              );
+            },
           });
         }
       });
@@ -61,17 +77,24 @@ const add = (fileName, url, exten, message) => {
         message.channel.send('Could not find file extension');
       }
       // Download the file
-      download(url, fileName, exten, (err) => {
-        if (err) {
-          console.log(err);
-          msg.delete();
-          message.channel.send(err);
-        } else {
-          msg.delete();
-          message.channel.send(
-            makeEmbed(`Added: ${fileName}`, message.author)
-          );
-        }
+      download({
+        url,
+        fileName,
+        extension: exten,
+        timeStart: startTime,
+        timeStop: stopTime,
+        cb: (err) => {
+          if (err) {
+            console.log(err);
+            msg.delete();
+            message.channel.send(err);
+          } else {
+            msg.delete();
+            message.channel.send(
+              makeEmbed(`Added: ${fileName}`, message.author)
+            );
+          }
+        },
       });
     }
   });
