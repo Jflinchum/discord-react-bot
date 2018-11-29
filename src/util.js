@@ -12,6 +12,8 @@ const COLOR = 0x9400D3;
 const MAX_YT_TIME = 150; // In seconds
 // eslint-disable-next-line
 const EMOJI_REGEX = /(?:[\u2700-\u27bf]|(?:\ud83c[\udde6-\uddff]){2}|[\ud800-\udbff][\udc00-\udfff]|[\u0023-\u0039]\ufe0f?\u20e3|\u3299|\u3297|\u303d|\u3030|\u24c2|\ud83c[\udd70-\udd71]|\ud83c[\udd7e-\udd7f]|\ud83c\udd8e|\ud83c[\udd91-\udd9a]|\ud83c[\udde6-\uddff]|[\ud83c[\ude01-\ude02]|\ud83c\ude1a|\ud83c\ude2f|[\ud83c[\ude32-\ude3a]|[\ud83c[\ude50-\ude51]|\u203c|\u2049|[\u25aa-\u25ab]|\u25b6|\u25c0|[\u25fb-\u25fe]|\u00a9|\u00ae|\u2122|\u2139|\ud83c\udc04|[\u2600-\u26FF]|\u2b05|\u2b06|\u2b07|\u2b1b|\u2b1c|\u2b50|\u2b55|\u231a|\u231b|\u2328|\u23cf|[\u23e9-\u23f3]|[\u23f8-\u23fa]|\ud83c\udccf|\u2934|\u2935|[\u2190-\u21ff])/;
+// How many words per message
+const MESSAGE_MAX_WORD_LENGTH = 150;
 
 
 /**
@@ -222,6 +224,77 @@ const removeJson = ({ path, key, cb }) => {
   });
 };
 
+/**
+ * Sends the text string to the message channel, paginating it based off
+ * of MESSAGE_MAX_LENGTH.
+ *
+ * @param {String} text - The text to send to the channel
+ * @param {Object} message - The Discord Message Object to respond to
+ * @param {Integer} page - The page for the text
+ */
+const sendText = ({text, message, page = 0}) => {
+  const textSplit = text.split(' ');
+  if (textSplit && textSplit.length > MESSAGE_MAX_WORD_LENGTH) {
+    const firstIndex = page * MESSAGE_MAX_WORD_LENGTH;
+    let lastIndex = firstIndex + MESSAGE_MAX_WORD_LENGTH;
+    const totalPages = Math.floor(textSplit.length / MESSAGE_MAX_WORD_LENGTH);
+    // Sanity check page index
+    if (firstIndex > textSplit.length) {
+      message.channel.send('Could not find page!');
+      return;
+    }
+    if (lastIndex > textSplit.length) {
+      lastIndex = textSplit.length;
+    }
+    // Response text
+    const messageText = textSplit.slice(firstIndex, lastIndex).join(' ')
+    + `${(parseInt(page, 10) === totalPages) ? '' : '...'}`
+    + `\nPage: ${page} of ${totalPages}`;
+    message.channel.send(messageText);
+  } else {
+    // If there are no pages
+    message.channel.send('```\n' + text + '\n```');
+    return;
+  }
+};
+
+/**
+ * Sends the text string in a block comment (```text```) to the message channel,
+ * paginating it based off of MESSAGE_MAX_LENGTH.
+ *
+ * @param {String} text - The text to send to the channel
+ * @param {Object} message - The Discord Message Object to respond to
+ * @param {Integer} page - The page for the text
+ */
+const sendTextBlock = ({text, message, page = 0}) => {
+  const textSplit = text.split(' ');
+  if (textSplit && textSplit.length > MESSAGE_MAX_WORD_LENGTH) {
+    const firstIndex = page * MESSAGE_MAX_WORD_LENGTH;
+    let lastIndex = firstIndex + MESSAGE_MAX_WORD_LENGTH;
+    const totalPages = Math.floor(textSplit.length / MESSAGE_MAX_WORD_LENGTH);
+    // Sanity check page index
+    if (firstIndex > textSplit.length) {
+      message.channel.send('Could not find page!');
+      return;
+    }
+    if (lastIndex > textSplit.length) {
+      lastIndex = textSplit.length;
+    }
+    // Response text
+    const messageText = '```\n'
+    + textSplit.slice(firstIndex, lastIndex).join(' ')
+    + `${(parseInt(page, 10) === totalPages) ? '' : '...'}`
+    + `\nPage: ${page} of ${totalPages}`
+    + '\n```';
+    message.channel.send(messageText);
+  } else {
+    // If there are no pages
+    message.channel.send('```\n' + text + '\n```');
+    return;
+  }
+};
+
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -235,4 +308,6 @@ module.exports = {
   hasFile,
   addJson,
   removeJson,
+  sendText,
+  sendTextBlock,
 };

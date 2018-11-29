@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { PATH, EMOJI_REGEX } = require('./util');
+const { PATH, EMOJI_REGEX, sendTextBlock } = require('./util');
 
 /**
  * Finds all files using the regex and returns an array of them
@@ -33,10 +33,10 @@ const findFiles = (regex, files) => {
  * the command
  * @param {Object} emojis - The emojis to search through and list
  */
-const list = ({ type, message, emojis }) => {
+const list = ({ type, message, emojis, page }) => {
   message.delete();
   const files = fs.readdirSync(PATH);
-  let response = '```\n';
+  let response = '';
   const imageRegex = (/\.(gif|jpg|jpeg|tiff|png|mp4)$/i);
   const musicRegex = (/\.(mp3|wav)$/i);
   const textRegex = (/\.(txt|pdf)$/i);
@@ -87,8 +87,7 @@ const list = ({ type, message, emojis }) => {
       response += '\n';
     }
   }
-  response += '```';
-  message.channel.send(response);
+  sendTextBlock({text: response, message, page});
 };
 
 module.exports = {

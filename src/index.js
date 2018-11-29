@@ -36,13 +36,14 @@ bot.on('message', message => {
   if (message.author.bot) {
     return;
   }
+  // React with any emojis
   const emojiKeys = Object.keys(emojiTriggers);
   for (let i = 0; i < emojiKeys.length; i++) {
     if (message.content.toLowerCase().includes(emojiKeys[i])) {
       const random = Math.random();
       let emojiArray = emojiTriggers[emojiKeys[i]];
       emojiArray.forEach((emojiChance) => {
-        if (emojiChance.chance >= random) {
+        if (emojiChance.chance >= random && !message.deleted) {
           message.react(emojiChance.emoji).catch((err) => {
             console.log(err);
           });
@@ -118,8 +119,14 @@ bot.on('message', message => {
     post(fileName, message, bot);
   } else if (botCommand === '!list' || botCommand === '!l') {
     // Listing files
-    const fileType = cmd[1];
-    list({ type: fileType, message, emojis: emojiTriggers });
+    let fileType, page;
+    if (isNaN(cmd[1])) {
+      fileType = cmd[1];
+      page = cmd[2];
+    } else {
+      page = cmd[1];
+    }
+    list({ type: fileType, message, emojis: emojiTriggers, page });
   } else if (botCommand === '!remove' || botCommand === '!r') {
     // Delete any stored reactions
     const fileName = cmd.slice(1, cmd.length).join(' ');
@@ -128,7 +135,8 @@ bot.on('message', message => {
     }});
   } else if (botCommand === '!help' || botCommand === '!h') {
     // Post a help page
-    help(message);
+    const page = cmd[1];
+    help(message, page);
   } else if (botCommand === '!markov') {
     let string = '';
     if (cmd[2] !== undefined && cmd[2] !== null) {
