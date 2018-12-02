@@ -37,6 +37,8 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
     // Check for youtube videos
     if (url.includes('www.youtube.com') || url.includes('youtu.be')) {
       ytdl.getBasicInfo(url, (err, info) => {
+        const duration = (stopTime - startTime) ||
+        (info.length_seconds - (startTime || 0));
         if (err) {
           console.log(err);
           msg.delete();
@@ -44,12 +46,8 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
           return;
         }
         // Check the length of the video
-        if (info.length_seconds >= MAX_YT_TIME) {
-          msg.delete();
-          message.channel.send(
-            'That video is too long! Keep it at 2:30 or below.'
-          );
-        } else {
+        if (info.length_seconds < MAX_YT_TIME
+          || (duration && duration < MAX_YT_TIME)) {
           /**
            * Download the audio from the video as mp3
            *
@@ -60,8 +58,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
             url,
             fileName,
             timeStart: startTime,
-            duration: (stopTime - startTime) ||
-            (info.length_seconds - (startTime || 0)),
+            duration,
             cb: () => {
               msg.delete();
               message.channel.send(
@@ -69,6 +66,11 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
               );
             },
           });
+        } else {
+          msg.delete();
+          message.channel.send(
+            'That video is too long! Keep it at 2:30 or below.'
+          );
         }
       });
     } else {
