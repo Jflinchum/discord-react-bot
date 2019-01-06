@@ -13,8 +13,8 @@ const { rename } = require('./rename');
 const { play, queue, skip } = require('./play');
 const { append } = require('./append');
 const { trigger } = require('./trigger');
-const { PATH, EMOJI_PATH, EMOJI_REGEX } = require('./util');
-const TOKEN = process.env.DISCORD_TOKEN;
+const { listen, leave } = require('./listen');
+const { DISCORD_TOKEN, PATH, EMOJI_PATH, EMOJI_REGEX } = require('./util');
 
 const bot = new Client();
 let emojiTriggers;
@@ -51,6 +51,12 @@ bot.on('message', message => {
       });
     }
   }
+
+  // Handle any commands the message may have
+  handleCommand(message);
+});
+
+const handleCommand = (message) => {
   // Check to make sure the message is a command
   if (message.content[0] !== '!') {
     return;
@@ -58,7 +64,6 @@ bot.on('message', message => {
   // Split the command by spaces
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
-  // console.log(message);
   console.log(cmd);
 
   // Get any attachments associated with message
@@ -93,7 +98,6 @@ bot.on('message', message => {
         message.channel.send('Please specify a name.');
         return;
       }
-
       addText(fileName, string, message);
     } else {
       if (!fileName) {
@@ -105,9 +109,9 @@ bot.on('message', message => {
       if (!exten) {
         message.channel.send('Could not find file extension');
       }
-
       add(fileName, url, exten, message, timeStart, timeStop);
     }
+
   } else if (botCommand === '!post' || botCommand === '!p') {
     // Posting an image
     const fileName = cmd[1];
@@ -115,8 +119,8 @@ bot.on('message', message => {
       message.channel.send('Please specify a name.');
       return;
     }
-
     post(fileName, message, bot);
+
   } else if (botCommand === '!list' || botCommand === '!l') {
     // Listing files
     let fileType, page;
@@ -127,16 +131,19 @@ bot.on('message', message => {
       page = cmd[1];
     }
     list({ type: fileType, message, emojis: emojiTriggers, page });
+
   } else if (botCommand === '!remove' || botCommand === '!r') {
     // Delete any stored reactions
     const fileName = cmd.slice(1, cmd.length).join(' ');
     remove({ fileName, message, emojis: emojiTriggers, cb: () => {
       emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
     }});
+
   } else if (botCommand === '!help' || botCommand === '!h') {
     // Post a help page
     const page = cmd[1];
     help(message, page);
+
   } else if (botCommand === '!markov') {
     let string = '';
     if (cmd[2] !== undefined && cmd[2] !== null) {
@@ -165,10 +172,12 @@ bot.on('message', message => {
       return;
     }
     message.channel.send('Please specify a User or Channel to markov.');
+
   } else if (botCommand === '!rename' || botCommand === '!rn') {
     const oldFile = cmd[1];
     const newFile = cmd[2];
     rename(oldFile, newFile, message);
+
   } else if (botCommand === '!play' || botCommand === '!pl') {
     let media;
     let channel;
@@ -179,11 +188,14 @@ bot.on('message', message => {
       channel = cmd[2];
     }
     play({channel, media, message, bot});
+
   } else if (botCommand === '!queue' || botCommand === '!q') {
     queue(message);
+
   } else if (botCommand === '!skip' || botCommand === '!s') {
     const num = cmd[1];
     skip(num, message);
+
   } else if (botCommand === '!append') {
     const fileName = cmd[1];
     let text = cmd.slice(2, cmd.length).join(' ');
@@ -197,6 +209,7 @@ bot.on('message', message => {
     }
     text = text.slice(1, text.length - 1);
     append({fileName, text, message});
+
   } else if (botCommand === '!trigger') {
     let text = cmd[3];
     let emoji = cmd[1];
@@ -236,7 +249,13 @@ bot.on('message', message => {
       console.log(err);
       message.channel.send('Could not find emoji');
     });
-  }
-});
 
-bot.login(TOKEN);
+  } else if (botCommand === '!listen') {
+    const voiceChannel = cmd[1];
+    listen({voiceChannel, message, bot});
+  } else if (botCommand === '!leave') {
+    leave({message});
+  }
+};
+
+bot.login(DISCORD_TOKEN);

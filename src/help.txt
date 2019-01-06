@@ -28,5 +28,11 @@
 !trigger <emoji> <decimalChance> <"Example Text">
 - Makes the bot react to the message with the supplied emoji. The decimal chance (between 0 and 1) is how often the bot will react.
 
+!listen <voiceChannel>/.
+- Listens in on a voice channel and attempts voice recognition to do commands
+
+!leave
+- Leaves any voice channels that the bot is listening in on
+
 [!help/!h]
 - Displays this help screen!

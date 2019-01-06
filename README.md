@@ -7,12 +7,20 @@ A react bot for discord that can download and store files locally and post them 
 * Plays music files or youtube videos to a channel
 * Queues up multiple songs to play to multiple channels
 * Generates a markov chain message based off of a user's message history
+* Attempts voice recognition using Wit.AI
 
 ## How to run
 * Install dependencies with `npm install`
   * Some other dependencies may need to be installed on your machine manually. Check [node-gyp](https://github.com/nodejs/node-gyp) and [fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg).
-* Put your bot token under the environment variable DISCORD_TOKEN
+* Make sure that your Discord bot token and Wit.AI token (only required for voice recognition) is set in `settings.json`
 * Use `npm start` to launch the bot
+
+## Voice recognition
+* As a part of voice recognition, bot sound effects are required for affirming commands and joining channels please be sure to have a:
+  * botSounds folder at the root directory
+  * botSounds/channelJoin folder filled with any sound clips you want to be played when joining a channel
+  * botSounds/affirm folder filled with any affirmation clips to be played
+
 
 ## Current commands
 ```
@@ -45,6 +53,12 @@ A react bot for discord that can download and store files locally and post them 
 
 !trigger <emoji> <decimalChance> <"Example Text">
 - Makes the bot react to the message with the supplied emoji. The decimal chance (between 0 and 1) is how often the bot will react.
+
+!listen <voiceChannel>/.
+- Listens in on a voice channel and attempts voice recognition to do commands
+
+!leave
+- Leaves any voice channels that the bot is listening in on
 
 [!help/!h]
 - Displays this help screen!

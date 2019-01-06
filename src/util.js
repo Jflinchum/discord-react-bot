@@ -6,8 +6,15 @@ const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 
 const appDir = path.dirname(require.main.filename);
+const settings = require(`${appDir}/../settings.json`);
+const DISCORD_TOKEN = settings.DISCORD_TOKEN;
+const WIT_AI_TOKEN = settings.WIT_AI_TOKEN;
 const PATH = `${appDir}/../reactions`;
 const EMOJI_PATH = `${appDir}/../emoji.json`;
+const RECORD_PATH = `${appDir}/..`;
+const SOUND_FX_PATH = `${appDir}/../botSounds`;
+const CHANNEL_JOIN_FX = `${SOUND_FX_PATH}/channelJoin`;
+const AFFIRMATION_FX = `${SOUND_FX_PATH}/affirm`;
 const COLOR = 0x9400D3;
 const MAX_YT_TIME = 150; // In seconds
 // eslint-disable-next-line
@@ -294,10 +301,80 @@ const sendTextBlock = ({text, message, page = 0}) => {
   }
 };
 
+/**
+ * Searches through the voice channels and returns the proper
+ * Discord VoiceChannel object. If channel is ".", it will search for the
+ * first channel it finds with users.
+ *
+ * @param {String} channel - The channel to search for
+ * @param {Object} bot - The Discord Client object that represents the bot
+ * @param {Object} message - The Discord Message Object to respond to
+ * @return {Object} - The Discord VoiceChannel Object
+ */
+const findVoiceChannel = ({ channel, bot, message }) => {
+  const channelList = bot.channels.array();
+  let vc;
+  for (let i = 0; i < channelList.length; i++) {
+    // Check if the channel is what we are searching for.
+    // If the channel is a ., then join the vc with any users in it
+    if (channelList[i].type === 'voice'
+        && ((channel === channelList[i].name) ||
+        (channel === '.' && channelList[i].members.array().length > 0))) {
+      vc = channelList[i];
+    }
+  }
+  return vc;
+};
+
+/**
+ * Plays a random sound clip from the specified directory
+ *
+ * @param {Object} connection - The Discord VoiceConnection object to play the
+ * clip to
+ * @param {String} path - The path to find a random sound clip in
+ * @returns {Object} - The Discord Dispatch object from playing the clip
+ */
+const playRandomFile = (connection, path) => {
+  const soundClips = fs.readdirSync(path);
+  if (soundClips.length === 0) {
+    return null;
+  }
+  const clip = soundClips[Math.floor(Math.random() * soundClips.length)];
+  return connection.playArbitraryInput(`${path}/${clip}`);
+};
+
+/**
+ * Plays a random sound clip from the channel join fx directory
+ *
+ * @param {Object} connection - The Discord VoiceConnection object to play the
+ * clip to
+ * @returns {Object} - The Discord Dispatch object from playing the clip
+ */
+const playChannelJoin = (connection) => {
+  return playRandomFile(connection, CHANNEL_JOIN_FX);
+};
+
+/**
+ * Plays a random sound clip from the channel affirmation fx directory
+ *
+ * @param {Object} connection - The Discord VoiceConnection object to play the
+ * clip to
+ * @returns {Object} - The Discord Dispatch object from playing the clip
+ */
+const playAffirmation = (connection) => {
+  return playRandomFile(connection, AFFIRMATION_FX);
+};
+
 
 module.exports = {
+  DISCORD_TOKEN,
+  WIT_AI_TOKEN,
   PATH,
   EMOJI_PATH,
+  RECORD_PATH,
+  SOUND_FX_PATH,
+  CHANNEL_JOIN_FX,
+  AFFIRMATION_FX,
   EMOJI_REGEX,
   COLOR,
   MAX_YT_TIME,
@@ -310,4 +387,7 @@ module.exports = {
   removeJson,
   sendText,
   sendTextBlock,
+  findVoiceChannel,
+  playChannelJoin,
+  playAffirmation,
 };

@@ -2,7 +2,7 @@
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const request = require('request');
-const { PATH, makeEmbed } = require('./util');
+const { PATH, makeEmbed, findVoiceChannel } = require('./util');
 
 const nextSongDelay = 500; // In milliseconds
 
@@ -230,17 +230,7 @@ const play = ({channel, media, message, bot}) => {
     message.channel.send('Please specify a channel name.');
     return;
   }
-  const channelList = bot.channels.array();
-  let vc;
-  for (let i = 0; i < channelList.length; i++) {
-    // Check if the channel is what we are searching for.
-    // If the channel is a ., then join the vc with any users in it
-    if (channelList[i].type === 'voice'
-        && ((channel === channelList[i].name) ||
-        (channel === '.' && channelList[i].members.array().length > 0))) {
-      vc = channelList[i];
-    }
-  }
+  let vc = findVoiceChannel({ channel, message, bot });
   // Check if the voice channel exists
   if (!vc) {
     message.channel.send('Could not find voice channel.');
