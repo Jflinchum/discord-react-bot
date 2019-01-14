@@ -1,4 +1,5 @@
 {
   "DISCORD_TOKEN": "",
-  "WIT_AI_TOKEN": ""
+  "WIT_AI_TOKEN": "",
+  "WAKE_WORDS": [ "bot" ],
 }

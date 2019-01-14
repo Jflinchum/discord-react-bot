@@ -10,9 +10,9 @@ const appDir = path.dirname(require.main.filename);
 const settings = require(`${appDir}/../settings.json`);
 const DISCORD_TOKEN = settings.DISCORD_TOKEN;
 const WIT_AI_TOKEN = settings.WIT_AI_TOKEN;
+const WAKE_WORDS = settings.WAKE_WORDS;
 const PATH = `${appDir}/../reactions`;
 const EMOJI_PATH = `${appDir}/../emoji.json`;
-const RECORD_PATH = `${appDir}/..`;
 const SOUND_FX_PATH = `${appDir}/../botSounds`;
 const CHANNEL_JOIN_FX = `${SOUND_FX_PATH}/channelJoin`;
 const AFFIRMATION_FX = `${SOUND_FX_PATH}/affirm`;
@@ -394,9 +394,9 @@ const strCmp = (string1, string2) => {
 module.exports = {
   DISCORD_TOKEN,
   WIT_AI_TOKEN,
+  WAKE_WORDS,
   PATH,
   EMOJI_PATH,
-  RECORD_PATH,
   SOUND_FX_PATH,
   CHANNEL_JOIN_FX,
   AFFIRMATION_FX,

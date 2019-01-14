@@ -3,6 +3,7 @@ const request = require('request');
 const ffmpeg = require('fluent-ffmpeg');
 const stringSimilarity = require('string-similarity');
 const fs = require('fs');
+const { PassThrough } = require('stream');
 const {
   makeEmbed,
   findVoiceChannel,
@@ -10,10 +11,10 @@ const {
   playAffirmation,
   playNegative,
   strCmp,
-  RECORD_PATH,
   SOUND_FX_PATH,
   WIT_AI_TOKEN,
   PATH,
+  WAKE_WORDS,
 } = require('./util');
 const { playSong } = require('./play');
 
@@ -74,7 +75,7 @@ const listen = ({ voiceChannel, message, bot }) => {
               }
               // Get the pcm 32bit signed little endian stereo stream
               const audioStream = receiver.createPCMStream(user);
-              const voicePath = `${RECORD_PATH}/${user.id}.wav`;
+              const pass = new PassThrough();
               /*
               We must first process the audio stream and convert it from
               stereo to mono. There's probably a better process than saving
@@ -88,18 +89,16 @@ const listen = ({ voiceChannel, message, bot }) => {
                   '-ar 48k',
                   '-ac 1',
                 ])
+                .format('wav')
                 .on('end', () => {
                   // Once we are done processing, send it to Wit.AI
                   witParse({
                     accessToken: WIT_AI_TOKEN,
-                    stream: fs.createReadStream(voicePath),
+                    stream: pass,
                     cb: (err, response) => {
                       if (err) {
                         console.log(err);
                       }
-                      // if (fs.existsSync(voicePath)) {
-                      //   fs.unlinkSync(voicePath);
-                      // }
                       if (!wakeWord) {
                         handleVoice(response._text, connection);
                       } else {
@@ -108,7 +107,7 @@ const listen = ({ voiceChannel, message, bot }) => {
                     },
                   });
                 })
-                .save(voicePath);
+                .pipe(pass);
             } else if (wakeWord) {
               // If the bot is awake and a user stops speaking, start the timer
               bufferTimer = setTimeout(() => {
@@ -169,7 +168,11 @@ const handleVoice = (voiceText, connection) => {
   }
   let commandRecognized = false;
   voiceText = voiceText.toLowerCase().split(' ');
-  if (strCmp(voiceText[0], 'sandal') > 0.8) {
+  let wakeWordRate = stringSimilarity
+    .findBestMatch(voiceText[0], WAKE_WORDS)
+    .bestMatch
+    .rating;
+  if (wakeWordRate > 0.8) {
     playAffirmation(connection);
     wakeWord = true;
     // Start the buffer timer to handle the buffered command when a user
