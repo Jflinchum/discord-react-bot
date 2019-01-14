@@ -78,10 +78,7 @@ const listen = ({ voiceChannel, message, bot }) => {
               const pass = new PassThrough();
               /*
               We must first process the audio stream and convert it from
-              stereo to mono. There's probably a better process than saving
-              it as a wav file, streaming that to Wit.AI, and then deleting the
-              file, however as of right now I do not know the best way to do
-              that.
+              stereo to mono.
               */
               ffmpeg(audioStream)
                 .addInputOptions([
