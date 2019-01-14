@@ -64,6 +64,7 @@ typings/
 reactions/
 emoji.json
 botSounds/
+settings.json
 
 # Mac Stuff
 .DS_STORE

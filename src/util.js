@@ -4,6 +4,7 @@ const fs = require('fs');
 const ytdl = require('ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
+const stringSimilarity = require('string-similarity');
 
 const appDir = path.dirname(require.main.filename);
 const settings = require(`${appDir}/../settings.json`);
@@ -15,6 +16,7 @@ const RECORD_PATH = `${appDir}/..`;
 const SOUND_FX_PATH = `${appDir}/../botSounds`;
 const CHANNEL_JOIN_FX = `${SOUND_FX_PATH}/channelJoin`;
 const AFFIRMATION_FX = `${SOUND_FX_PATH}/affirm`;
+const NEGATIVE_FX = `${SOUND_FX_PATH}/negative`;
 const COLOR = 0x9400D3;
 const MAX_YT_TIME = 150; // In seconds
 // eslint-disable-next-line
@@ -334,13 +336,21 @@ const findVoiceChannel = ({ channel, bot, message }) => {
  * @param {String} path - The path to find a random sound clip in
  * @returns {Object} - The Discord Dispatch object from playing the clip
  */
-const playRandomFile = (connection, path) => {
+const playRandomFile = (connection, path, cb = () => {}) => {
   const soundClips = fs.readdirSync(path);
   if (soundClips.length === 0) {
     return null;
   }
   const clip = soundClips[Math.floor(Math.random() * soundClips.length)];
-  return connection.playArbitraryInput(`${path}/${clip}`);
+  const dispatch = connection.playFile(`${path}/${clip}`);
+  /*
+   * This is a workaround for a bug in which the stream starts to get delayed
+   * after playing many files on the same connection.
+   */
+  dispatch.on('start', () => {
+    connection.player.streamingData.pausedTime = 0;
+  });
+  return dispatch;
 };
 
 /**
@@ -365,6 +375,21 @@ const playAffirmation = (connection) => {
   return playRandomFile(connection, AFFIRMATION_FX);
 };
 
+/**
+ * Plays a random sound clip from the channel negative fx directory
+ *
+ * @param {Object} connection - The Discord VoiceConnection object to play the
+ * clip to
+ * @returns {Object} - The Discord Dispatch object from playing the clip
+ */
+const playNegative = (connection) => {
+  return playRandomFile(connection, NEGATIVE_FX);
+};
+
+const strCmp = (string1, string2) => {
+  return stringSimilarity.compareTwoStrings(string1, string2);
+};
+
 
 module.exports = {
   DISCORD_TOKEN,
@@ -375,6 +400,7 @@ module.exports = {
   SOUND_FX_PATH,
   CHANNEL_JOIN_FX,
   AFFIRMATION_FX,
+  NEGATIVE_FX,
   EMOJI_REGEX,
   COLOR,
   MAX_YT_TIME,
@@ -390,4 +416,6 @@ module.exports = {
   findVoiceChannel,
   playChannelJoin,
   playAffirmation,
+  playNegative,
+  strCmp,
 };

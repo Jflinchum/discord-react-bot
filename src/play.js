@@ -99,16 +99,28 @@ const joinAndPlay = (vc, media, name, message, connection) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-const playSong = ({ connection, song, message }) => {
+const playSong = ({ connection, song, message, leaveAfter = true }) => {
+  console.log('Playing: ', song.name);
   // On connecting to a voice channel, play the youtube stream
   const dispatch = connection.playArbitraryInput(song.media);
-  // Delete the command message
-  message.channel.send(
-    makeEmbed(
-      `Playing: ${song.name}\nTo: ${song.channel.name}`,
-      message.author)
-  );
+  // Send play status to channel where command came from
+  if (message) {
+    message.channel.send(
+      makeEmbed(
+        `Playing: ${song.name}\nTo: ${song.channel.name}`,
+        message.author)
+    );
+  }
+  /*
+   * This is a workaround for a bug in which the stream starts to get delayed
+   * after playing many files on the same connection.
+   */
+  dispatch.on('start', () => {
+    connection.player.streamingData.pausedTime = 0;
+  });
+
   dispatch.on('end', (reason) => {
+    console.log('Finished: ', song.name);
     const nextSong = dequeue();
     if (nextSong && nextSong.channel.name === currentChannel.name) {
       // If the next song is on the same channel
@@ -116,7 +128,8 @@ const playSong = ({ connection, song, message }) => {
     } else {
       playNext(nextSong);
       // Leave the voice channel after finishing the stream
-      song.channel.leave();
+      if (leaveAfter)
+        song.channel.leave();
     }
   });
   dispatch.on('error', (err) => {
@@ -133,8 +146,8 @@ const playSong = ({ connection, song, message }) => {
 const playNext = (song, connection) => {
   currentSong = undefined;
   currentChannel = undefined;
-  setTimeout(() => {
-    if (song) {
+  if (song) {
+    setTimeout(() => {
       joinAndPlay(
         song.channel,
         song.media,
@@ -142,8 +155,8 @@ const playNext = (song, connection) => {
         song.message,
         connection,
       );
-    }
-  }, nextSongDelay);
+    }, nextSongDelay);
+  }
 };
 
 /**
@@ -287,4 +300,5 @@ module.exports = {
   skip,
   queue,
   play,
+  playSong,
 };
