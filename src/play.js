@@ -100,7 +100,6 @@ const joinAndPlay = (vc, media, name, message, connection) => {
  * the command
  */
 const playSong = ({ connection, song, message, leaveAfter = true }) => {
-  console.log('Playing: ', song.name);
   // On connecting to a voice channel, play the youtube stream
   const dispatch = connection.playArbitraryInput(song.media);
   // Send play status to channel where command came from
@@ -120,7 +119,6 @@ const playSong = ({ connection, song, message, leaveAfter = true }) => {
   });
 
   dispatch.on('end', (reason) => {
-    console.log('Finished: ', song.name);
     const nextSong = dequeue();
     if (nextSong && nextSong.channel.name === currentChannel.name) {
       // If the next song is on the same channel

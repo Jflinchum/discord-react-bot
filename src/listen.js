@@ -3,6 +3,7 @@ const request = require('request');
 const ffmpeg = require('fluent-ffmpeg');
 const stringSimilarity = require('string-similarity');
 const fs = require('fs');
+const ytdl = require('ytdl-core');
 
 const mkdirp = require('mkdirp');
 const {
@@ -36,6 +37,7 @@ let userTalkTimes = {};
 const BUFFER_WAIT_TIME = 3000; // In milliseconds
 const MAX_WAKE_WORD_TIME = 1500; // In milliseconds
 const MIN_WAKE_WORD_TIME = 500; // In milliseconds
+const WORD_SIMILARITY_RATING = 0.8; // How strict the word compare should be
 
 /**
  * Wakes the bot up and sets the timer to go back to sleep
@@ -227,21 +229,31 @@ const handleVoice = (voiceText, connection, user) => {
     .findBestMatch(voiceText[0], WAKE_WORDS)
     .bestMatch
     .rating;
-  if (wakeWordRate > 0.8) {
+  if (wakeWordRate > WORD_SIMILARITY_RATING) {
     playAffirmation(connection).on('end', () => {
       wakeUp(connection, user);
     });
   } else if (wakeWord) {
-    if (strCmp(voiceText[0], 'play') > 0.8) {
-      commandRecognized = playFile(voiceText, connection);
-    } else if (strCmp(voiceText[0], 'post') > 0.8) {
-      commandRecognized = true;
-      playAffirmation(connection);
-    } else if (strCmp(voiceText[0], 'leave') > 0.8) {
+    if (strCmp(voiceText[0], 'play') > WORD_SIMILARITY_RATING) {
+      commandRecognized = voicePlay(voiceText, connection);
+
+    } else if (strCmp(voiceText[0], 'leave') > WORD_SIMILARITY_RATING) {
       commandRecognized = true;
       playLeave(connection).on('end', () => {
         leave({});
       });
+
+    } else if (strCmp(voiceText[0], 'stop') > WORD_SIMILARITY_RATING) {
+      commandRecognized = true;
+      playAffirmation(connection);
+
+    } else if (strCmp(voiceText[0], 'search') > WORD_SIMILARITY_RATING) {
+      voiceSearch(voiceText, connection, (err) => {
+        if (err) {
+          playNegative(connection);
+        }
+      });
+
     } else if (!commandRecognized) {
       // If the bot does not recognize the command, play the NEGATIVE_FX
       playNegative(connection);
@@ -256,7 +268,7 @@ const handleVoice = (voiceText, connection, user) => {
  * @param connection {Object} - The Discord VoiceConnection object that the
  * voice was heard from
  */
-const playFile = (voiceText, connection) => {
+const voicePlay = (voiceText, connection) => {
   const mediaName = voiceText.slice(1, voiceText.length).join('');
 
   const files = fs.readdirSync(PATH).filter((file) => {
@@ -277,8 +289,6 @@ const playFile = (voiceText, connection) => {
   // Only play a sound if it is recognized
   if (playFileRating > 0) {
     const filePath = `${PATH}/${files[playFileIndex]}`;
-    console.log(stringSimilarity.findBestMatch(mediaName, noExtensions));
-    console.log(filePath);
     playSong({
       connection,
       song: {
@@ -292,6 +302,49 @@ const playFile = (voiceText, connection) => {
   } else {
     return false;
   }
+};
+
+/**
+ * Searches for the first video on youtube given the voice text
+ *
+ * @param voiceText {String} - The voice-to-text string to parse
+ * @param connection {Object} - The Discord VoiceConnection object that the
+ * voice was heard from
+ * @param cb {Function} - The callback method for whether there was an error or
+ * not
+ */
+const voiceSearch = (voiceText, connection, cb) => {
+  const mediaName = voiceText.slice(1, voiceText.length).join('+');
+  request(`https://www.youtube.com/results?search_query=${mediaName}`,
+    (err, response, body) => {
+      if (err) {
+        console.log(err);
+        return cb(true);
+      }
+      // Parse through the html for the href of the first youtube video
+      const firstVideoIndex = body.indexOf('yt-lockup-content');
+      const firstHrefIndex = body.indexOf('href', firstVideoIndex);
+      const href = body.slice(firstHrefIndex + 6,
+        body.indexOf('"', firstHrefIndex + 6));
+      console.log(href);
+      const mediaUrl = `www.youtube.com${href}`;
+      // For youtube video streaming
+      // Check if the url is valid
+      if (!ytdl.validateURL(mediaUrl)) {
+        return cb(true);
+      }
+      const ytStream = ytdl(mediaUrl, { filter: 'audioonly' });
+      playSong({
+        connection,
+        song: {
+          channel: currentChannel,
+          media: ytStream,
+          name: mediaName,
+        },
+        leaveAfter: false,
+      });
+      return cb(false);
+    });
 };
 
 /**

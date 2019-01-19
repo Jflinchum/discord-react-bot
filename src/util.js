@@ -399,6 +399,13 @@ const playLeave = (connection) => {
   return playRandomFile(connection, LEAVE_FX);
 };
 
+/**
+ * Compares two strings to check how similar they are to each other.
+ *
+ * @param {String} string1 - The first string to compare to string2
+ * @param {String} string2 - The second string to compare to string1
+ * @returns {Float} - A number between 0 and 1 for how similar the strings are
+ */
 const strCmp = (string1, string2) => {
   return stringSimilarity.compareTwoStrings(string1, string2);
 };

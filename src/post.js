@@ -11,9 +11,8 @@ const { PATH, COLOR, makeEmbed } = require('./util');
  * @param {String} fileName - The local file to post
  * @param {Object} message - The Discord Message Object that initiated
  * the command
- * @param {Object} bot - The Discord Client object that represents the bot
  */
-const post = (fileName, message, bot) => {
+const post = (fileName, message) => {
   // Posting files
   message.delete();
   const files = fs.readdirSync(PATH);

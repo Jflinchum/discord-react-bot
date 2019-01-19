@@ -119,7 +119,7 @@ const handleCommand = (message) => {
       message.channel.send('Please specify a name.');
       return;
     }
-    post(fileName, message, bot);
+    post(fileName, message);
 
   } else if (botCommand === '!list' || botCommand === '!l') {
     // Listing files
