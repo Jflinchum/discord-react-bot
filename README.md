@@ -56,6 +56,7 @@ A react bot for discord that can download and store files locally and post them 
 
 !listen <voiceChannel>/.
 - Listens in on a voice channel and attempts voice recognition to do commands
+- Current listen commands are "play <media name>", "search <youtube media>", and "leave"
 
 !leave
 - Leaves any voice channels that the bot is listening in on
