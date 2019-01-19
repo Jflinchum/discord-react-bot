@@ -3,17 +3,20 @@ const request = require('request');
 const ffmpeg = require('fluent-ffmpeg');
 const stringSimilarity = require('string-similarity');
 const fs = require('fs');
-const { PassThrough } = require('stream');
+
+const mkdirp = require('mkdirp');
 const {
   makeEmbed,
   findVoiceChannel,
   playChannelJoin,
   playAffirmation,
   playNegative,
+  playLeave,
   strCmp,
   SOUND_FX_PATH,
   WIT_AI_TOKEN,
   PATH,
+  RECORDING_PATH,
   WAKE_WORDS,
 } = require('./util');
 const { playSong } = require('./play');
@@ -23,9 +26,45 @@ let currentChannel;
 let wakeWord = false;
 // Buffer timer is a timeout object.
 let bufferTimer = setTimeout(() => {}, 0);
+// The command buffer that the bot listens to while it is awake
 let bufferedCommand = '';
+// The user to listen for when the bot wakes up
+let bufferedUserID = '';
+// Keep track of when users start to talk
+let userTalkTimes = {};
 // How long the bot waits for someone to finish speaking
 const BUFFER_WAIT_TIME = 3000; // In milliseconds
+const MAX_WAKE_WORD_TIME = 1500; // In milliseconds
+const MIN_WAKE_WORD_TIME = 500; // In milliseconds
+
+/**
+ * Wakes the bot up and sets the timer to go back to sleep
+ *
+ * @param connection {Object} - The Discord VoiceConnection object that the
+ * voice was heard from
+ * @param user {Object} - The Discord User object that contains the user id
+ * who initiated the command
+ */
+const wakeUp = (connection, user) => {
+  wakeWord = true;
+  bufferedCommand = '';
+  bufferedUserID = user.id;
+  // Start the buffer timer to handle the buffered command when the user
+  // is done talking
+  bufferTimer = setTimeout(() => {
+    handleVoice(bufferedCommand, connection, user);
+    sleep();
+  }, BUFFER_WAIT_TIME);
+};
+
+/**
+ * Resets the global variables for the bot
+ */
+const sleep = () => {
+  bufferedCommand = '';
+  bufferedUserID = '';
+  wakeWord = false;
+};
 
 /**
  * Join in on a channel and parse the meaning of any voices heard.
@@ -69,13 +108,16 @@ const listen = ({ voiceChannel, message, bot }) => {
 
           connection.on('speaking', (user, speaking) => {
             if (speaking) {
+              userTalkTimes[user.id] = Date.now();
               // If the user speaks while the bot is awake, clear the timeout
               if (wakeWord) {
                 clearTimeout(bufferTimer);
               }
               // Get the pcm 32bit signed little endian stereo stream
               const audioStream = receiver.createPCMStream(user);
-              const pass = new PassThrough();
+              mkdirp(RECORDING_PATH);
+              const voicePath = `${RECORDING_PATH}/${user.id}.wav`;
+
               /*
               We must first process the audio stream and convert it from
               stereo to mono.
@@ -86,31 +128,45 @@ const listen = ({ voiceChannel, message, bot }) => {
                   '-ar 48k',
                   '-ac 1',
                 ])
-                .format('wav')
                 .on('end', () => {
-                  // Once we are done processing, send it to Wit.AI
-                  witParse({
-                    accessToken: WIT_AI_TOKEN,
-                    stream: pass,
-                    cb: (err, response) => {
-                      if (err) {
-                        console.log(err);
-                      }
-                      if (!wakeWord) {
-                        handleVoice(response._text, connection);
-                      } else {
-                        bufferedCommand += response._text + ' ';
-                      }
-                    },
-                  });
+                  /**
+                   * Essentially, when we are waiting for the wake word, we are
+                   * going to want to only use the api if the voice clip is
+                   * less than the MAX_WAKE_WORD_TIME. This is so we don't
+                   * overuse the api, which improves performance.
+                   */
+                  const clipLength = Date.now() - userTalkTimes[user.id];
+                  if (
+                    wakeWord
+                    || ((clipLength <= MAX_WAKE_WORD_TIME)
+                    && (clipLength > MIN_WAKE_WORD_TIME))) {
+                    // Once we are done processing, send it to Wit.AI
+                    witParse({
+                      accessToken: WIT_AI_TOKEN,
+                      stream: fs.createReadStream(voicePath),
+                      cb: (err, response) => {
+                        if (err) {
+                          console.log(err);
+                        }
+                        if (!wakeWord) {
+                          handleVoice(response._text, connection, user);
+                        } else {
+                          // Only buffer the command for the user who
+                          // initiated it
+                          if (user.id === bufferedUserID) {
+                            bufferedCommand += response._text + ' ';
+                          }
+                        }
+                      },
+                    });
+                  }
                 })
-                .pipe(pass);
+                .save(voicePath);
             } else if (wakeWord) {
               // If the bot is awake and a user stops speaking, start the timer
               bufferTimer = setTimeout(() => {
-                handleVoice(bufferedCommand, connection);
-                bufferedCommand = '';
-                wakeWord = false;
+                handleVoice(bufferedCommand.trim(), connection, user);
+                sleep();
               }, BUFFER_WAIT_TIME);
             }
           });
@@ -143,6 +199,7 @@ const leave = ({ message }) => {
       );
     }
     currentChannel.leave();
+    currentChannel = null;
   } else if (message) {
     message.channel.send('Not currently listening to a channel.');
   }
@@ -155,7 +212,7 @@ const leave = ({ message }) => {
  * @param connection {Object} - The Discord VoiceConnection object that the
  * voice was heard from
  */
-const handleVoice = (voiceText, connection) => {
+const handleVoice = (voiceText, connection, user) => {
   console.log(voiceText);
   if (!voiceText) {
     if (wakeWord) {
@@ -165,20 +222,15 @@ const handleVoice = (voiceText, connection) => {
   }
   let commandRecognized = false;
   voiceText = voiceText.toLowerCase().split(' ');
+  // Check if the voice text is a wake word
   let wakeWordRate = stringSimilarity
     .findBestMatch(voiceText[0], WAKE_WORDS)
     .bestMatch
     .rating;
   if (wakeWordRate > 0.8) {
-    playAffirmation(connection);
-    wakeWord = true;
-    // Start the buffer timer to handle the buffered command when a user
-    // is done talking
-    bufferTimer = setTimeout(() => {
-      handleVoice(bufferedCommand, connection);
-      bufferedCommand = '';
-      wakeWord = false;
-    }, BUFFER_WAIT_TIME);
+    playAffirmation(connection).on('end', () => {
+      wakeUp(connection, user);
+    });
   } else if (wakeWord) {
     if (strCmp(voiceText[0], 'play') > 0.8) {
       commandRecognized = playFile(voiceText, connection);
@@ -187,10 +239,11 @@ const handleVoice = (voiceText, connection) => {
       playAffirmation(connection);
     } else if (strCmp(voiceText[0], 'leave') > 0.8) {
       commandRecognized = true;
-      playNegative(connection).on('end', () => {
+      playLeave(connection).on('end', () => {
         leave({});
       });
     } else if (!commandRecognized) {
+      // If the bot does not recognize the command, play the NEGATIVE_FX
       playNegative(connection);
     }
   }

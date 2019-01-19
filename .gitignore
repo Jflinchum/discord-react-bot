@@ -60,13 +60,19 @@ typings/
 # next.js build output
 .next
 
-# Reactions folder
+# Reactions Folder
 reactions/
+# Emoji List
 emoji.json
+# Bot Sound Effects
 botSounds/
+# Bot Settings
 settings.json
+# Bot Voice Files
+recordings/
 
 # Mac Stuff
 .DS_STORE
+
 package-lock.json
 build/config.gypi

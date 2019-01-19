@@ -14,9 +14,11 @@ const WAKE_WORDS = settings.WAKE_WORDS;
 const PATH = `${appDir}/../reactions`;
 const EMOJI_PATH = `${appDir}/../emoji.json`;
 const SOUND_FX_PATH = `${appDir}/../botSounds`;
+const RECORDING_PATH = `${appDir}/../recordings`;
 const CHANNEL_JOIN_FX = `${SOUND_FX_PATH}/channelJoin`;
 const AFFIRMATION_FX = `${SOUND_FX_PATH}/affirm`;
 const NEGATIVE_FX = `${SOUND_FX_PATH}/negative`;
+const LEAVE_FX = `${SOUND_FX_PATH}/leave`;
 const COLOR = 0x9400D3;
 const MAX_YT_TIME = 150; // In seconds
 // eslint-disable-next-line
@@ -386,6 +388,17 @@ const playNegative = (connection) => {
   return playRandomFile(connection, NEGATIVE_FX);
 };
 
+/**
+ * Plays a random sound clip from the channel leave fx directory
+ *
+ * @param {Object} connection - The Discord VoiceConnection object to play the
+ * clip to
+ * @returns {Object} - The Discord Dispatch object from playing the clip
+ */
+const playLeave = (connection) => {
+  return playRandomFile(connection, LEAVE_FX);
+};
+
 const strCmp = (string1, string2) => {
   return stringSimilarity.compareTwoStrings(string1, string2);
 };
@@ -398,9 +411,11 @@ module.exports = {
   PATH,
   EMOJI_PATH,
   SOUND_FX_PATH,
+  RECORDING_PATH,
   CHANNEL_JOIN_FX,
   AFFIRMATION_FX,
   NEGATIVE_FX,
+  LEAVE_FX,
   EMOJI_REGEX,
   COLOR,
   MAX_YT_TIME,
@@ -417,5 +432,6 @@ module.exports = {
   playChannelJoin,
   playAffirmation,
   playNegative,
+  playLeave,
   strCmp,
 };
