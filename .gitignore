@@ -68,3 +68,4 @@ emoji.json
 .DS_STORE
 package-lock.json
 build/config.gypi
+src/gpt2/models

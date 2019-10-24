@@ -23,9 +23,10 @@ const MESSAGE_MAX_WORD_LENGTH = 150;
  * embeded message
  * @param {Object} user - Discord User object. Will post avatar and
  * username along with message
+ * @param {String} title - The title of the message
  * @return {Object} - Returns the constructed embeded message
  */
-const makeEmbed = (message, user) => {
+const makeEmbed = (message, user, title) => {
   return {
     embed: {
       thumbnail: {
@@ -34,7 +35,7 @@ const makeEmbed = (message, user) => {
       color: COLOR,
       description: message,
       author: {
-        name: user.username,
+        name: title || user.username,
       },
     },
   };
