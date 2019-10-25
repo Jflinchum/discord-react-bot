@@ -8,28 +8,31 @@ let gpt2Request = [];
 
 
 gpt2.stdout.on('data', (data) => {
-  console.log(data.toString());
   const request = gpt2Request.shift();
   const channel = request.origin.channel;
   const author = request.origin.author;
+  const title = request.title || '';
   const prompt = request.prompt.split(' ');
   let promptSplit = [];
   // Asteriks for bold prompt
-  let temp = '**';
-  prompt.map((promptString) => {
-    // Check to see if adding to the string would go over max length
-    if ((temp.length + promptString.length) > MAX_LENGTH) {
-      promptSplit.push(`${temp}** `);
-      temp = `**${promptString} `;
-    } else {
-      // If it doesn't go over max length, add it to the temp string
-      temp += `${promptString} `;
-    }
-  });
+  let temp = '';
+  if (request.printPrompt) {
+    temp += '**';
+    prompt.map((promptString) => {
+      // Check to see if adding to the string would go over max length
+      if ((temp.length + promptString.length) > MAX_LENGTH) {
+        promptSplit.push(`${temp}** `);
+        temp = `**${promptString} `;
+      } else {
+        // If it doesn't go over max length, add it to the temp string
+        temp += `${promptString} `;
+      }
+    });
+    temp += '** ';
+  }
   let response = data.toString().trim().split(' ');
   let messageSplit = promptSplit;
   // Cap off the temp variable with asteriks
-  temp += '** ';
   response.map((messageString) => {
     if ((temp.length + messageString.length) > MAX_LENGTH) {
       messageSplit.push(`${temp} `);
@@ -46,7 +49,7 @@ gpt2.stdout.on('data', (data) => {
         makeEmbed(
           message,
           author,
-          `Response [${index + 1}/${messageSplit.length}]`
+          `${title} Response [${index + 1}/${messageSplit.length}]`
         )
       );
     });
@@ -55,7 +58,7 @@ gpt2.stdout.on('data', (data) => {
       channel.send(
         makeEmbedNoUser(
           message,
-          `Response [${index + 1}/${messageSplit.length}]`
+          `${title} Response [${index + 1}/${messageSplit.length}]`
         )
       );
     });
@@ -66,17 +69,45 @@ gpt2.stderr.on('data', (data) => {
   console.log(data.toString());
 });
 
-const promptGpt2 = (prompt, message) => {
+const promptGpt2 = (prompt, message, printPrompt = true, title = '') => {
   // Store the message id at
   gpt2Request.push({
     origin: message,
     prompt,
+    printPrompt,
+    title,
   });
   message.delete();
   gpt2.stdin.write(prompt.toString() + '\n');
   gpt2.stdin.write('<|endoftext|>\n');
 };
 
+const promptRelevanceGpt2 = (originMessage, channel, n = 10) => {
+  let messageArray = [];
+  channel.fetchMessages({ limit: n })
+    .then(messages => {
+      messages.tap((message) => {
+        if (message.cleanContent.length > 0) {
+          messageArray.unshift(message);
+        }
+      });
+
+      let gpt2String = '';
+      messageArray.map((message) => {
+        gpt2String += `[${
+          message.author.username
+        }]: ${message.cleanContent}\n\n`;
+      });
+      console.log(gpt2String);
+      if (!gpt2String) {
+        channel.send('Could not find text messages!');
+      }
+      promptGpt2(gpt2String, originMessage, false, channel.name);
+    });
+};
+
+
 module.exports = {
   promptGpt2,
+  promptRelevanceGpt2,
 };

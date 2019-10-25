@@ -13,7 +13,7 @@ const { rename } = require('./rename');
 const { play, queue, skip } = require('./play');
 const { append } = require('./append');
 const { trigger } = require('./trigger');
-const { promptGpt2 } = require('./gpt2');
+const { promptGpt2, promptRelevanceGpt2 } = require('./gpt2');
 const { PATH, EMOJI_PATH, EMOJI_REGEX } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -187,8 +187,19 @@ bot.on('message', message => {
     skip(num, message);
   } else if (botCommand === '!gpt2') {
     let string = cmd.slice(1).join(' ');
-    console.log(string);
-    promptGpt2(string, message);
+    const channel = message.mentions.channels.first();
+    let numOfMessages;
+    if (cmd.length > 2) {
+      numOfMessages = cmd[2];
+    }
+    if (numOfMessages > 100) {
+      numOfMessages = 100;
+    }
+    if (channel) {
+      promptRelevanceGpt2(message, channel, numOfMessages);
+    } else {
+      promptGpt2(string, message);
+    }
   } else if (botCommand === '!append') {
     const fileName = cmd[1];
     let text = cmd.slice(2, cmd.length).join(' ');
