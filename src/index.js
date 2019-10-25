@@ -13,7 +13,7 @@ const { rename } = require('./rename');
 const { play, queue, skip } = require('./play');
 const { append } = require('./append');
 const { trigger } = require('./trigger');
-const { PATH, EMOJI_PATH, EMOJI_REGEX, exportMessages, exportFormattedMessages } = require('./util');
+const { PATH, EMOJI_PATH, EMOJI_REGEX, exportMessages, exportFormattedMessages, exportAllMessages, exportAllFormattedMessages } = require('./util');
 const TOKEN = process.env.DISCORD_TOKEN;
 
 const bot = new Client();
@@ -237,6 +237,10 @@ bot.on('message', message => {
       message.channel.send('Could not find emoji');
     });
   } else if (botCommand === '!export') {
+    if (cmd[1] === 'all') {
+      exportAllMessages(message.channel.guild);
+      return;
+    }
     const channel = message.mentions.channels.first();
     if (channel != null) {
       exportMessages(channel);
@@ -244,6 +248,10 @@ bot.on('message', message => {
     }
     message.channel.send('Please specify a Channel to export.');
   } else if (botCommand === '!exportgpt2') {
+    if (cmd[1] === 'all') {
+      exportAllFormattedMessages(message.channel.guild);
+      return;
+    }
     const channel = message.mentions.channels.first();
     if (channel != null) {
       exportFormattedMessages(channel);

@@ -321,7 +321,7 @@ const sendTextBlock = ({text, message, page = 0}) => {
   }
 };
 
-var exportString = '';
+var exportDictionary = new Object();
 var currUser = null;
 
 /**
@@ -330,16 +330,17 @@ var currUser = null;
  * @param {Channel} channel - the channel to download
  */
 const exportMessages = (channel) => {
-  exportString = '';
+  exportDictionary[channel.name] = '';
   
   if (channel.type === 'text') {
+    console.log("Export started.");
     channel.fetchMessages({ limit: 100 })
       .then(messages => {
-        messages.tap((message) => { if (message.cleanContent.length > 0 ) { exportString += (message.cleanContent + '\n'); } });
+        messages.tap((message) => { if (message.cleanContent.length > 0 ) { exportDictionary[channel.name] += (message.cleanContent + '\n'); } });
         if (messages.size >= 100) {
           exportRecursive(messages.last(), channel);
         } else {
-          addText({ path : OUTPUT_PATH + channel.name + '.txt', text : exportString});
+          addText({ path : OUTPUT_PATH + channel.name + '.txt', text : exportDictionary[channel.name]});
           console.log("Export finished.");
         }
       }).catch(console.error);
@@ -349,15 +350,19 @@ const exportMessages = (channel) => {
 const exportRecursive = (message, channel) => {
   channel.fetchMessages({ limit: 100, before: message.id })
     .then(messages => {
-      messages.tap((message) => { if (message.cleanContent.length > 0 ) { exportString += (message.cleanContent + '\n'); } });
+      messages.tap((message) => { if (message.cleanContent.length > 0 ) { exportDictionary[channel.name] += (message.cleanContent + '\n'); } });
       if (messages.size >= 100) {
         exportRecursive(messages.last(), channel);
       } else {
-        addText({ path : OUTPUT_PATH + channel.name + '.txt', text : exportString});
+        addText({ path : OUTPUT_PATH + channel.name + '.txt', text : exportDictionary[channel.name]});
         console.log("Export finished.");
       }
     }).catch(console.error);
 };
+
+const exportAllMessages = (guild) => {
+  guild.channels.tap((channel) => { exportMessages(channel) });
+}
 
 /**
  * Downloads all messages from the channel
@@ -365,27 +370,20 @@ const exportRecursive = (message, channel) => {
  * @param {Channel} channel - the channel to download
  */
 const exportFormattedMessages = (channel) => {
-  exportString = '';
+  exportDictionary[channel.name] = '';
   
   if (channel.type === 'text') {
+    console.log("Export started.");
     channel.fetchMessages({ limit: 100 })
       .then(messages => {
         messages.tap((message) => { if (message.cleanContent.length > 0 ) { 
-          if (message.author != currUser)
-          {
-            if (currUser != null)
-            {
-              exportString += ('<|endoftext|>' + '\n');
-            }
-            exportString += (message.author.username + '|');
-          }
-          exportString += (message.cleanContent + '\n');
+          exportDictionary[channel.name] += (message.author.username + '|' + message.cleanContent + '\n');
           currUser = message.author;
         } });
         if (messages.size >= 100) {
           exportFormattedRecursive(messages.last(), channel);
         } else {
-          addText({ path : OUTPUT_PATH + channel.name + 'GPT2.txt', text : exportString});
+          addText({ path : OUTPUT_PATH + channel.name + 'GPT2.txt', text : exportDictionary[channel.name]});
           console.log("Export finished.");
         }
       }).catch(console.error);
@@ -396,25 +394,21 @@ const exportFormattedRecursive = (message, channel) => {
   channel.fetchMessages({ limit: 100, before: message.id })
     .then(messages => {
       messages.tap((message) => { if (message.cleanContent.length > 0 ) { 
-        if (message.author != currUser)
-        {
-          if (currUser != null)
-          {
-            exportString += ('<|endoftext|>' + '\n');
-          }
-          exportString += (message.author.username + '|');
-        }
-        exportString += (message.cleanContent + '\n');
+        exportDictionary[channel.name] += (message.author.username + '|' + message.cleanContent + '\n');
         currUser = message.author;
       } });
       if (messages.size >= 100) {
         exportFormattedRecursive(messages.last(), channel);
       } else {
-        addText({ path : OUTPUT_PATH + channel.name + 'GPT2.txt', text : exportString});
+        addText({ path : OUTPUT_PATH + channel.name + 'GPT2.txt', text : exportDictionary[channel.name]});
         console.log("Export finished.");
       }
     }).catch(console.error);
 };
+
+const exportAllFormattedMessages = (guild) => {
+  guild.channels.tap((channel) => { exportFormattedMessages(channel) });
+}
 
 
 module.exports = {
@@ -426,6 +420,8 @@ module.exports = {
   MAX_YT_TIME,
   exportMessages,
   exportFormattedMessages,
+  exportAllMessages,
+  exportAllFormattedMessages,
   makeEmbed,
   makeEmbedNoUser,
   ytdownload,
