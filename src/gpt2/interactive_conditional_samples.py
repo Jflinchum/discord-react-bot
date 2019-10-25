@@ -6,6 +6,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import sys
+import fileinput
 
 import model, sample, encoder
 
@@ -71,11 +72,18 @@ def interact_model(
         saver.restore(sess, ckpt)
 
         while True:
-            raw_text = input()
+            raw_text = ""
+            line = sys.stdin.readline()
+            while line != '<|endoftext|>\n':
+                raw_text += line
+                line = sys.stdin.readline()
             while not raw_text:
                 print('Prompt should not be empty!')
                 sys.stdout.flush()
-                raw_text = input()
+                line = sys.stdin.readline()
+                while line != '<|endoftext|>\n':
+                    raw_text += line
+                    line = sys.stdin.readline()
             context_tokens = enc.encode(raw_text)
             generated = 0
             for _ in range(nsamples // batch_size):

@@ -74,6 +74,7 @@ const promptGpt2 = (prompt, message) => {
   });
   message.delete();
   gpt2.stdin.write(prompt.toString() + '\n');
+  gpt2.stdin.write('<|endoftext|>\n');
 };
 
 module.exports = {
