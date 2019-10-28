@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { EMOJI_PATH, addJson, EMOJI_REGEX } = require('./util');
-
+const USAGE = '`usage: !trigger <emoji> <decimalChance> <"Example Text">`';
 
 /**
  * Adds a message/emoji pair to the emoji.json file.
@@ -28,23 +28,27 @@ const onText = (message, bot) => {
     let text = cmd[3];
     let emoji = cmd[1];
     let chance = cmd[2];
+    if (!text || !emoji || !chance) {
+      message.channel.send(USAGE);
+      return;
+    }
     // If the user is only uploading a string
     if (text[0] === '"') {
       let string = cmd.slice(3, cmd.length).join(' ');
       if (string[string.length - 1] !== '"') {
-        message.channel.send('Please wrap text in quotation marks.');
+        message.channel.send(USAGE);
         return;
       }
       text = string.slice(1, string.length - 1);
       if (!emoji) {
-        message.channel.send('Please specify an emoji.');
+        message.channel.send(USAGE);
         return;
       } else if (isNaN(chance)) {
-        message.channel.send('Please specify an chance.');
+        message.channel.send(USAGE);
         return;
       }
     } else {
-      message.channel.send('Please wrap text in quotation marks.');
+      message.channel.send(USAGE);
       return;
     }
     if (!EMOJI_REGEX.test(emoji)) {

@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { PATH, EMOJI_REGEX, sendTextBlock } = require('./util');
+const USAGE = '`usage: [!list/!l] [image/music/text/emoji]`';
 
 /**
  * Finds all files using the regex and returns an array of them
@@ -40,32 +41,38 @@ const list = ({ type, message, emojis, page }) => {
   const imageRegex = (/\.(gif|jpg|jpeg|tiff|png|mp4)$/i);
   const musicRegex = (/\.(mp3|wav)$/i);
   const textRegex = (/\.(txt|pdf)$/i);
+
   let imageList = [];
   let musicList = [];
   let textList = [];
 
-  if (!type || type === 'image') {
+  const imageType = (!type || type === 'image');
+  const musicType = (!type || type === 'music');
+  const textType = (!type || type === 'text');
+  const emojiType = (!type || type === 'emoji');
+
+  if (imageType) {
     imageList = findFiles(imageRegex, files);
     if (imageList.length > 0) {
       response += 'Image:\n';
       response += '  ' + imageList.join('  ');
     }
   }
-  if (!type || type === 'music') {
+  if (musicType) {
     musicList = findFiles(musicRegex, files);
     if (musicList.length > 0) {
       response += 'Music:\n';
       response += '  ' + musicList.join('  ');
     }
   }
-  if (!type || type === 'text') {
+  if (textType) {
     textList = findFiles(textRegex, files);
     if (textList.length > 0) {
       response += 'Text:\n';
       response += '  ' + textList.join('  ');
     }
   }
-  if (!type || type === 'emoji') {
+  if (emojiType) {
     response += 'Emojis:\n';
     const words = Object.keys(emojis);
     for (let index in words) {
@@ -86,6 +93,11 @@ const list = ({ type, message, emojis, page }) => {
       }
       response += '\n';
     }
+  }
+
+  if (!imageType && !musicType && !textType && !emojiType) {
+    message.channel.send(USAGE);
+    return;
   }
   sendTextBlock({text: response, message, page});
 };

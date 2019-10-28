@@ -1,6 +1,8 @@
 'use strict';
 const MarkovChain = require('markovchain');
 const { makeEmbed, makeEmbedNoUser } = require('./util');
+const USAGE = '`usage: !markov <@user/#textChannel/all> [messageStart]`';
+
 
 var markovString = '';
 var channelLength = 0;
@@ -197,7 +199,7 @@ const onText = (message) => {
     if (cmd[2] !== undefined && cmd[2] !== null) {
       string = cmd.slice(2, cmd.length).join(' ');
       if (string[string.length - 1] !== '"') {
-        message.channel.send('Please wrap text in quotation marks.');
+        message.channel.send(USAGE);
         return;
       }
       string = string.slice(1, string.length - 1);
@@ -219,7 +221,7 @@ const onText = (message) => {
       markovChannel(channel, message.guild, message.channel, string);
       return;
     }
-    message.channel.send('Please specify a User or Channel to markov.');
+    message.channel.send(USAGE);
   }
 };
 

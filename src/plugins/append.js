@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { PATH, hasFile, makeEmbed } = require('./util');
+const USAGE = '`usage: !append <name> <"Example Text">`';
 
 /**
  * Appends text to a .txt file
@@ -35,11 +36,11 @@ const onText = (message) => {
     const fileName = cmd[1];
     let text = cmd.slice(2, cmd.length).join(' ');
     if (text[0] !== '"' || text[text.length - 1] !== '"') {
-      message.channel.send('Please wrap text in quotation marks.');
+      message.channel.send(USAGE);
       return;
     }
     if (!fileName) {
-      message.channel.send('Please specify a name.');
+      message.channel.send(USAGE);
       return;
     }
     text = text.slice(1, text.length - 1);

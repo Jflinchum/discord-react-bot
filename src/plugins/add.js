@@ -9,6 +9,8 @@ const {
   makeEmbed,
   hasFile,
 } = require('./util');
+const USAGE = '`usage: [!add/!a] [<url>/"Example String Here"] <name>' +
+  ' [<startTimeStamp>] [<stopTimeStamp>]`';
 
 /**
  * Adds a file to the local storage space. If the url is a youtube video,
@@ -31,7 +33,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
   message.channel.send('Loading...').then(msg => {
     if (!fileName) {
       msg.delete();
-      message.channel.send('Please specify a name.');
+      message.channel.send(USAGE);
       return;
     }
     // Check for youtube videos
@@ -152,20 +154,20 @@ const onText = (message) => {
     if (url[0] === '"') {
       let string = cmd.slice(1, cmd.length - 1).join(' ');
       if (string[string.length - 1] !== '"') {
-        message.channel.send('Please wrap text in quotation marks.');
+        message.channel.send(USAGE);
         return;
       }
       string = string.slice(1, string.length - 1);
       fileName = cmd[cmd.length - 1];
       if (!fileName) {
-        message.channel.send('Please specify a name.');
+        message.channel.send(USAGE);
         return;
       }
 
       addText(fileName, string, message);
     } else {
       if (!fileName) {
-        message.channel.send('Please specify a name.');
+        message.channel.send(USAGE);
         return;
       }
 

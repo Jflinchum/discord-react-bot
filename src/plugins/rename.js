@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { PATH, makeEmbed } = require('./util');
+const USAGE = '`usage: [!rename/!rn] <oldName> <newName>`';
 
 /**
  * Renames a file in the local storage space
@@ -14,7 +15,7 @@ const rename = (oldName, newName, message) => {
   message.delete();
   const files = fs.readdirSync(PATH);
   if (!oldName) {
-    message.channel.send('Please specify a name.');
+    message.channel.send(USAGE);
     return;
   }
   let oldFile;
