@@ -1,13 +1,12 @@
 'use strict';
-const { makeEmbed, makeEmbedNoUser } = require('./util');
+const { makeEmbed, makeEmbedNoUser, config } = require('./util');
 const { spawn } = require('child_process');
 
 const MAX_LENGTH = 2000;
-// Only run on windows considering that gpt2 takes a lot of gpu
-const isWin = process.platform === 'win32';
 let gpt2;
 let gpt2Request = [];
-if (isWin) {
+const gpt2Enabled = config.gpt2Enabled;
+if (gpt2Enabled) {
   gpt2 = spawn(
     'python',
     ['./src/plugins/gpt2/interactive_conditional_samples.py']
@@ -116,7 +115,7 @@ const onText = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
-  if (isWin && botCommand === '!gpt2') {
+  if (gpt2Enabled && botCommand === '!gpt2') {
     let string = cmd.slice(1).join(' ');
     const channel = message.mentions.channels.first();
     let numOfMessages;
