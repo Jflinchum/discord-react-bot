@@ -3,7 +3,7 @@
 const { Client } = require('discord.js');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
-const { PATH, EMOJI_PATH } = require('./plugins/util');
+const { PATH, EMOJI_PATH, EMOJI_REGEX, removeJson } = require('./plugins/util');
 const { onTextHooks } = require('./plugins');
 const TOKEN = process.env.DISCORD_TOKEN;
 
@@ -12,12 +12,23 @@ fs.exists(EMOJI_PATH, (exists) => {
   if (!exists) {
     fs.writeFileSync(EMOJI_PATH, '{}');
   }
-  bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+  let emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+  bot.emojiTriggers = emojiTriggers;
 });
 
 bot.on('ready', () => {
   console.log('Logged in');
   mkdirp.sync(PATH);
+  Object.keys(bot.emojiTriggers).map((triggerWord) => {
+    for (let index in bot.emojiTriggers[triggerWord]) {
+      let emojiObj = bot.emojiTriggers[triggerWord][index];
+      if (!EMOJI_REGEX.test(emojiObj.emoji) &&
+      !bot.guilds.array()[0].emojis.get(emojiObj.emoji)) {
+        removeJson({ path: EMOJI_PATH, key: triggerWord });
+        delete bot.emojiTriggers[triggerWord];
+      }
+    }
+  });
 });
 
 

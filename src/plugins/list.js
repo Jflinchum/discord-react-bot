@@ -86,9 +86,11 @@ const list = ({ type, message, emojis, page }) => {
           `(${emojiString},`
           + ` ${emojiList[emoji].chance}), `;
         } else {
-          response +=
-          `(:${message.guild.emojis.get(emojiString).name}:,`
-          + ` ${emojiList[emoji].chance}), `;
+          if (message.guild.emojis.get(emojiString)) {
+            response +=
+            `(:${message.guild.emojis.get(emojiString).name}:,`
+            + ` ${emojiList[emoji].chance}), `;
+          }
         }
       }
       response += '\n';

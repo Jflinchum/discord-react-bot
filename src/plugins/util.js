@@ -171,7 +171,7 @@ const hasFile = ({path = PATH, fileName}) => {
  * @param {Object} value - The value to assign to the key in the file
  * @param {Function} cb - The callback function
  */
-const addJson = ({ path, key, value, cb }) => {
+const addJson = ({ path, key, value, cb = () => {} }) => {
   // First check if the file exists
   fs.exists(path, (exists) => {
     if (exists) {
@@ -206,7 +206,7 @@ const addJson = ({ path, key, value, cb }) => {
  * @param {String} key - The key to add
  * @param {Function} cb - The callback function
  */
-const removeJson = ({ path, key, cb }) => {
+const removeJson = ({ path, key, cb = () => {} }) => {
   // First check if the file exists
   fs.exists(path, (exists) => {
     if (exists) {
