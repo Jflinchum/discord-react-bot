@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { PATH, hasFile, makeEmbed } = require('./util');
+const USAGE = '`usage: !append <name> <"Example Text">`';
 
 /**
  * Appends text to a .txt file
@@ -27,7 +28,28 @@ const append = ({fileName, text, message}) => {
   });
 };
 
+const onText = (message) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+
+  if (botCommand === '!append') {
+    const fileName = cmd[1];
+    let text = cmd.slice(2, cmd.length).join(' ');
+    if (text[0] !== '"' || text[text.length - 1] !== '"') {
+      message.channel.send(USAGE);
+      return;
+    }
+    if (!fileName) {
+      message.channel.send(USAGE);
+      return;
+    }
+    text = text.slice(1, text.length - 1);
+    append({fileName, text, message});
+  }
+};
+
 
 module.exports = {
   append,
+  onText,
 };

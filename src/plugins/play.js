@@ -3,6 +3,8 @@ const ytdl = require('ytdl-core');
 const fs = require('fs');
 const request = require('request');
 const { PATH, makeEmbed } = require('./util');
+const USAGEPLAY = '`usage: [!play/!pl] [<name>] [<voiceChannel>/.]`';
+const USAGESKIP = '`usage: [!skip/!s] [<index>]`';
 
 const nextSongDelay = 500; // In milliseconds
 
@@ -184,7 +186,7 @@ const skip = (number, message) => {
       cutSongName = playingQueue[number].name;
       playingQueue.splice(number, 1);
     } else {
-      message.channel.send('That index is out of bounds!');
+      message.channel.send(USAGESKIP);
     }
   }
   if (cutSongName) {
@@ -227,7 +229,7 @@ const queue = (message) => {
  */
 const play = ({channel, media, message, bot}) => {
   if (!channel) {
-    message.channel.send('Please specify a channel name.');
+    message.channel.send(USAGEPLAY);
     return;
   }
   const channelList = bot.channels.array();
@@ -251,7 +253,7 @@ const play = ({channel, media, message, bot}) => {
     // For attachments
     const attach = message.attachments.array();
     if (attach.length === 0) {
-      message.channel.send('Please specify music to play.');
+      message.channel.send(USAGEPLAY);
       return;
     }
     joinAndPlay(vc, request(attach[0].url), attach[0].filename, message);
@@ -293,8 +295,30 @@ const play = ({channel, media, message, bot}) => {
   }
 };
 
+const onText = (message, bot) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+  if (botCommand === '!play' || botCommand === '!pl') {
+    let media;
+    let channel;
+    if (cmd.length === 2) {
+      channel = cmd[1];
+    } else {
+      media = cmd[1];
+      channel = cmd[2];
+    }
+    play({channel, media, message, bot});
+  } else if (botCommand === '!queue' || botCommand === '!q') {
+    queue(message);
+  } else if (botCommand === '!skip' || botCommand === '!s') {
+    const num = cmd[1];
+    skip(num, message);
+  }
+};
+
 module.exports = {
   skip,
   queue,
   play,
+  onText,
 };

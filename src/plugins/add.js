@@ -9,6 +9,8 @@ const {
   makeEmbed,
   hasFile,
 } = require('./util');
+const USAGE = '`usage: [!add/!a] [<url>/"Example String Here"] <name>' +
+  ' [<startTimeStamp>] [<stopTimeStamp>]`';
 
 /**
  * Adds a file to the local storage space. If the url is a youtube video,
@@ -31,7 +33,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
   message.channel.send('Loading...').then(msg => {
     if (!fileName) {
       msg.delete();
-      message.channel.send('Please specify a name.');
+      message.channel.send(USAGE);
       return;
     }
     // Check for youtube videos
@@ -127,7 +129,60 @@ const addText = (fileName, text, message) => {
   });
 };
 
+const onText = (message) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+  // Get any attachments associated with message
+  const attach = message.attachments.array();
+
+  if (botCommand === '!add' || botCommand === '!a') {
+    let url, fileName, exten, timeStart, timeStop;
+    if (attach.length > 0) {
+      // Handling attachment images
+      fileName = cmd[1];
+      url = attach[0].url;
+      timeStart = cmd[2];
+      timeStop = cmd[3];
+    } else {
+      // If the image is contained in url
+      fileName = cmd[2];
+      url = cmd[1];
+      timeStart = cmd[3];
+      timeStop = cmd[4];
+    }
+    // If the user is only uploading a string
+    if (url[0] === '"') {
+      let string = cmd.slice(1, cmd.length - 1).join(' ');
+      if (string[string.length - 1] !== '"') {
+        message.channel.send(USAGE);
+        return;
+      }
+      string = string.slice(1, string.length - 1);
+      fileName = cmd[cmd.length - 1];
+      if (!fileName) {
+        message.channel.send(USAGE);
+        return;
+      }
+
+      addText(fileName, string, message);
+    } else {
+      if (!fileName) {
+        message.channel.send(USAGE);
+        return;
+      }
+
+      exten = url.substr((url.lastIndexOf('.') + 1));
+      if (!exten) {
+        message.channel.send('Could not find file extension');
+      }
+
+      add(fileName, url, exten, message, timeStart, timeStop);
+    }
+  }
+};
+
 module.exports = {
   add,
   addText,
+  onText,
 };

@@ -2,6 +2,7 @@
 const fs = require('fs');
 const { Attachment } = require('discord.js');
 const { PATH, COLOR, makeEmbed } = require('./util');
+const USAGE = '`usage: [!post/!p] <name>`';
 
 /**
  * Posts a file stored in the local storage space.
@@ -18,7 +19,7 @@ const post = (fileName, message, bot) => {
   message.delete();
   const files = fs.readdirSync(PATH);
   if (!fileName) {
-    message.channel.send('Please specify a name.');
+    message.channel.send(USAGE);
     return;
   }
   let file;
@@ -94,6 +95,22 @@ const post = (fileName, message, bot) => {
   }
 };
 
+const onText = (message, bot) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+  if (botCommand === '!post' || botCommand === '!p') {
+    // Posting an image
+    const fileName = cmd[1];
+    if (!fileName) {
+      message.channel.send(USAGE);
+      return;
+    }
+
+    post(fileName, message, bot);
+  }
+};
+
 module.exports = {
   post,
+  onText,
 };

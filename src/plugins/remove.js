@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { PATH, EMOJI_PATH, removeJson, makeEmbed } = require('./util');
+const USAGE = '`usage: [!remove/!r] <name>`';
 
 /**
  * Removes a file from the local storage
@@ -16,7 +17,7 @@ const remove = ({ fileName, message, emojis, cb }) => {
   const files = fs.readdirSync(PATH);
   let file;
   if (!fileName) {
-    message.channel.send('Please specify a name.');
+    message.channel.send(USAGE);
   }
   if (emojis[fileName]) {
     // If the file is an emoji reaction
@@ -48,6 +49,20 @@ const remove = ({ fileName, message, emojis, cb }) => {
   }
 };
 
+const onText = (message, bot) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+
+  if (botCommand === '!remove' || botCommand === '!r') {
+    // Delete any stored reactions
+    const fileName = cmd.slice(1, cmd.length).join(' ');
+    remove({ fileName, message, emojis: bot.emojiTriggers, cb: () => {
+      bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+    }});
+  }
+};
+
 module.exports = {
   remove,
+  onText,
 };

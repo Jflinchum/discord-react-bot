@@ -1,6 +1,8 @@
 'use strict';
 const MarkovChain = require('markovchain');
 const { makeEmbed, makeEmbedNoUser } = require('./util');
+const USAGE = '`usage: !markov <@user/#textChannel/all> [messageStart]`';
+
 
 var markovString = '';
 var channelLength = 0;
@@ -188,7 +190,43 @@ const postMarkovChannel = (user, channel, origChannel, phrase) => {
   );
 };
 
+const onText = (message) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+
+  if (botCommand === '!markov') {
+    let string = '';
+    if (cmd[2] !== undefined && cmd[2] !== null) {
+      string = cmd.slice(2, cmd.length).join(' ');
+      if (string[string.length - 1] !== '"') {
+        message.channel.send(USAGE);
+        return;
+      }
+      string = string.slice(1, string.length - 1);
+    }
+    if (string == null) {
+      string = '';
+    }
+    if (cmd[1] === 'all') {
+      markovUser(null, message.guild, message.channel, string);
+      return;
+    }
+    const channel = message.mentions.channels.first();
+    const user = message.mentions.users.first();
+    if (user != null) {
+      markovUser(user, message.guild, message.channel, string);
+      return;
+    }
+    if (channel != null) {
+      markovChannel(channel, message.guild, message.channel, string);
+      return;
+    }
+    message.channel.send(USAGE);
+  }
+};
+
 module.exports = {
   markovUser,
   markovChannel,
+  onText,
 };
