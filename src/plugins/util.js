@@ -8,6 +8,7 @@ const path = require('path');
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
 const EMOJI_PATH = `${appDir}/../emoji.json`;
+const OUTPUT_PATH = `${appDir}/../output/`;
 const COLOR = 0x9400D3;
 const MAX_YT_TIME = 150; // In seconds
 // eslint-disable-next-line
@@ -227,6 +228,32 @@ const removeJson = ({ path, key, cb }) => {
 };
 
 /**
+ * Adds a json object to a file.
+ *
+ * @param {String} path - The path to the file
+ * @param {String} text - The text to add
+ */
+const addText = ({ path, text }) => {
+  // First check if the file exists
+  fs.exists(path, (exists) => {
+    if (exists) {
+      // Read the file and parse the data
+      fs.readFile(path, (err, data) => {
+        if (err) console.log(err);
+        else {
+          fs.writeFileSync(path, text);
+          return;
+        }
+      });
+    } else {
+      // If the file doesn't exists, make it
+      fs.writeFileSync(path, text);
+      return;
+    }
+  });
+};
+
+/**
  * Sends the text string to the message channel, paginating it based off
  * of MESSAGE_MAX_LENGTH.
  *
@@ -301,13 +328,130 @@ const sendTextBlock = ({text, message, page = 1}) => {
   }
 };
 
+let exportDictionary = {};
+
+/**
+ * Downloads all messages from the channel
+ *
+ * @param {Channel} channel - the channel to download
+ */
+const exportMessages = (channel) => {
+  exportDictionary[channel.name] = '';
+
+  if (channel.type === 'text') {
+    console.log('Export started.');
+    channel.fetchMessages({ limit: 100 })
+      .then(messages => {
+        messages.tap((message) => {
+          if (message.cleanContent.length > 0) {
+            exportDictionary[channel.name] += (message.cleanContent + '\n');
+          }
+        });
+        if (messages.size >= 100) {
+          exportRecursive(messages.last(), channel);
+        } else {
+          addText({
+            path: OUTPUT_PATH + channel.name + '.txt',
+            text: exportDictionary[channel.name],
+          });
+          console.log('Export finished.');
+        }
+      }).catch(console.error);
+  }
+};
+
+const exportRecursive = (message, channel) => {
+  channel.fetchMessages({ limit: 100, before: message.id })
+    .then(messages => {
+      messages.tap((message) => {
+        if (message.cleanContent.length > 0) {
+          exportDictionary[channel.name] += (message.cleanContent + '\n');
+        }
+      });
+      if (messages.size >= 100) {
+        exportRecursive(messages.last(), channel);
+      } else {
+        addText({
+          path: OUTPUT_PATH + channel.name + '.txt',
+          text: exportDictionary[channel.name],
+        });
+        console.log('Export finished.');
+      }
+    }).catch(console.error);
+};
+
+const exportAllMessages = (guild) => {
+  guild.channels.tap((channel) => { exportMessages(channel); });
+};
+
+/**
+ * Downloads all messages from the channel
+ *
+ * @param {Channel} channel - the channel to download
+ */
+const exportFormattedMessages = (channel) => {
+  exportDictionary[channel.name] = '';
+
+  if (channel.type === 'text') {
+    console.log('Export started.');
+    channel.fetchMessages({ limit: 100 })
+      .then(messages => {
+        messages.tap((message) => {
+          if (message.cleanContent.length > 0) {
+            exportDictionary[channel.name] += (message.author.username +
+              '|' + message.cleanContent + '\n');
+          }
+        });
+        if (messages.size >= 100) {
+          exportFormattedRecursive(messages.last(), channel);
+        } else {
+          addText({
+            path: OUTPUT_PATH + channel.name + 'GPT2.txt',
+            text: exportDictionary[channel.name],
+          });
+          console.log('Export finished.');
+        }
+      }).catch(console.error);
+  }
+};
+
+const exportFormattedRecursive = (message, channel) => {
+  channel.fetchMessages({ limit: 100, before: message.id })
+    .then(messages => {
+      messages.tap((message) => {
+        if (message.cleanContent.length > 0) {
+          exportDictionary[channel.name] += (message.author.username +
+            '|' + message.cleanContent + '\n');
+        }
+      });
+      if (messages.size >= 100) {
+        exportFormattedRecursive(messages.last(), channel);
+      } else {
+        addText({
+          path: OUTPUT_PATH + channel.name + 'GPT2.txt',
+          text: exportDictionary[channel.name],
+        });
+        console.log('Export finished.');
+      }
+    }).catch(console.error);
+};
+
+const exportAllFormattedMessages = (guild) => {
+  guild.channels.tap((channel) => { exportFormattedMessages(channel); });
+};
+
 
 module.exports = {
   PATH,
   EMOJI_PATH,
   EMOJI_REGEX,
+  OUTPUT_PATH,
   COLOR,
   MAX_YT_TIME,
+  exportMessages,
+  exportFormattedMessages,
+  exportAllMessages,
+  exportAllFormattedMessages,
   makeEmbed,
   makeEmbedNoUser,
   ytdownload,
