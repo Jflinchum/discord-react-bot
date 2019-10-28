@@ -267,7 +267,8 @@ const sendText = ({text, message, page = 0}) => {
  * @param {Object} message - The Discord Message Object to respond to
  * @param {Integer} page - The page for the text
  */
-const sendTextBlock = ({text, message, page = 0}) => {
+const sendTextBlock = ({text, message, page = 1}) => {
+  page -= 1;
   const textSplit = text.split(' ');
   if (textSplit && textSplit.length > MESSAGE_MAX_WORD_LENGTH) {
     const firstIndex = page * MESSAGE_MAX_WORD_LENGTH;
@@ -281,11 +282,15 @@ const sendTextBlock = ({text, message, page = 0}) => {
     if (lastIndex > textSplit.length) {
       lastIndex = textSplit.length;
     }
+    if (isNaN(page) || page > totalPages || page < 0) {
+      message.channel.send('Could not find page!');
+      return;
+    }
     // Response text
     const messageText = '```\n'
     + textSplit.slice(firstIndex, lastIndex).join(' ')
     + `${(parseInt(page, 10) === totalPages) ? '' : '...'}`
-    + `\nPage: ${page} of ${totalPages}`
+    + `\nPage: ${page + 1} of ${totalPages + 1}`
     + '\n```';
     message.channel.send(messageText);
   } else {

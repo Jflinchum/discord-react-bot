@@ -127,7 +127,60 @@ const addText = (fileName, text, message) => {
   });
 };
 
+const onText = (message) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+  // Get any attachments associated with message
+  const attach = message.attachments.array();
+
+  if (botCommand === '!add' || botCommand === '!a') {
+    let url, fileName, exten, timeStart, timeStop;
+    if (attach.length > 0) {
+      // Handling attachment images
+      fileName = cmd[1];
+      url = attach[0].url;
+      timeStart = cmd[2];
+      timeStop = cmd[3];
+    } else {
+      // If the image is contained in url
+      fileName = cmd[2];
+      url = cmd[1];
+      timeStart = cmd[3];
+      timeStop = cmd[4];
+    }
+    // If the user is only uploading a string
+    if (url[0] === '"') {
+      let string = cmd.slice(1, cmd.length - 1).join(' ');
+      if (string[string.length - 1] !== '"') {
+        message.channel.send('Please wrap text in quotation marks.');
+        return;
+      }
+      string = string.slice(1, string.length - 1);
+      fileName = cmd[cmd.length - 1];
+      if (!fileName) {
+        message.channel.send('Please specify a name.');
+        return;
+      }
+
+      addText(fileName, string, message);
+    } else {
+      if (!fileName) {
+        message.channel.send('Please specify a name.');
+        return;
+      }
+
+      exten = url.substr((url.lastIndexOf('.') + 1));
+      if (!exten) {
+        message.channel.send('Could not find file extension');
+      }
+
+      add(fileName, url, exten, message, timeStart, timeStop);
+    }
+  }
+};
+
 module.exports = {
   add,
   addText,
+  onText,
 };

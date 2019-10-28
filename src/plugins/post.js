@@ -94,6 +94,22 @@ const post = (fileName, message, bot) => {
   }
 };
 
+const onText = (message, bot) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+  if (botCommand === '!post' || botCommand === '!p') {
+    // Posting an image
+    const fileName = cmd[1];
+    if (!fileName) {
+      message.channel.send('Please specify a name.');
+      return;
+    }
+
+    post(fileName, message, bot);
+  }
+};
+
 module.exports = {
   post,
+  onText,
 };

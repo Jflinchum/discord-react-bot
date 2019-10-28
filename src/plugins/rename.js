@@ -51,6 +51,18 @@ const rename = (oldName, newName, message) => {
   }
 };
 
+const onText = (message) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+
+  if (botCommand === '!rename' || botCommand === '!rn') {
+    const oldFile = cmd[1];
+    const newFile = cmd[2];
+    rename(oldFile, newFile, message);
+  }
+};
+
 module.exports = {
   rename,
+  onText,
 };

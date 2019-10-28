@@ -18,6 +18,17 @@ const help = (message, page) => {
   sendTextBlock({text: helpText, message, page});
 };
 
+const onText = (message) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+  if (botCommand === '!help' || botCommand === '!h') {
+    // Post a help page
+    const page = cmd[1];
+    help(message, page);
+  }
+};
+
 module.exports = {
   help,
+  onText,
 };

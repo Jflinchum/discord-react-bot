@@ -90,6 +90,24 @@ const list = ({ type, message, emojis, page }) => {
   sendTextBlock({text: response, message, page});
 };
 
+const onText = (message, bot) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+
+  if (botCommand === '!list' || botCommand === '!l') {
+    // Listing files
+    let fileType, page;
+    if (isNaN(cmd[1])) {
+      fileType = cmd[1];
+      page = cmd[2];
+    } else {
+      page = cmd[1];
+    }
+    list({ type: fileType, message, emojis: bot.emojiTriggers, page });
+  }
+};
+
 module.exports = {
   list,
+  onText,
 };

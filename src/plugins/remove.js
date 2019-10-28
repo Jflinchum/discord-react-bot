@@ -48,6 +48,20 @@ const remove = ({ fileName, message, emojis, cb }) => {
   }
 };
 
+const onText = (message, bot) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+
+  if (botCommand === '!remove' || botCommand === '!r') {
+    // Delete any stored reactions
+    const fileName = cmd.slice(1, cmd.length).join(' ');
+    remove({ fileName, message, emojis: bot.emojiTriggers, cb: () => {
+      bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+    }});
+  }
+};
+
 module.exports = {
   remove,
+  onText,
 };

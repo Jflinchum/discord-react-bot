@@ -293,8 +293,30 @@ const play = ({channel, media, message, bot}) => {
   }
 };
 
+const onText = (message, bot) => {
+  const cmd = message.content.split(' ');
+  const botCommand = cmd[0];
+  if (botCommand === '!play' || botCommand === '!pl') {
+    let media;
+    let channel;
+    if (cmd.length === 2) {
+      channel = cmd[1];
+    } else {
+      media = cmd[1];
+      channel = cmd[2];
+    }
+    play({channel, media, message, bot});
+  } else if (botCommand === '!queue' || botCommand === '!q') {
+    queue(message);
+  } else if (botCommand === '!skip' || botCommand === '!s') {
+    const num = cmd[1];
+    skip(num, message);
+  }
+};
+
 module.exports = {
   skip,
   queue,
   play,
+  onText,
 };
