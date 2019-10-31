@@ -11,7 +11,7 @@ import fileinput
 import model, sample, encoder
 
 def interact_model(
-    model_name='345M',
+    model_name='discord-model',
     seed=None,
     nsamples=1,
     batch_size=1,
@@ -19,7 +19,7 @@ def interact_model(
     temperature=1,
     top_k=40,
     top_p=1,
-    models_dir='./src/gpt2/models',
+    models_dir='./src/plugins/gpt2/models',
 ):
     """
     Interactively run the model

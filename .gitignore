@@ -69,7 +69,7 @@ emoji.json
 package-lock.json
 build/config.gypi
 <<<<<<< HEAD
-src/gpt2/models
+src/plugins/gpt2/models
 =======
 
 output/
