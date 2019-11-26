@@ -31,6 +31,7 @@
     "ytdl-core": "^1.0.0"
   },
   "dependencies": {
-    "markovchain": "^1.0.2"
+    "markovchain": "^1.0.2",
+    "node-cron": "^2.0.3"
   }
 }

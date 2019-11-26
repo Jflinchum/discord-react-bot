@@ -34,7 +34,7 @@ const findFiles = (regex, files) => {
  * the command
  * @param {Object} emojis - The emojis to search through and list
  */
-const list = ({ type, message, emojis, page }) => {
+const list = ({ type, message, emojis, cronJobs, page }) => {
   message.delete();
   const files = fs.readdirSync(PATH);
   let response = '';
@@ -50,6 +50,7 @@ const list = ({ type, message, emojis, page }) => {
   const musicType = (!type || type === 'music');
   const textType = (!type || type === 'text');
   const emojiType = (!type || type === 'emoji');
+  const cronType = (!type || type === 'cron');
 
   if (imageType) {
     imageList = findFiles(imageRegex, files);
@@ -96,8 +97,20 @@ const list = ({ type, message, emojis, page }) => {
       response += '\n';
     }
   }
+  if (cronType) {
+    response += 'Cron Jobs: \n';
+    const jobNames = Object.keys(cronJobs);
+    for (let index in jobNames) {
+      let jobList = cronJobs[jobNames[index]];
+      response += `  ${jobNames[index]}: `;
+      for (let job in jobList) {
+        response += `  (${jobList[job].content}, ${jobList[job].cronTime}), `;
+      }
+    }
+    response += '\n';
+  }
 
-  if (!imageType && !musicType && !textType && !emojiType) {
+  if (!imageType && !musicType && !textType && !emojiType && !cronType) {
     message.channel.send(USAGE);
     return;
   }
@@ -117,7 +130,13 @@ const onText = (message, bot) => {
     } else {
       page = cmd[1];
     }
-    list({ type: fileType, message, emojis: bot.emojiTriggers, page });
+    list({
+      type: fileType,
+      message,
+      emojis: bot.emojiTriggers,
+      cronJobs: bot.cronJobs,
+      page,
+    });
   }
 };
 

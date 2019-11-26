@@ -3,11 +3,19 @@
 const { Client } = require('discord.js');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
-const { PATH, EMOJI_PATH, EMOJI_REGEX, removeJson } = require('./plugins/util');
+const cron = require('node-cron');
+const {
+  PATH,
+  EMOJI_PATH,
+  EMOJI_REGEX,
+  CRON_PATH,
+  removeJson,
+} = require('./plugins/util');
 const { onTextHooks } = require('./plugins');
 const TOKEN = process.env.DISCORD_TOKEN;
 
 const bot = new Client();
+// Set up emojis
 fs.exists(EMOJI_PATH, (exists) => {
   if (!exists) {
     fs.writeFileSync(EMOJI_PATH, '{}');
@@ -16,11 +24,45 @@ fs.exists(EMOJI_PATH, (exists) => {
   bot.emojiTriggers = emojiTriggers;
 });
 
+// Set up cron jobs
+fs.exists(CRON_PATH, (exists) => {
+  if (!exists) {
+    fs.writeFileSync(CRON_PATH, '{}');
+  }
+  bot.cronJobs = [];
+  let cronJobs = JSON.parse(fs.readFileSync(CRON_PATH));
+  const cronKeys = Object.keys(cronJobs);
+  for (let i = 0; i < cronKeys.length; i += 1) {
+    const key = cronKeys[i];
+    const jobs = cronJobs[key];
+    for (let j = 0; j < jobs.length; j += 1) {
+      const job = jobs[j];
+      const newJob = {
+        channel: job.channel,
+        name: job.name,
+        content: job.content,
+        cronTime: job.cronTime,
+      };
+      newJob.cronJob = cron.schedule(job.cron, () => {
+        bot.guilds.find('id', job.guildId)
+          .channels.find('name', job.channel)
+          .send(job.content);
+      });
+      if (bot.cronJobs[job.name]) {
+        bot.cronJobs[job.name].push(newJob);
+      } else {
+        bot.cronJobs[job.name] = [newJob];
+      }
+    }
+  }
+});
+
 bot.on('ready', () => {
   console.log('Logged in');
   mkdirp.sync(PATH);
   Object.keys(bot.emojiTriggers).map((triggerWord) => {
     for (let index in bot.emojiTriggers[triggerWord]) {
+      // Removing any emojis that are not on the server anymore
       let emojiObj = bot.emojiTriggers[triggerWord][index];
       if (!EMOJI_REGEX.test(emojiObj.emoji) &&
       !bot.guilds.array()[0].emojis.get(emojiObj.emoji)) {

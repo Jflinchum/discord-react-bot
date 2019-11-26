@@ -8,6 +8,7 @@ const path = require('path');
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
 const EMOJI_PATH = `${appDir}/../emoji.json`;
+const CRON_PATH = `${appDir}/../cron.json`;
 const OUTPUT_PATH = `${appDir}/../output/`;
 const COLOR = 0x9400D3;
 const MAX_YT_TIME = 150; // In seconds
@@ -445,6 +446,7 @@ module.exports = {
   PATH,
   EMOJI_PATH,
   EMOJI_REGEX,
+  CRON_PATH,
   OUTPUT_PATH,
   COLOR,
   MAX_YT_TIME,

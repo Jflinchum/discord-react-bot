@@ -63,6 +63,7 @@ typings/
 # Reactions folder
 reactions/
 emoji.json
+cron.json
 
 # Mac Stuff
 .DS_STORE

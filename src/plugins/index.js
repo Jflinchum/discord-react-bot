@@ -12,6 +12,7 @@ const onTextHooks = [
   require('./append').onText,
   require('./trigger').onText,
   require('./gpt2').onText,
+  require('./cron').onText,
 ];
 
 module.exports = { onTextHooks };
