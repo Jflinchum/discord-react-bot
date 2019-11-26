@@ -43,7 +43,7 @@ fs.exists(CRON_PATH, (exists) => {
         content: job.content,
         cronTime: job.cronTime,
       };
-      newJob.cronJob = cron.schedule(job.cron, () => {
+      newJob.cronJob = cron.schedule(job.cronTime, () => {
         bot.guilds.find('id', job.guildId)
           .channels.find('name', job.channel)
           .send(job.content);
