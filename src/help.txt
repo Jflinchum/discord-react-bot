@@ -7,7 +7,7 @@
 [!remove/!r] <name>
 - Deletes the file from the local storage.
 
-[!list/!l] [image/music/text/emoji]
+[!list/!l] [image/music/text/emoji/cron]
 - Lists all files currently saved in the local storage. If a file type is requested, it will only list files under that type.
 
 [!skip/!s] <index>]
@@ -31,8 +31,11 @@
 !gpt2 <prompt>
 - Makes the bot generate a gpt2 response based on the prompt you give it
 
-!cron <name> <channel> <link> <cronSyntax>
+!addCron <name> <channel> <link> <cronSyntax>
 - Sets a cron job for the bot to automatically post the link to the channel at the given cron time syntax
+
+!removeCron <name>
+- Removes the cron job at the given name
 
 [!help/!h]
 - Displays this help screen!

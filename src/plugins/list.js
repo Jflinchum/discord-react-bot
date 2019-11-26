@@ -27,7 +27,7 @@ const findFiles = (regex, files) => {
 /**
  * Finds all files under the given file type and sends a list of them.
  * If no type is specified, list all files under each category.
- * The current categories are Image, Music, Text, and Emoji
+ * The current categories are Image, Music, Text, Emoji, and Cron
  *
  * @param {String} type - The local file to post
  * @param {Object} message - The Discord Message Object that initiated
