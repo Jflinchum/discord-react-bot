@@ -10,6 +10,7 @@ const {
   EMOJI_REGEX,
   CRON_PATH,
   removeJson,
+  formatEscapedDates,
 } = require('./plugins/util');
 const { onTextHooks } = require('./plugins');
 const TOKEN = process.env.DISCORD_TOKEN;
@@ -39,19 +40,19 @@ fs.exists(CRON_PATH, (exists) => {
       const job = jobs[j];
       const newJob = {
         channel: job.channel,
-        name: job.name,
+        name: key,
         content: job.content,
         cronTime: job.cronTime,
       };
       newJob.cronJob = cron.schedule(job.cronTime, () => {
         bot.guilds.find('id', job.guildId)
           .channels.find('name', job.channel)
-          .send(job.content);
+          .send(formatEscapedDates(job.content, new Date()));
       });
-      if (bot.cronJobs[job.name]) {
-        bot.cronJobs[job.name].push(newJob);
+      if (bot.cronJobs[newJob.name]) {
+        bot.cronJobs[newJob.name].push(newJob);
       } else {
-        bot.cronJobs[job.name] = [newJob];
+        bot.cronJobs[newJob.name] = [newJob];
       }
     }
   }

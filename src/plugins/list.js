@@ -102,7 +102,7 @@ const list = ({ type, message, emojis, cronJobs, page }) => {
     const jobNames = Object.keys(cronJobs);
     for (let index in jobNames) {
       let jobList = cronJobs[jobNames[index]];
-      response += `  ${jobNames[index]}: `;
+      response += `  ${jobNames[index]}:`;
       for (let job in jobList) {
         response += `  (${jobList[job].content}, ${jobList[job].cronTime}), `;
       }

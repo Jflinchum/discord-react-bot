@@ -1,6 +1,12 @@
 'use strict';
 const cron = require('node-cron');
-const { CRON_PATH, addJson, removeJson, makeEmbed } = require('./util');
+const {
+  CRON_PATH,
+  addJson,
+  removeJson,
+  makeEmbed,
+  formatEscapedDates,
+} = require('./util');
 // Cron Time Params
 // # ┌────────────── second (optional)
 // # │ ┌──────────── minute
@@ -34,7 +40,7 @@ const addCron = ({
       };
       newJob.cronJob = cron.schedule(cronTime, () => {
         bot.guilds.find('id', guildId).channels.find('name', channel)
-          .send(content);
+          .send(formatEscapedDates(content, new Date()));
       });
       // Start the cron job and append it to the bot
       if (bot.cronJobs[name]) {

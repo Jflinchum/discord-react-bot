@@ -441,6 +441,25 @@ const exportAllFormattedMessages = (guild) => {
   guild.channels.tap((channel) => { exportFormattedMessages(channel); });
 };
 
+/**
+ * Formats the string by replacing escaped date sequences with the supplied date
+ * i.e string = "The date is %Y %M %D right now" would return
+ * "The date is 2019 11 26 right now" if the supplied date were
+ * 2019 November 26th
+ * @param {String} string - The string to format
+ * @param {Date} date - The date to format the string with
+ * @returns {String} - The final formmated string replacing the escaped dates
+ */
+const formatEscapedDates = (string, date) => {
+  return string
+    .replace(/%Y/g, date.getFullYear())
+    .replace(/%M/g, `0${date.getMonth() + 1}`.slice(-2))
+    .replace(/%D/g, `0${date.getDate()}`.slice(-2))
+    .replace(/%H/g, date.getHours())
+    .replace(/%M/g, date.getMinutes())
+    .replace(/%S/g, date.getSeconds());
+};
+
 
 module.exports = {
   PATH,
@@ -464,4 +483,5 @@ module.exports = {
   sendText,
   sendTextBlock,
   config,
+  formatEscapedDates,
 };
