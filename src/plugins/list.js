@@ -106,8 +106,8 @@ const list = ({ type, message, emojis, cronJobs, page }) => {
       for (let job in jobList) {
         response += `  (${jobList[job].content}, ${jobList[job].cronTime}), `;
       }
+      response += '\n';
     }
-    response += '\n';
   }
 
   if (!imageType && !musicType && !textType && !emojiType && !cronType) {
