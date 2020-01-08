@@ -45,9 +45,10 @@ fs.exists(CRON_PATH, (exists) => {
         cronTime: job.cronTime,
       };
       newJob.cronJob = cron.schedule(job.cronTime, () => {
-        bot.guilds.find('id', job.guildId)
-          .channels.find('name', job.channel)
-          .send(formatEscapedDates(job.content, new Date()));
+        const channel = bot.guilds.find('id', job.guildId)
+          .channels.find('name', job.channel);
+        if (channel)
+          channel.send(formatEscapedDates(job.content, new Date()));
       });
       if (bot.cronJobs[newJob.name]) {
         bot.cronJobs[newJob.name].push(newJob);

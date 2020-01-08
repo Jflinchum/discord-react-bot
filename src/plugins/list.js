@@ -104,7 +104,7 @@ const list = ({ type, message, emojis, cronJobs, page }) => {
       let jobList = cronJobs[jobNames[index]];
       response += `  ${jobNames[index]}:`;
       for (let job in jobList) {
-        response += `  (${jobList[job].content}, ${jobList[job].cronTime}), `;
+        response += `  (${jobList[job].content}, ${jobList[job].cronTime}, ${jobList[job].channel}), `;
       }
       response += '\n';
     }
