@@ -460,6 +460,18 @@ const formatEscapedDates = (string, date) => {
     .replace(/%S/g, date.getSeconds());
 };
 
+/**
+ * Splits the string by spaces into an array, however it keeps words wrapped in
+ * quotation marks together.
+ * i.e 'get "something" from "any site"' =>
+ * ["get", "something", "from", "any site"]
+ */
+const splitArgsWithQuotes = (string) => {
+  const tokens = [].concat.apply([], string.split('"').map(function(v, i){
+    return i % 2 ? '"' + v + '"' : v.split(' ');
+  })).filter(Boolean);
+  return tokens;
+};
 
 module.exports = {
   PATH,
@@ -484,4 +496,5 @@ module.exports = {
   sendTextBlock,
   config,
   formatEscapedDates,
+  splitArgsWithQuotes,
 };

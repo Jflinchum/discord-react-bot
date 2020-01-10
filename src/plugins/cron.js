@@ -39,8 +39,9 @@ const addCron = ({
         cronTime,
       };
       newJob.cronJob = cron.schedule(cronTime, () => {
-        bot.guilds.find('id', guildId).channels.find('name', channel)
-          .send(formatEscapedDates(content, new Date()));
+        const channel = bot.guilds.find('id', guildId)
+          .channels.find('name', channel);
+        channel.send(formatEscapedDates(content, new Date()));
       });
       // Start the cron job and append it to the bot
       if (bot.cronJobs[name]) {
