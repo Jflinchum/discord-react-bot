@@ -33,8 +33,11 @@ const findFiles = (regex, files) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  * @param {Object} emojis - The emojis to search through and list
+ * @param {Object} cronJobs - The list of cron jobs to parse
+ * @param {String} page - The page of the list to show
+ * @param {Object} bot - The discord bot
  */
-const list = ({ type, message, emojis, cronJobs, page }) => {
+const list = ({ type, message, emojis, cronJobs, page, bot }) => {
   message.delete();
   const files = fs.readdirSync(PATH);
   let response = '';
@@ -104,8 +107,9 @@ const list = ({ type, message, emojis, cronJobs, page }) => {
       let jobList = cronJobs[jobNames[index]];
       response += `  ${jobNames[index]}:`;
       for (let job in jobList) {
+        const guild = bot.guilds.find('id', jobList[job].guildId);
         response += `  (${jobList[job].content}, ${jobList[job].cronTime},` +
-          ` ${jobList[job].channel}), `;
+          ` ${guild.channels.get(jobList[job].channel).name}), `;
       }
       response += '\n';
     }
@@ -137,6 +141,7 @@ const onText = (message, bot) => {
       emojis: bot.emojiTriggers,
       cronJobs: bot.cronJobs,
       page,
+      bot,
     });
   }
 };

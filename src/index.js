@@ -43,10 +43,11 @@ fs.exists(CRON_PATH, (exists) => {
         name: key,
         content: job.content,
         cronTime: job.cronTime,
+        guildId: job.guildId,
       };
       newJob.cronJob = cron.schedule(job.cronTime, () => {
         const channel = bot.guilds.find('id', job.guildId)
-          .channels.find('name', job.channel);
+          .channels.get(job.channel);
         if (channel)
           channel.send(formatEscapedDates(job.content, new Date()));
       });

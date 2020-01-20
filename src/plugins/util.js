@@ -473,6 +473,25 @@ const splitArgsWithQuotes = (string) => {
   return tokens;
 };
 
+/**
+ * Parses the discord id from a string
+ * I.E <@12517231> returns 12517231
+ * @param string - The string to parse for the id
+ * @returns - The discord id parsed from the string or undefined
+ */
+const getDiscordId = (string) => {
+  if ((string.startsWith('<@') || string.startsWith('<#'))
+  && string.endsWith('>')) {
+    string = string.slice(2, -1);
+
+    if (string.startsWith('!')) {
+      string = string.slice(1);
+    }
+
+    return string;
+  }
+};
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -497,4 +516,5 @@ module.exports = {
   config,
   formatEscapedDates,
   splitArgsWithQuotes,
+  getDiscordId,
 };

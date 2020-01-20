@@ -6,6 +6,7 @@ const {
   removeJson,
   makeEmbed,
   formatEscapedDates,
+  getDiscordId,
 } = require('./util');
 // Cron Time Params
 // # ┌────────────── second (optional)
@@ -37,11 +38,13 @@ const addCron = ({
         name,
         content,
         cronTime,
+        guildId,
       };
+      const guild = bot.guilds.find('id', guildId);
       newJob.cronJob = cron.schedule(cronTime, () => {
-        const channel = bot.guilds.find('id', guildId)
-          .channels.find('name', channel);
-        channel.send(formatEscapedDates(content, new Date()));
+        const channel = guild.channels.get(channel);
+        if (channel)
+          channel.send(formatEscapedDates(content, new Date()));
       });
       // Start the cron job and append it to the bot
       if (bot.cronJobs[name]) {
@@ -78,7 +81,7 @@ const removeCron = ({ name, bot, message }) => {
 
 const formatCmd = (cmd) => {
   const name = cmd[1];
-  const channel = cmd[2];
+  const channel = getDiscordId(cmd[2]);
   const content = cmd[3];
   const cron = cmd.slice(4, cmd.length).join(' ');
   return { name, channel, content, cron };
