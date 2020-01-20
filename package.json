@@ -28,7 +28,7 @@
     "mkdirp": "^0.5.1",
     "node-opus": "^0.3.1",
     "request": "^2.88.0",
-    "ytdl-core": "^1.0.0"
+    "ytdl-core": "^1.0.7"
   },
   "dependencies": {
     "markovchain": "^1.0.2",
