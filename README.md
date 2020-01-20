@@ -49,7 +49,7 @@ A react bot for discord that can download and store files locally and post them 
 !gpt2 <prompt>
 - Makes the bot generate a gpt2 response based on the prompt you give it
 
-!addCron <name> <#channel> <link> <cronSyntax>
+!addCron <name> <#channel> <"message"> <cronSyntax>
 - Sets a cron job for the bot to automatically post the link to the channel at the given cron time syntax
 
 !removeCron <name>

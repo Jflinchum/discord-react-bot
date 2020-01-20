@@ -7,6 +7,7 @@ const {
   makeEmbed,
   formatEscapedDates,
   getDiscordId,
+  splitArgsWithQuotes,
 } = require('./util');
 // Cron Time Params
 // # ┌────────────── second (optional)
@@ -28,35 +29,40 @@ const addCron = ({
   bot,
   message,
 }) => {
-  addJson({
-    path: CRON_PATH,
-    key: name,
-    value: { cronTime, content, channel, guildId },
-    cb: () => {
-      let newJob = {
-        channel,
-        name,
-        content,
-        cronTime,
-        guildId,
-      };
-      const guild = bot.guilds.find('id', guildId);
-      newJob.cronJob = cron.schedule(cronTime, () => {
-        const channel = guild.channels.get(channel);
-        if (channel)
-          channel.send(formatEscapedDates(content, new Date()));
-      });
-      // Start the cron job and append it to the bot
-      if (bot.cronJobs[name]) {
-        bot.cronJobs[name].push(newJob);
-      } else {
-        bot.cronJobs[name] = [newJob];
-      }
-      message.channel.send(
-        makeEmbed(`Added cron job: ${name}`, message.author)
-      );
-    },
-  });
+  const guild = bot.guilds.get(guildId);
+  if (guild.channels.get(channel)) {
+    addJson({
+      path: CRON_PATH,
+      key: name,
+      value: { cronTime, content, channel, guildId },
+      cb: () => {
+        let newJob = {
+          channel,
+          name,
+          content,
+          cronTime,
+          guildId,
+        };
+        const guild = bot.guilds.get(guildId);
+        newJob.cronJob = cron.schedule(cronTime, () => {
+          const channelToPost = guild.channels.get(channel);
+          if (channelToPost)
+            channelToPost.send(formatEscapedDates(content, new Date()));
+        });
+        // Start the cron job and append it to the bot
+        if (bot.cronJobs[name]) {
+          bot.cronJobs[name].push(newJob);
+        } else {
+          bot.cronJobs[name] = [newJob];
+        }
+        message.channel.send(
+          makeEmbed(`Added cron job: ${name}`, message.author)
+        );
+      },
+    });
+  } else {
+    message.channel.send('Could not find channel');
+  }
 };
 
 const removeCron = ({ name, bot, message }) => {
@@ -82,13 +88,17 @@ const removeCron = ({ name, bot, message }) => {
 const formatCmd = (cmd) => {
   const name = cmd[1];
   const channel = getDiscordId(cmd[2]);
-  const content = cmd[3];
+  let content = cmd[3];
+  if (content.startsWith('"') && content.endsWith('"')) {
+    content = content.slice(1, content.length - 1);
+  }
   const cron = cmd.slice(4, cmd.length).join(' ');
   return { name, channel, content, cron };
 };
 
 const onText = (message, bot) => {
-  const cmd = message.content.split(' ');
+  const cmd = splitArgsWithQuotes(message.content);
+  console.log(cmd);
   const botCommand = cmd[0];
 
   if (botCommand === '!addCron') {
