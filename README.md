@@ -25,10 +25,10 @@ A react bot for discord that can download and store files locally and post them 
 [!remove/!r] <name>
 - Deletes the file from the local storage.
 
-[!list/!l][image/music/text]
+[!list/!l] [image/music/text/emoji/cron]
 - Lists all files currently saved in the local storage. If a file type is requested, it will only list files under that type.
 
-[!skip/!s][<index>]
+[!skip/!s] <index>]
 - Skips the current song if no index is given. Skips the song listed in the queue at the index otherwise.
 
 !markov <@user/#textChannel/all> [messageStart]
@@ -40,11 +40,20 @@ A react bot for discord that can download and store files locally and post them 
 !append <name> <"Example Text">
 - Appends text to the end of a text file. Only works for .txt files.
 
-[!play/!pl] [<name>] <voiceChannel>/.
+[!play/!pl] [<name>] [<voiceChannel>/.]
 - Plays an audio file to the specified channel. Name can be a name of a local file or a youtube video. If uploading an attachment, the name is not needed. Supplying a . as the channel name will make the bot use the channel with any users with it.
 
 !trigger <emoji> <decimalChance> <"Example Text">
 - Makes the bot react to the message with the supplied emoji. The decimal chance (between 0 and 1) is how often the bot will react.
+
+!gpt2 <prompt>
+- Makes the bot generate a gpt2 response based on the prompt you give it
+
+!addCron <name> <#channel> <link> <cronSyntax>
+- Sets a cron job for the bot to automatically post the link to the channel at the given cron time syntax
+
+!removeCron <name>
+- Removes the cron job at the given name
 
 [!help/!h]
 - Displays this help screen!

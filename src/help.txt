@@ -31,7 +31,7 @@
 !gpt2 <prompt>
 - Makes the bot generate a gpt2 response based on the prompt you give it
 
-!addCron <name> <channel> <link> <cronSyntax>
+!addCron <name> <#channel> <link> <cronSyntax>
 - Sets a cron job for the bot to automatically post the link to the channel at the given cron time syntax
 
 !removeCron <name>
