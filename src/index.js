@@ -99,6 +99,10 @@ bot.on('message', message => {
   if (message.author.bot) {
     return;
   }
+  if (message.channel.type === 'dm') {
+    message.channel.send('No DMs allowed');
+    return;
+  }
   // React with any emojis
   const emojiKeys = Object.keys(bot.emojiTriggers);
   for (let i = 0; i < emojiKeys.length; i++) {
@@ -120,7 +124,7 @@ bot.on('message', message => {
   }
   // Split the command by spaces
   const cmd = message.content.split(' ');
-  console.log(cmd);
+  console.log(message.author.username + ' ' + cmd);
   onTextHooks.map((onTextFunc) => {
     onTextFunc(message, bot);
   });
