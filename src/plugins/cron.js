@@ -30,11 +30,15 @@ const addCron = ({
   message,
 }) => {
   const guild = bot.guilds.get(guildId);
+  const messageRef = {
+    messageId: message.id,
+    channelId: message.channel.id,
+  };
   if (guild.channels.get(channel)) {
     addJson({
       path: CRON_PATH,
       key: name,
-      value: { cronTime, content, channel, guildId },
+      value: { cronTime, content, channel, guildId, messageRef },
       cb: () => {
         let newJob = {
           channel,
@@ -42,12 +46,33 @@ const addCron = ({
           content,
           cronTime,
           guildId,
+          messageRef,
         };
         const guild = bot.guilds.get(guildId);
+        // Schedule the cron job
         newJob.cronJob = cron.schedule(cronTime, () => {
           const channelToPost = guild.channels.get(channel);
-          if (channelToPost)
-            channelToPost.send(formatEscapedDates(content, new Date()));
+          if (channelToPost) {
+            const contentToPost = formatEscapedDates(content, new Date());
+            if (contentToPost.startsWith('!')) {
+              bot.channels
+                .get(messageRef.channelId).fetchMessage(messageRef.messageId)
+                .then((simulatedMessage) => {
+                  simulatedMessage.content = content;
+                  simulatedMessage.delete = () => {};
+                  simulatedMessage.channel = channelToPost;
+
+                  require('./index').onTextHooks.map((onTextFunc) => {
+                    onTextFunc(simulatedMessage, bot);
+                  });
+                })
+                .catch((err) => {
+                  console.log(err);
+                });
+            } else {
+              channelToPost.send(contentToPost);
+            }
+          }
         });
         // Start the cron job and append it to the bot
         if (bot.cronJobs[name]) {
@@ -98,7 +123,6 @@ const formatCmd = (cmd) => {
 
 const onText = (message, bot) => {
   const cmd = splitArgsWithQuotes(message.content);
-  console.log(cmd);
   const botCommand = cmd[0];
 
   if (botCommand === '!addCron') {

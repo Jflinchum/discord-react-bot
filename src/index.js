@@ -44,12 +44,29 @@ fs.exists(CRON_PATH, (exists) => {
         content: job.content,
         cronTime: job.cronTime,
         guildId: job.guildId,
+        messageRef: job.messageRef,
       };
       newJob.cronJob = cron.schedule(job.cronTime, () => {
         const channel = bot.guilds.get(job.guildId)
           .channels.get(job.channel);
-        if (channel)
-          channel.send(formatEscapedDates(job.content, new Date()));
+        if (channel) {
+          if (job.content.startsWith('!')) {
+            bot.channels.get(job.messageRef.channelId)
+              .fetchMessage(job.messageRef.messageId)
+              .then((messageRef) => {
+                messageRef.content = job.content;
+                messageRef.delete = () => {};
+                messageRef.channel = channel;
+
+                onTextHooks.map((onTextFunc) => {
+                  onTextFunc(messageRef, bot);
+                });
+              })
+              .catch((err) => { console.log(err); });
+          } else {
+            channel.send(formatEscapedDates(job.content, new Date()));
+          }
+        }
       });
       if (bot.cronJobs[newJob.name]) {
         bot.cronJobs[newJob.name].push(newJob);
