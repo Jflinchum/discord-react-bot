@@ -125,9 +125,13 @@ bot.on('message', message => {
   // Split the command by spaces
   const cmd = message.content.split(' ');
   console.log(message.author.username + ' ' + cmd);
-  onTextHooks.map((onTextFunc) => {
-    onTextFunc(message, bot);
-  });
+  try {
+    onTextHooks.map((onTextFunc) => {
+      onTextFunc(message, bot);
+    });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 bot.login(TOKEN);
