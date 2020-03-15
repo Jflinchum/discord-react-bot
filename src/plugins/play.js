@@ -273,25 +273,36 @@ const play = ({channel, media, message, bot}) => {
   } else {
     // For playing local files
     const files = fs.readdirSync(PATH);
-    let file;
-    // Find the file associated with the name
-    for (let i = 0; i < files.length; i++) {
-      if (files[i].substr(0, files[i].lastIndexOf('.')) === media) {
-        file = files[i];
-        break;
+    const musicFiles = files.filter(file => {
+      const exten = file.substr((file.lastIndexOf('.') + 1));
+      return exten === 'mp3' || exten === 'wav';
+    });
+    let fileToPlay;
+    if (media === '*') {
+      const randomFileIndex = Math.floor(
+        Math.random() * Math.floor(musicFiles.length)
+      );
+      fileToPlay = musicFiles[randomFileIndex];
+    } else {
+      // Find the file associated with the name
+      for (let i = 0; i < musicFiles.length; i++) {
+        if (musicFiles[i].substr(0, musicFiles[i].lastIndexOf('.')) === media) {
+          fileToPlay = musicFiles[i];
+          break;
+        }
       }
     }
-    if (!file) {
+    if (!fileToPlay) {
       message.channel.send('Could not find file.');
       return;
     }
-    const exten = file.substr((file.lastIndexOf('.') + 1));
-    if (exten !== 'mp3' && exten !== 'wav') {
-      message.channel.send('File is not categorized as music.');
-      return;
-    }
-    const filePath = `${PATH}/${file}`;
-    joinAndPlay(vc, fs.createReadStream(filePath), media, message);
+    const filePath = `${PATH}/${fileToPlay}`;
+    joinAndPlay(
+      vc,
+      fs.createReadStream(filePath),
+      fileToPlay.substr(0, fileToPlay.lastIndexOf('.')),
+      message
+    );
   }
 };
 
