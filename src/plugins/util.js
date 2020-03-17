@@ -492,6 +492,10 @@ const getDiscordId = (string) => {
   }
 };
 
+const formatDateString = (date) => {
+  return date.toLocaleString(config.locale, { timeZone: config.timeZone });
+};
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -517,4 +521,5 @@ module.exports = {
   formatEscapedDates,
   splitArgsWithQuotes,
   getDiscordId,
+  formatDateString,
 };

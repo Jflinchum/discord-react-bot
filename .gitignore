@@ -69,9 +69,10 @@ cron.json
 .DS_STORE
 package-lock.json
 build/config.gypi
-<<<<<<< HEAD
-src/plugins/gpt2/models
-=======
 
-output/
->>>>>>> c7ef72698287d2f34552acadd84dc576a2912965
+# GPT2 stuff
+src/plugins/gpt2/models
+
+# Google api stuff
+credentials.json
+token.json

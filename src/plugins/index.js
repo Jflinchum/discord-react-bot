@@ -13,6 +13,7 @@ const onTextHooks = [
   require('./trigger').onText,
   require('./gpt2').onText,
   require('./cron').onText,
+  require('./google/calendar').onText,
 ];
 
 module.exports = { onTextHooks };
