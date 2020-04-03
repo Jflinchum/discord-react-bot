@@ -1,6 +1,9 @@
 {
+  "calendar": {
+    "updateChannelId": ""
+  },
+  "googleAPIEnabled": true,
   "gpt2Enabled": false,
-  "googleAPIEnabled": false,
   "locale": "en-US",
   "timeZone": "America/New_York"
 }

@@ -10,6 +10,14 @@ const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = 'token.json';
+const STORED_EVENTS_PATH = 'events.json';
+// Frequency in milliseconds to check for updates to the calendar
+const UPDATE_FREQUENCY = 60 * 1000;
+// This is the scope of checking for any updates
+// This is useful in solving the case in which there is a series of events
+const getUpdateMaxTime = () => {
+  return new Date(new Date().setMonth(new Date().getMonth() + 1));
+};
 let creds;
 
 if (config.googleAPIEnabled) {
@@ -107,12 +115,95 @@ function listEvents(auth, message) {
     }
     message.channel.send(makeEmbedNoUser(finalMessage,
       `Upcoming Events: (${formatDateString(timeMin).split(',')[0]}) - ` +
-      `(${formatDateString(timeMax).split(',')[0]})`));
+      `(${formatDateString(timeMax).split(',')[0]})` +
+      `\n${config.timeZone}`));
   });
 }
 
+const getAllUpcomingEvents = (auth, cb) => {
+  const calendar = google.calendar({ version: 'v3', auth });
+  calendar.events.list({
+    calendarId: 'primary',
+    timeMin: new Date().toISOString(),
+    timeMax: getUpdateMaxTime(),
+    singleEvents: true,
+    orderBy: 'startTime',
+  }, (err, resp) => {
+    if (err) return cb(err);
+    return cb(null, resp.data.items);
+  });
+};
+
+const getEventById = (events, id) => {
+  return events.filter(event => event.id === id);
+};
+
+const getEventDiff = (events, cb) => {
+  fs.exists(STORED_EVENTS_PATH, (exists) => {
+    if (!exists) {
+      // If the file doesn't exist, likely first time setup. Don't return a diff
+      fs.writeFileSync(STORED_EVENTS_PATH, JSON.stringify(events));
+      return cb({ removedEvents: [], addedEvents: [] });
+    } else {
+      const storedEvents = JSON.parse(fs.readFileSync(STORED_EVENTS_PATH));
+      // All added events are newly found events that do not exist
+      // in the stored events array
+      let addedEvents = events.filter(
+        event => getEventById(storedEvents, event.id).length === 0
+      );
+      // Removed events are already stored events that do not exist
+      // in the newly found events array
+      let removedEvents = storedEvents.filter(
+        event => getEventById(events, event.id).length === 0
+      );
+      return cb({ removedEvents, addedEvents });
+    }
+  });
+};
+
+const createUpdateInterval = (bot) => {
+  setInterval(() => {
+    authorize(JSON.parse(creds), (auth) => {
+      getAllUpcomingEvents(auth, (err, events) => {
+        if (err) return console.log('An error has occured in the api', err);
+        console.log('CHECKING FOR EVENTS');
+        getEventDiff(events, ({ removedEvents, addedEvents }) => {
+          console.log('REMOVED EVENTS', removedEvents);
+          console.log('ADDED EVENTS', addedEvents);
+          if (removedEvents.length > 0 || addedEvents.length > 0) {
+            fs.writeFileSync(STORED_EVENTS_PATH, JSON.stringify(events));
+            if (removedEvents.length > 0) {
+              let removedMessage = '';
+              removedEvents.map((event) => {
+                let start = event.start.dateTime || event.start.date;
+                start = formatDateString(new Date(start));
+                removedMessage += `${start} - ${event.summary}\n`;
+              });
+              bot.channels.get(config.calendar.updateChannelId)
+                .send(makeEmbedNoUser(removedMessage,
+                  'Events Removed:'));
+            }
+            if (addedEvents.length > 0) {
+              let addedMessage = '';
+              addedEvents.map((event) => {
+                let start = event.start.dateTime || event.start.date;
+                start = formatDateString(new Date(start));
+                addedMessage += `${start} - ${event.summary}\n`;
+              });
+              bot.channels.get(config.calendar.updateChannelId)
+                .send(makeEmbedNoUser(addedMessage,
+                  'Events Added:'));
+            }
+          }
+        });
+      });
+    });
+  }, UPDATE_FREQUENCY);
+};
+
 const onText = (message, bot) => {
-  if (config.googleAPIEnabled && message.content.split(' ')[0] === '!events') {
+  if (config.googleAPIEnabled &&
+      message.content.split(' ')[0] === '!events') {
     if (creds && !(creds instanceof Error)) {
       authorize(JSON.parse(creds), (auth) => listEvents(auth, message));
     } else if (creds instanceof Error) {
@@ -123,4 +214,5 @@ const onText = (message, bot) => {
 
 module.exports = {
   onText,
+  createUpdateInterval,
 };

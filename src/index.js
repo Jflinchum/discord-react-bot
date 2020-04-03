@@ -11,8 +11,10 @@ const {
   CRON_PATH,
   removeJson,
   formatEscapedDates,
+  config,
 } = require('./plugins/util');
 const { onTextHooks } = require('./plugins');
+const { createUpdateInterval } = require('./plugins/google/calendar');
 const TOKEN = process.env.DISCORD_TOKEN;
 
 const bot = new Client();
@@ -91,6 +93,9 @@ bot.on('ready', () => {
       }
     }
   });
+  if (config.googleAPIEnabled && config.calendar.updateChannelId) {
+    createUpdateInterval(bot);
+  }
 });
 
 
