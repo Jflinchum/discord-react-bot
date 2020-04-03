@@ -142,4 +142,6 @@ bot.on('message', message => {
   }
 });
 
+bot.on('error', console.error);
+
 bot.login(TOKEN);
