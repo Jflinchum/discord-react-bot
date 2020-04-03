@@ -166,10 +166,7 @@ const createUpdateInterval = (bot) => {
     authorize(JSON.parse(creds), (auth) => {
       getAllUpcomingEvents(auth, (err, events) => {
         if (err) return console.log('An error has occured in the api', err);
-        console.log('CHECKING FOR EVENTS');
         getEventDiff(events, ({ removedEvents, addedEvents }) => {
-          console.log('REMOVED EVENTS', removedEvents);
-          console.log('ADDED EVENTS', addedEvents);
           if (removedEvents.length > 0 || addedEvents.length > 0) {
             fs.writeFileSync(STORED_EVENTS_PATH, JSON.stringify(events));
             if (removedEvents.length > 0) {
