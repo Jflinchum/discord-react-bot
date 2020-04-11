@@ -310,7 +310,8 @@ const onText = (message, bot) => {
       channel = cmd[1];
     } else {
       media = cmd[1];
-      channel = cmd[2];
+      channel = cmd.splice(2, cmd.length).join(' ');
+      console.log(channel);
     }
     play({channel, media, message, bot});
   } else if (botCommand === '!queue' || botCommand === '!q') {
