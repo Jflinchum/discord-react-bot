@@ -112,13 +112,14 @@ const playSong = ({ connection, song, message }) => {
   );
   dispatch.on('end', (reason) => {
     const nextSong = dequeue();
-    if (nextSong && nextSong.channel.name === currentChannel.name) {
+    if (nextSong && currentChannel
+    && nextSong.channel.id === currentChannel.id) {
       // If the next song is on the same channel
       playNext(nextSong, connection);
     } else {
-      playNext(nextSong);
       // Leave the voice channel after finishing the stream
       song.channel.leave();
+      playNext(nextSong);
     }
   });
   dispatch.on('error', (err) => {
@@ -162,21 +163,11 @@ const skip = (number, message) => {
   if (!number) {
     if (currentSong) {
       cutSongName = currentSong;
-      currentChannel.leave();
+      let oldChannel = currentChannel;
       // Skip the currently playing song
       currentSong = undefined;
       currentChannel = undefined;
-      const nextSong = dequeue();
-      setTimeout(() => {
-        if (nextSong) {
-          joinAndPlay(
-            nextSong.channel,
-            nextSong.media,
-            nextSong.name,
-            nextSong.message
-          );
-        }
-      }, nextSongDelay);
+      oldChannel.leave();
     } else {
       message.channel.send('Nothing to skip!');
     }
