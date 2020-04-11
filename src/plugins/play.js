@@ -108,7 +108,10 @@ const playSong = ({ connection, song, message }) => {
   message.channel.send(
     makeEmbed(
       `Playing: ${song.name}\nTo: ${song.channel.name}`,
-      message.author)
+      message.author,
+      null,
+      message.content
+    )
   );
   dispatch.on('end', (reason) => {
     const nextSong = dequeue();

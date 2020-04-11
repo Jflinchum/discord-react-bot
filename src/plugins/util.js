@@ -29,7 +29,7 @@ const config = require('./../../config.json');
  * @param {String} title - The title of the message
  * @return {Object} - Returns the constructed embeded message
  */
-const makeEmbed = (message, user, title) => {
+const makeEmbed = (message, user, title, footerText) => {
   return {
     embed: {
       thumbnail: {
@@ -39,6 +39,9 @@ const makeEmbed = (message, user, title) => {
       description: message,
       author: {
         name: title || user.username,
+      },
+      footer: {
+        text: footerText,
       },
     },
   };

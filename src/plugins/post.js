@@ -46,7 +46,7 @@ const post = (fileName, message, bot) => {
     // Audio files don't work with embeded messages, so send the attachments
     // afterwards
     message.channel.send(
-      makeEmbed(fileName, message.author)
+      makeEmbed(fileName, message.author, null, message.content)
     )
       .catch(() => {
         message.channel.send('Could not find user posting.');
@@ -66,7 +66,7 @@ const post = (fileName, message, bot) => {
       .then(msg => {
         msg.delete();
         message.channel.send(
-          makeEmbed(text.toString(), message.author)
+          makeEmbed(text.toString(), message.author, null, message.content)
         );
       });
   } else {
