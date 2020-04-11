@@ -136,7 +136,7 @@ bot.on('message', message => {
     });
   } catch (err) {
     console.log(err);
-    message.channel.post(
+    message.channel.send(
       `Ran into unexpected error. Check error log.\n${err.message}`
     );
   }
