@@ -83,6 +83,7 @@ const post = (fileName, message, bot) => {
         author: {
           name: message.author.username,
         },
+        description: message.content,
       },
       files: [{
         attachment: `${PATH}/${file}`,
