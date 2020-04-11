@@ -103,7 +103,7 @@ const joinAndPlay = (vc, media, name, message, connection) => {
  */
 const playSong = ({ connection, song, message }) => {
   // On connecting to a voice channel, play the youtube stream
-  const dispatch = connection.playArbitraryInput(song.media, { volume: 0.1 });
+  const dispatch = connection.playArbitraryInput(song.media, { volume: 0.3 });
   // Delete the command message
   message.channel.send(
     makeEmbed(
