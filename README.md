@@ -55,6 +55,9 @@ A react bot for discord that can download and store files locally and post them 
 !removeCron <name>
 - Removes the cron job at the given name
 
+!events [<startDate "mm/dd/yyyy">] [<endDate>]
+- Shows the current events in for the bot's google calendar. Start date is defaulted to the current time and end date is defaulted to a week from the start date
+
 [!help/!h]
 - Displays this help screen!
 ```

@@ -76,24 +76,29 @@ function getAccessToken(oAuth2Client, callback) {
 }
 
 /**
+ * Get all of the upcoming events and post it to the channel
+ * Message content will take two parameters, one for the starting date and
+ * another for the end date
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+ * @param {Discord Message Object} message The discord message that spawned cmd
  */
 function listEvents(auth, message) {
   const calendar = google.calendar({ version: 'v3', auth });
   const params = message.content.split(' ');
   let timeMin = new Date();
-  // Time max is set to one week out
   if (params.length > 1) {
     if (!isNaN(new Date(params[1]))) {
       timeMin = new Date(params[1]);
     }
   }
+  // Time max is set to one week out
   let timeMax = new Date(timeMin.getTime() + 7 * 24 * 60 * 60 * 1000);
   if (params.length > 2) {
     if (!isNaN(new Date(params[2]))) {
       timeMax = new Date(params[2]);
     }
   }
+  // Call the google api
   calendar.events.list({
     calendarId: 'primary',
     timeMin: timeMin.toISOString(),
@@ -104,6 +109,7 @@ function listEvents(auth, message) {
     if (err) return console.log('The API returned an error: ' + err);
     const events = res.data.items;
     let finalMessage = '';
+    // Start concating all of the event summaries and times
     if (events.length) {
       events.map((event, i) => {
         let start = event.start.dateTime || event.start.date;
@@ -111,15 +117,27 @@ function listEvents(auth, message) {
         finalMessage += `${start} - ${event.summary}\n`;
       });
     } else {
+      // If no events
       finalMessage += 'No upcoming events found.';
     }
-    message.channel.send(makeEmbedNoUser(finalMessage,
-      `Upcoming Events: (${formatDateString(timeMin).split(',')[0]}) - ` +
-      `(${formatDateString(timeMax).split(',')[0]})` +
-      `\n${config.timeZone}`));
+    message.channel.send(
+      makeEmbedNoUser(
+        finalMessage,
+        `Upcoming Events: (${formatDateString(timeMin).split(',')[0]}) - ` +
+        `(${formatDateString(timeMax).split(',')[0]})` +
+        `\n${config.timeZone}`,
+        null,
+        message.content
+      )
+    );
   });
 }
 
+/**
+ * Gets all upcoming events between the current time and getUpdateMaxTime
+ * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
+ * @param {Function} cb Callback function
+ */
 const getAllUpcomingEvents = (auth, cb) => {
   const calendar = google.calendar({ version: 'v3', auth });
   calendar.events.list({
@@ -134,10 +152,21 @@ const getAllUpcomingEvents = (auth, cb) => {
   });
 };
 
+/**
+ * Gets an event out of the array by id
+ * @param {Array} events Array of google event objects
+ * @param {String} id The id of the google event to get
+ */
 const getEventById = (events, id) => {
   return events.filter(event => event.id === id);
 };
 
+/**
+ * Gets the diff between the events passed as a parameter and the locally stored
+ * events. Calls the callback function with { removedEvents, addedEvents }
+ * @param {Array} events A list of events
+ * @param {Function} cb Callback function
+ */
 const getEventDiff = (events, cb) => {
   fs.exists(STORED_EVENTS_PATH, (exists) => {
     if (!exists) {
@@ -161,6 +190,12 @@ const getEventDiff = (events, cb) => {
   });
 };
 
+/**
+ * Sets the interval to check for all upcoming events, find the difference
+ * between that and the locally stored events, and posts the diff to the
+ * updateChannelId in the config
+ * @param {Discord Client} bot Discord client.
+ */
 const createUpdateInterval = (bot) => {
   setInterval(() => {
     authorize(JSON.parse(creds), (auth) => {
