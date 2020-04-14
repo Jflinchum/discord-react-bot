@@ -168,6 +168,30 @@ const hasFile = ({path = PATH, fileName}) => {
 };
 
 /**
+ * @obj: the json object to change
+ * @access: string dot separates route to value
+ * @value: new valu
+ */
+function setValue(obj, access, value){
+  if (typeof access === 'string'){
+    access = access.split('.');
+  }
+  if (access.length > 1){
+    const nextAccess = access.shift();
+    if (!obj[nextAccess]) {
+      obj[nextAccess] = {};
+    }
+    setValue(obj[nextAccess], access, value);
+  } else {
+    if (obj[access[0]]) {
+      obj[access[0]].push(value);
+    } else {
+      obj[access[0]] = [ value ];
+    }
+  }
+}
+
+/**
  * Adds a json object to a file.
  *
  * @param {String} path - The path to the file
@@ -184,11 +208,7 @@ const addJson = ({ path, key, value, cb = () => {} }) => {
         if (err) console.log(err);
         else {
           let file = JSON.parse(data);
-          if (file[key]) {
-            file[key].push(value);
-          } else {
-            file[key] = [ value ];
-          }
+          setValue(file, key, value);
           fs.writeFileSync(path, JSON.stringify(file));
           return cb();
         }
@@ -196,8 +216,35 @@ const addJson = ({ path, key, value, cb = () => {} }) => {
     } else {
       // If the file doesn't exists, make it
       let newFile = {};
-      newFile[key] = [ value ];
+      setValue(newFile, key, value);
       fs.writeFileSync(path, JSON.stringify(newFile));
+      return cb();
+    }
+  });
+};
+
+const getJson = ({ path, key = '', cb = () => {} }) => {
+  // First check if the file exists
+  fs.exists(path, (exists) => {
+    if (exists) {
+      // Read the file and parse the data
+      fs.readFile(path, (err, data) => {
+        if (err) console.log(err);
+        else {
+          let value = JSON.parse(data);
+          if (key.length === 0) {
+            return cb(value);
+          }
+          let keys = key.split('.');
+          const len = keys.length;
+          for (let i = 0; typeof value === 'object' && i < len; ++i) {
+            value = value[keys[i]];
+          }
+          return cb(value);
+        }
+      });
+    } else {
+      // If the file doesn't exists, don't return anything
       return cb();
     }
   });
@@ -517,6 +564,7 @@ module.exports = {
   download,
   hasFile,
   addJson,
+  getJson,
   removeJson,
   sendText,
   sendTextBlock,

@@ -77,3 +77,4 @@ src/plugins/gpt2/models
 # Google api stuff
 credentials.json
 token.json
+reminders.json

@@ -2,7 +2,13 @@
 const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
-const { config, makeEmbedNoUser, formatDateString } = require('./../util');
+const {
+  config,
+  makeEmbedNoUser,
+  formatDateString,
+  getJson,
+  addJson,
+} = require('./../util');
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
@@ -13,6 +19,9 @@ const TOKEN_PATH = 'token.json';
 const STORED_EVENTS_PATH = 'events.json';
 // Frequency in milliseconds to check for updates to the calendar
 const UPDATE_FREQUENCY = 60 * 1000;
+const CLEAR_REMINDER_USAGE = '`usage: !clearReminders <index>`';
+const REMIND_ME_USAGE = '`usage: !remindMe <index> <time in minutes>`';
+const REMIND_ME_PATH = './reminders.json';
 // This is the scope of checking for any updates
 // This is useful in solving the case in which there is a series of events
 const getUpdateMaxTime = () => {
@@ -114,7 +123,7 @@ function listEvents(auth, message) {
       events.map((event, i) => {
         let start = event.start.dateTime || event.start.date;
         start = formatDateString(new Date(start));
-        finalMessage += `${start} - ${event.summary}\n`;
+        finalMessage += `(${i + 1}) ${start} - ${event.summary}\n`;
       });
     } else {
       // If no events
@@ -228,18 +237,185 @@ const createUpdateInterval = (bot) => {
             }
           }
         });
+        events.map((event) => {
+          const start = event.start.dateTime || event.start.date;
+          const eventTime = new Date(start);
+          getJson({
+            path: REMIND_ME_PATH,
+            key: event.id,
+            cb: (value) => {
+              if (value) {
+                const userIds = Object.keys(value);
+                userIds.map((userId) => {
+                  const reminderTimes = value[userId];
+                  reminderTimes.map((reminder, i) => {
+                    const today = new Date();
+                    const diffMs = eventTime - today;
+                    // Diff in minutes
+                    const diffMins = Math.round(diffMs / 60000);
+                    // If we need to trigger a reminder
+                    if (diffMins <= reminder) {
+                      let data = JSON.parse(fs.readFileSync(REMIND_ME_PATH));
+                      data[event.id][userId].splice(i, 1);
+                      fs.writeFileSync(REMIND_ME_PATH, JSON.stringify(data));
+                      bot.fetchUser(userId).then((user) => {
+                        user.send(`${event.summary} is happening in ` +
+                          `${diffMins} minutes!`);
+                      }).catch((err) => console.log(err));
+                    }
+                  });
+                });
+              }
+            },
+          });
+        });
       });
     });
   }, UPDATE_FREQUENCY);
 };
 
+const addReminder = (auth, message) => {
+  const calendar = google.calendar({ version: 'v3', auth });
+  const index = parseInt(message.content.split(' ')[1], 10);
+  const minutes = parseInt(message.content.split(' ')[2], 10);
+  if (isNaN(index) || isNaN(minutes)) {
+    message.channel.send(REMIND_ME_USAGE);
+    return;
+  }
+  calendar.events.list({
+    calendarId: 'primary',
+    timeMin: new Date().toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
+  }, (err, resp) => {
+    if (err) return console.log(err);
+    const event = resp.data.items[index - 1];
+    const eventId = event.id;
+    const userId = message.author.id;
+    addJson({
+      path: REMIND_ME_PATH,
+      key: `${eventId}.${userId}`,
+      value: minutes,
+      cb: () => {
+        message.channel.send(`Set up a reminder for ${minutes} minutes` +
+          ` before ${event.summary}`);
+      },
+    });
+  });
+};
+
+const getReminder = (auth, message) => {
+  const calendar = google.calendar({ version: 'v3', auth });
+  getJson({
+    path: REMIND_ME_PATH,
+    cb: (allReminders) => {
+      if (!allReminders) {
+        message.channel.send('No reminders found!');
+        return;
+      }
+      const allEvents = Object.keys(allReminders);
+      let userEvents = {};
+      for (let i = 0; i < allEvents.length; i++) {
+        const allUsers = Object.keys(allReminders[allEvents[i]]);
+        for (let j = 0; j < allUsers.length; j++) {
+          const userId = allUsers[j];
+          if (userId === message.author.id) {
+            /**
+             * What we're doing here is basically turning this json:
+             * { eventId1: {userId1: [time1, time2, time3], userId2: [time1]}
+             *}
+             * to this json:
+             * { eventId1: [time1, time2, time3], eventId2: [time1, time2] }
+             */
+            userEvents[allEvents[i]] = allReminders[allEvents[i]][userId];
+            break;
+          }
+        }
+      }
+      const events = Object.keys(userEvents);
+      if (events.length === 0) {
+        message.channel.send('No reminders found!');
+      } else {
+        let finalMessage = 'Found reminders for:\n```\n';
+        const promises = events.map((eventId) =>
+          new Promise((resolve, reject) => {
+            calendar.events.get({
+              calendarId: 'primary',
+              eventId,
+            }, (err, resp) => {
+              if (err) return reject(err);
+              return resolve(resp.data);
+            });
+          }));
+        Promise.all(promises).then((results) => {
+          results.map((event) => {
+            let eventReminders = `${event.summary}:\n`;
+            const reminders = userEvents[event.id];
+            reminders.map((reminder) => {
+              eventReminders += `\t${reminder} minutes before\n`;
+            });
+            finalMessage += eventReminders;
+          });
+          finalMessage += '```';
+          message.channel.send(finalMessage);
+        });
+      }
+    },
+  });
+};
+
+const clearReminder = (auth, message) => {
+  const calendar = google.calendar({ version: 'v3', auth });
+  const userId = message.author.id;
+  const index = parseInt(message.content.split(' ')[1], 10);
+  if (isNaN(index)) {
+    message.channel.send(CLEAR_REMINDER_USAGE);
+    return;
+  }
+  calendar.events.list({
+    calendarId: 'primary',
+    timeMin: new Date().toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
+  }, (err, resp) => {
+    if (err) return console.log(err);
+    const event = resp.data.items[index - 1];
+    const eventId = event.id;
+    getJson({
+      path: REMIND_ME_PATH,
+      key: `${eventId}.${userId}`,
+      cb: (value) => {
+        if (value) {
+          let data = JSON.parse(fs.readFileSync(REMIND_ME_PATH));
+          delete data[eventId][userId];
+          fs.writeFileSync(REMIND_ME_PATH, JSON.stringify(data));
+          message.channel.send(`Cleared all reminders for ${event.summary}`);
+        } else {
+          message.channel.send(`No reminders found for ${event.summary}`);
+        }
+      },
+    });
+  });
+};
+
+const getCredsAndAuth = (cb) => {
+  if (creds && !(creds instanceof Error)) {
+    authorize(JSON.parse(creds), (auth) => cb(auth));
+  } else if (creds instanceof Error) {
+    console.log('Error reading credentials: ' + creds);
+  }
+};
+
 const onText = (message, bot) => {
-  if (config.googleAPIEnabled &&
-      message.content.split(' ')[0] === '!events') {
-    if (creds && !(creds instanceof Error)) {
-      authorize(JSON.parse(creds), (auth) => listEvents(auth, message));
-    } else if (creds instanceof Error) {
-      console.log('Error reading credentials: ' + creds);
+  if (config.googleAPIEnabled) {
+    if (message.content.split(' ')[0] === '!events') {
+      getCredsAndAuth((auth) => listEvents(auth, message));
+    } else if (message.content.split(' ')[0] === '!remindMe') {
+      getCredsAndAuth((auth) => addReminder(auth, message));
+    } else if (message.content.split(' ')[0] === '!reminders') {
+      getCredsAndAuth((auth) => getReminder(auth, message));
+    } else if (message.content.split(' ')[0] === '!clearReminders') {
+      getCredsAndAuth((auth) => clearReminder(auth, message));
     }
   }
 };
