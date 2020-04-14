@@ -281,6 +281,12 @@ const addReminder = (auth, message) => {
   if (isNaN(index) || isNaN(minutes)) {
     message.channel.send(REMIND_ME_USAGE);
     return;
+  } else if (index < 0) {
+    message.channel.send('Could not find event at index ' + index);
+    return;
+  } else if (minutes < 0) {
+    message.channel.send('Minutes has to be a positive number');
+    return;
   }
   calendar.events.list({
     calendarId: 'primary',
@@ -289,6 +295,10 @@ const addReminder = (auth, message) => {
     orderBy: 'startTime',
   }, (err, resp) => {
     if (err) return console.log(err);
+    if ((index - 1) > resp.data.items.length) {
+      message.channel.send('Could not find event at index ' + index);
+      return;
+    }
     const event = resp.data.items[index - 1];
     const eventId = event.id;
     const userId = message.author.id;
