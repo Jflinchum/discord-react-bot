@@ -546,6 +546,13 @@ const formatDateString = (date) => {
   return date.toLocaleString(config.locale, { timeZone: config.timeZone });
 };
 
+const isDirectMessageEnabled = (message) => {
+  if (message.channel.type === 'dm') {
+    return config.dmWhiteList.includes(message.content.split(' ')[0]);
+  }
+  return true;
+};
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -573,4 +580,5 @@ module.exports = {
   splitArgsWithQuotes,
   getDiscordId,
   formatDateString,
+  isDirectMessageEnabled,
 };

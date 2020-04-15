@@ -90,9 +90,13 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
           `(${emojiString},`
           + ` ${emojiList[emoji].chance}), `;
         } else {
-          if (message.guild.emojis.get(emojiString)) {
+          if (message.guild && message.guild.emojis.get(emojiString)) {
             response +=
             `(:${message.guild.emojis.get(emojiString).name}:,`
+            + ` ${emojiList[emoji].chance}), `;
+          } else if (!message.guild) {
+            response +=
+            `(:${emojiString}:,`
             + ` ${emojiList[emoji].chance}), `;
           }
         }

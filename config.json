@@ -5,5 +5,6 @@
   "googleAPIEnabled": false,
   "gpt2Enabled": false,
   "locale": "en-US",
-  "timeZone": "America/New_York"
+  "timeZone": "America/New_York",
+  "dmWhiteList": ["!list", "!l", "!remindMe", "!reminders", "!clearReminders", "!help", "!h"]
 }

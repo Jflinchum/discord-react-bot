@@ -12,6 +12,7 @@ const {
   removeJson,
   formatEscapedDates,
   config,
+  isDirectMessageEnabled,
 } = require('./plugins/util');
 const { onTextHooks } = require('./plugins');
 const { createUpdateInterval } = require('./plugins/google/calendar');
@@ -104,7 +105,7 @@ bot.on('message', message => {
   if (message.author.bot) {
     return;
   }
-  if (message.channel.type === 'dm') {
+  if (!isDirectMessageEnabled(message)) {
     message.channel.send('No DMs allowed');
     return;
   }
