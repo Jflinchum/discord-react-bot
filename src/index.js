@@ -13,6 +13,7 @@ const {
   formatEscapedDates,
   config,
   isDirectMessageEnabled,
+  formatDateString,
 } = require('./plugins/util');
 const { onTextHooks } = require('./plugins');
 const { createUpdateInterval } = require('./plugins/google/calendar');
@@ -128,9 +129,11 @@ bot.on('message', message => {
   if (message.content[0] !== '!') {
     return;
   }
-  // Split the command by spaces
-  const cmd = message.content.split(' ');
-  console.log(message.author.username + ' ' + cmd);
+  console.log(`[${formatDateString(new Date())}] `
+    + `${message.author.username} (${message.author.tag})`
+    + ` ${message.guild ? message.guild.id : 'DM'}`
+    + ' - '
+    + message.content);
   try {
     onTextHooks.map((onTextFunc) => {
       onTextFunc(message, bot);
