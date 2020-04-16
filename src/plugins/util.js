@@ -205,7 +205,7 @@ const addJson = ({ path, key, value, cb = () => {} }) => {
     if (exists) {
       // Read the file and parse the data
       fs.readFile(path, (err, data) => {
-        if (err) console.log(err);
+        if (err) console.log('Could not read file: ', err);
         else {
           let file = JSON.parse(data);
           setValue(file, key, value);
@@ -229,7 +229,7 @@ const getJson = ({ path, key = '', cb = () => {} }) => {
     if (exists) {
       // Read the file and parse the data
       fs.readFile(path, (err, data) => {
-        if (err) console.log(err);
+        if (err) console.log('Could not read file: ', err);
         else {
           let value = JSON.parse(data);
           if (key.length === 0) {
@@ -263,7 +263,7 @@ const removeJson = ({ path, key, cb = () => {} }) => {
     if (exists) {
       // Read the file and parse the data
       fs.readFile(path, (err, data) => {
-        if (err) console.log(err);
+        if (err) console.log('Could not read file: ', err);
         else {
           let file = JSON.parse(data);
           delete file[key];
@@ -290,7 +290,7 @@ const addText = ({ path, text }) => {
     if (exists) {
       // Read the file and parse the data
       fs.readFile(path, (err, data) => {
-        if (err) console.log(err);
+        if (err) console.log('Could not read file: ', err);
         else {
           fs.writeFileSync(path, text);
           return;

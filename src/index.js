@@ -66,7 +66,9 @@ fs.exists(CRON_PATH, (exists) => {
                   onTextFunc(messageRef, bot);
                 });
               })
-              .catch((err) => { console.log(err); });
+              .catch((err) => {
+                console.log('Could not fetch messages: ', err);
+              });
           } else {
             channel.send(formatEscapedDates(job.content, new Date()));
           }
@@ -119,7 +121,7 @@ bot.on('message', message => {
       emojiArray.forEach((emojiChance) => {
         if (emojiChance.chance >= random && !message.deleted) {
           message.react(emojiChance.emoji).catch((err) => {
-            console.log(err);
+            console.log('Could not react to message: ', err);
           });
         }
       });

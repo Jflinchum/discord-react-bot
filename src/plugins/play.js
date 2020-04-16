@@ -81,7 +81,7 @@ const joinAndPlay = (vc, media, name, message, connection) => {
           const nextSong = dequeue();
           message.channel.send('Could not join channel.');
           playNext(nextSong);
-          console.log(err);
+          console.log('Could not join channel: ', err);
         });
     }
   } else {
@@ -261,7 +261,7 @@ const play = ({channel, media, message, bot}) => {
     const ytStream = ytdl(media, { filter: 'audioonly' });
     ytdl.getBasicInfo(media, (err, info) => {
       if (err)
-        console.log(err);
+        console.log('Could not get youtube info: ', err);
       joinAndPlay(vc, ytStream, info.title, message);
     });
   } else {

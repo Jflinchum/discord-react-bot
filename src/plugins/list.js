@@ -38,7 +38,9 @@ const findFiles = (regex, files) => {
  * @param {Object} bot - The discord bot
  */
 const list = ({ type, message, emojis, cronJobs, page, bot }) => {
-  message.delete();
+  if (message.channel.type !== 'dm') {
+    message.delete();
+  }
   const files = fs.readdirSync(PATH);
   let response = '';
   const imageRegex = (/\.(gif|jpg|jpeg|tiff|png|mp4)$/i);

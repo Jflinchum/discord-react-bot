@@ -11,7 +11,9 @@ const { sendTextBlock } = require('./util');
  * @param {Integer} page - The page number
  */
 const help = (message, page) => {
-  message.delete();
+  if (message.channel.type !== 'dm') {
+    message.delete();
+  }
   const helpText = fs.readFileSync(
     `${path.dirname(require.main.filename)}/help.txt`, 'utf8'
   );

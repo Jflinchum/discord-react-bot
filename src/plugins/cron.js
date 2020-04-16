@@ -67,7 +67,7 @@ const addCron = ({
                   });
                 })
                 .catch((err) => {
-                  console.log(err);
+                  console.log('Could not fetch messages: ', err);
                 });
             } else {
               channelToPost.send(contentToPost);

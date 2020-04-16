@@ -66,7 +66,7 @@ const onText = (message, bot) => {
         },
       });
     }).catch((err) => {
-      console.log(err);
+      console.log('Could not react with emoji: ', err);
       message.channel.send('Could not find emoji');
     });
   }

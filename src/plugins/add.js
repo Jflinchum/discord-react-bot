@@ -42,7 +42,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
         const duration = (stopTime - startTime) ||
         (info.length_seconds - (startTime || 0));
         if (err) {
-          console.log(err);
+          console.log('Could not get youtube info', err);
           msg.delete();
           message.channel.send('Could not get video info.');
           return;
@@ -89,7 +89,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
         timeStop: stopTime,
         cb: (err) => {
           if (err) {
-            console.log(err);
+            console.log('Could not download file: ', err);
             msg.delete();
             message.channel.send(err);
           } else {

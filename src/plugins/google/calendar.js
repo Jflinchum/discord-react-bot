@@ -261,7 +261,9 @@ const createUpdateInterval = (bot) => {
                       bot.fetchUser(userId).then((user) => {
                         user.send(`${event.summary} is happening in ` +
                           `${diffMins} minutes!`);
-                      }).catch((err) => console.log(err));
+                      }).catch(
+                        (err) => console.log('Could not fetch user: ', err)
+                      );
                     }
                   });
                 });
@@ -294,7 +296,7 @@ const addReminder = (auth, message) => {
     singleEvents: true,
     orderBy: 'startTime',
   }, (err, resp) => {
-    if (err) return console.log(err);
+    if (err) return console.log('Could not get events: ', err);
     if ((index - 1) > resp.data.items.length) {
       message.channel.send('Could not find event at index ' + index);
       return;
@@ -388,7 +390,7 @@ const clearReminder = (auth, message) => {
     singleEvents: true,
     orderBy: 'startTime',
   }, (err, resp) => {
-    if (err) return console.log(err);
+    if (err) return console.log('Could not get events: ', err);
     const event = resp.data.items[index - 1];
     const eventId = event.id;
     getJson({
