@@ -116,8 +116,8 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
       for (let job in jobList) {
         const guild = bot.guilds.get(jobList[job].guildId);
         response += `  (${jobList[job].content}, `
-          + `${guild.channels.get(jobList[job].channel).name}), `
-          + `${cronstrue.toString(jobList[job].cronTime)},`;
+          + `${guild.channels.get(jobList[job].channel).name}, `
+          + `${cronstrue.toString(jobList[job].cronTime)}),`;
       }
       response += '\n';
     }
