@@ -455,7 +455,7 @@ const getAttendance = (auth, message, bot) => {
             let finalMessage = 'The following users are '
             + `attending ${event.summary}:\n\`\`\``;
             discordUsers.map((discordUser) => {
-              finalMessage += `- ${discordUser.username}`;
+              finalMessage += `- ${discordUser.username}\n`;
             });
             finalMessage += '```';
             message.channel.send(finalMessage);
