@@ -49,6 +49,9 @@
 !clearReminders <n>
 - Clears all reminders that you have set up for the nth event from the current date
 
+!attendance <n>
+- Shows all users who have set up a reminder for the nth event from the current date
+
 !roll <amount> [d]<sides>
 - Rolls the amount of dice with the specified sides
 

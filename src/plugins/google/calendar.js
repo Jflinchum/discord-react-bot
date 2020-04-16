@@ -22,6 +22,7 @@ const UPDATE_FREQUENCY = 60 * 1000;
 const CLEAR_REMINDER_USAGE = '`usage: !clearReminders <index>`';
 const REMIND_ME_USAGE = '`usage: !remindMe <index> <time in minutes>`';
 const REMIND_ME_PATH = './reminders.json';
+const ATTENDANCE_USAGE = '`usage: !attendance <index>`';
 // This is the scope of checking for any updates
 // This is useful in solving the case in which there is a series of events
 const getUpdateMaxTime = () => {
@@ -410,6 +411,64 @@ const clearReminder = (auth, message) => {
   });
 };
 
+const getAttendance = (auth, message, bot) => {
+  const calendar = google.calendar({ version: 'v3', auth });
+  if (message.content.split(' ').length < 2) {
+    message.channel.send(ATTENDANCE_USAGE);
+    return;
+  }
+  const index = parseInt(message.content.split(' ')[1], 10);
+  if (isNaN(index) || index < 0) {
+    message.channel.send(ATTENDANCE_USAGE);
+  }
+  calendar.events.list({
+    calendarId: 'primary',
+    timeMin: new Date().toISOString(),
+    singleEvents: true,
+    orderBy: 'startTime',
+  }, (err, resp) => {
+    if (err) return console.log('Could not get events: ', err);
+    if ((index - 1) > resp.data.items.length) {
+      message.channel.send('Could not find event at index ' + index);
+      return;
+    }
+    const event = resp.data.items[index - 1];
+    const eventId = event.id;
+    getJson({
+      path: REMIND_ME_PATH,
+      key: `${eventId}`,
+      cb: (reminders) => {
+        if (!reminders) {
+          message.channel.send('No one has set up reminders'
+            + ` for ${event.summary}`);
+          console.log('No reminders found.');
+          return;
+        }
+        const users = Object.keys(reminders);
+        if (users.length > 0) {
+          let userPromises = [];
+          for (let i = 0; i < users.length; i++) {
+            const userId = users[i];
+            userPromises.push(bot.fetchUser(userId));
+          };
+          Promise.all(userPromises).then((discordUsers) => {
+            let finalMessage = 'The following users are '
+            + `attending ${event.summary}:\n\`\`\``;
+            discordUsers.map((discordUser) => {
+              finalMessage += `- ${discordUser.username}`;
+            });
+            finalMessage += '```';
+            message.channel.send(finalMessage);
+          }).catch((err) => console.log('Could not find user: ', err));
+        } else {
+          message.channel.send('No one has set up reminders'
+            + ` for ${event.summary}`);
+        }
+      },
+    });
+  });
+};
+
 const getCredsAndAuth = (cb) => {
   if (creds && !(creds instanceof Error)) {
     authorize(JSON.parse(creds), (auth) => cb(auth));
@@ -428,6 +487,8 @@ const onText = (message, bot) => {
       getCredsAndAuth((auth) => getReminder(auth, message));
     } else if (message.content.split(' ')[0] === '!clearReminders') {
       getCredsAndAuth((auth) => clearReminder(auth, message));
+    } else if (message.content.split(' ')[0] === '!attendance') {
+      getCredsAndAuth((auth) => getAttendance(auth, message, bot));
     }
   }
 };
