@@ -1,5 +1,6 @@
 'use strict';
 const fs = require('fs');
+const cronstrue = require('cronstrue/i18n');
 const { PATH, EMOJI_REGEX, sendTextBlock } = require('./util');
 const USAGE = '`usage: [!list/!l] [image/music/text/emoji]`';
 
@@ -114,8 +115,9 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
       response += `  ${jobNames[index]}:`;
       for (let job in jobList) {
         const guild = bot.guilds.get(jobList[job].guildId);
-        response += `  (${jobList[job].content}, ${jobList[job].cronTime},` +
-          ` ${guild.channels.get(jobList[job].channel).name}), `;
+        response += `  (${jobList[job].content}, `
+          + `${guild.channels.get(jobList[job].channel).name}), `
+          + `${cronstrue.toString(jobList[job].cronTime)},`;
       }
       response += '\n';
     }
