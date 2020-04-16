@@ -49,5 +49,8 @@
 !clearReminders <n>
 - Clears all reminders that you have set up for the nth event from the current date
 
+!roll <amount> [d]<sides>
+- Rolls the amount of dice with the specified sides
+
 [!help/!h]
 - Displays this help screen!

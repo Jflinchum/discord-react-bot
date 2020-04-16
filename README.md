@@ -58,6 +58,18 @@ A react bot for discord that can download and store files locally and post them 
 !events [<startDate "mm/dd/yyyy">] [<endDate>]
 - Shows the current events in for the bot's google calendar. Start date is defaulted to the current time and end date is defaulted to a week from the start date
 
+!reminders
+- Shows all of the reminders set up currently for you
+
+!remindMe <n> <minutes>
+- Sets up a reminder for the bot to dm you within the amount of minute specified. n is the nth event from now.
+
+!clearReminders <n>
+- Clears all reminders that you have set up for the nth event from the current date
+
+!roll <amount> [d]<sides>
+- Rolls the amount of dice with the specified sides
+
 [!help/!h]
 - Displays this help screen!
 ```
