@@ -258,6 +258,12 @@ const createUpdateInterval = (bot) => {
                     if (diffMins <= reminder) {
                       let data = JSON.parse(fs.readFileSync(REMIND_ME_PATH));
                       data[event.id][userId].splice(i, 1);
+                      if (data[event.id][userId].length === 0) {
+                        delete data[event.id][userId];
+                      }
+                      if (Object.keys(data[event.id]).length === 0) {
+                        delete data[event.id];
+                      }
                       fs.writeFileSync(REMIND_ME_PATH, JSON.stringify(data));
                       bot.fetchUser(userId).then((user) => {
                         user.send(`${event.summary} is happening in ` +
@@ -401,6 +407,9 @@ const clearReminder = (auth, message) => {
         if (value) {
           let data = JSON.parse(fs.readFileSync(REMIND_ME_PATH));
           delete data[eventId][userId];
+          if (Object.keys(data[event.id]).length === 0) {
+            delete data[event.id];
+          }
           fs.writeFileSync(REMIND_ME_PATH, JSON.stringify(data));
           message.channel.send(`Cleared all reminders for ${event.summary}`);
         } else {
