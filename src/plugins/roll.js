@@ -32,8 +32,8 @@ const roll = (amount, sides, message) => {
     return;
   }
   const diceArray = rollDice(amount, sides);
-  let finalMessage = `\`\`\`Results for rolling ${amount}`
-    + ` d${sides}${amount > 1 ? '\'s' : ''}\n`;
+  let finalMessage = `\`\`\`${message.author.username} rolled ${amount}`
+    + ` d${sides}${amount > 1 ? '\'s' : ''}:\n`;
   for (let i = 0; i < diceArray.length; i++) {
     finalMessage += `${diceArray[i]}\n`;
   }
