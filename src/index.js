@@ -112,7 +112,7 @@ bot.on('message', message => {
     let finalMessage = 'No DMs allowed';
     if (config.dmWhiteList.length > 0) {
       finalMessage = 'The current commands that are available '
-      + ' for direct messages are:\n```';
+      + 'for direct messages are:\n```';
       config.dmWhiteList.map((whiteListedCommand) => {
         finalMessage += `- ${whiteListedCommand}\n`;
       });
