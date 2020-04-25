@@ -109,7 +109,16 @@ bot.on('message', message => {
     return;
   }
   if (!isDirectMessageEnabled(message)) {
-    message.channel.send('No DMs allowed');
+    let finalMessage = 'No DMs allowed';
+    if (config.dmWhiteList.length > 0) {
+      finalMessage = 'The current commands that are available '
+      + ' for direct messages are:\n```';
+      config.dmWhiteList.map((whiteListedCommand) => {
+        finalMessage += `- ${whiteListedCommand}\n`;
+      });
+      finalMessage += '```';
+    }
+    message.channel.send(finalMessage);
     return;
   }
   // React with any emojis
