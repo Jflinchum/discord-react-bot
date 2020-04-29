@@ -443,7 +443,6 @@ const getAttendance = (auth, message, bot) => {
     }
     const event = resp.data.items[index - 1];
     const attendees = event.attendees;
-    console.log(attendees);
     if (attendees.length === 0) {
       message.channel.send('No one has set up reminders'
         + ` for ${event.summary}`);
