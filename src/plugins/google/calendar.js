@@ -442,39 +442,23 @@ const getAttendance = (auth, message, bot) => {
       return;
     }
     const event = resp.data.items[index - 1];
-    const eventId = event.id;
-    getJson({
-      path: REMIND_ME_PATH,
-      key: `${eventId}`,
-      cb: (reminders) => {
-        if (!reminders) {
-          message.channel.send('No one has set up reminders'
-            + ` for ${event.summary}`);
-          console.log('No reminders found.');
+    const attendees = event.attendees;
+    console.log(attendees);
+    if (attendees.length === 0) {
+      message.channel.send('No one has set up reminders'
+        + ` for ${event.summary}`);
+    } else {
+      let finalMessage = 'The following users are '
+        + `attending ${event.summary}:\n\`\`\``;
+      attendees.map((attendee) => {
+        if (config.botGmail && config.botGmail === attendee.email) {
           return;
         }
-        const users = Object.keys(reminders);
-        if (users.length > 0) {
-          let userPromises = [];
-          for (let i = 0; i < users.length; i++) {
-            const userId = users[i];
-            userPromises.push(bot.fetchUser(userId));
-          };
-          Promise.all(userPromises).then((discordUsers) => {
-            let finalMessage = 'The following users are '
-            + `attending ${event.summary}:\n\`\`\``;
-            discordUsers.map((discordUser) => {
-              finalMessage += `- ${discordUser.username}\n`;
-            });
-            finalMessage += '```';
-            message.channel.send(finalMessage);
-          }).catch((err) => console.log('Could not find user: ', err));
-        } else {
-          message.channel.send('No one has set up reminders'
-            + ` for ${event.summary}`);
-        }
-      },
-    });
+        finalMessage += `- ${attendee.displayName || attendee.email}\n`;
+      });
+      finalMessage += '```';
+      message.channel.send(finalMessage);
+    }
   });
 };
 
