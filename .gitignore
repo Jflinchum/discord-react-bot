@@ -65,6 +65,7 @@ reactions/
 emoji.json
 cron.json
 events.json
+data.json
 
 # Mac Stuff
 .DS_STORE
