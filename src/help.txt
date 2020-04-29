@@ -50,7 +50,13 @@
 - Clears all reminders that you have set up for the nth event from the current date
 
 !attendance <n>
-- Shows all users who have set up a reminder for the nth event from the current date
+- Shows all users who have are on the guest list for the nth event from the current date
+
+!set <property> <value>
+- Stores the defined value under the property in the user's config file
+
+!config
+- Displays what is in your config file
 
 !roll <amount> [d]<sides>
 - Rolls the amount of dice with the specified sides

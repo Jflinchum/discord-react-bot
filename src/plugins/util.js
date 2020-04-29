@@ -10,6 +10,7 @@ const PATH = `${appDir}/../reactions`;
 const EMOJI_PATH = `${appDir}/../emoji.json`;
 const CRON_PATH = `${appDir}/../cron.json`;
 const OUTPUT_PATH = `${appDir}/../output/`;
+const DATA_PATH = `${appDir}/../data.json`;
 const COLOR = 0x9400D3;
 const MAX_YT_TIME = 150; // In seconds
 // eslint-disable-next-line
@@ -172,7 +173,7 @@ const hasFile = ({path = PATH, fileName}) => {
  * @access: string dot separates route to value
  * @value: new valu
  */
-function setValue(obj, access, value){
+function setValue(obj, access, value, append){
   if (typeof access === 'string'){
     access = access.split('.');
   }
@@ -181,10 +182,14 @@ function setValue(obj, access, value){
     if (!obj[nextAccess]) {
       obj[nextAccess] = {};
     }
-    setValue(obj[nextAccess], access, value);
+    setValue(obj[nextAccess], access, value, append);
   } else {
     if (obj[access[0]]) {
-      obj[access[0]].push(value);
+      if (append) {
+        obj[access[0]].push(value);
+      } else {
+        obj[access[0]] = [ value ];
+      }
     } else {
       obj[access[0]] = [ value ];
     }
@@ -199,7 +204,7 @@ function setValue(obj, access, value){
  * @param {Object} value - The value to assign to the key in the file
  * @param {Function} cb - The callback function
  */
-const addJson = ({ path, key, value, cb = () => {} }) => {
+const addJson = ({ path, key, value, append = true, cb = () => {} }) => {
   // First check if the file exists
   fs.exists(path, (exists) => {
     if (exists) {
@@ -208,7 +213,7 @@ const addJson = ({ path, key, value, cb = () => {} }) => {
         if (err) console.log('Could not read file: ', err);
         else {
           let file = JSON.parse(data);
-          setValue(file, key, value);
+          setValue(file, key, value, append);
           fs.writeFileSync(path, JSON.stringify(file));
           return cb();
         }
@@ -559,6 +564,7 @@ module.exports = {
   EMOJI_REGEX,
   CRON_PATH,
   OUTPUT_PATH,
+  DATA_PATH,
   COLOR,
   MAX_YT_TIME,
   exportMessages,

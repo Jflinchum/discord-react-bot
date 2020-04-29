@@ -15,6 +15,7 @@ const onTextHooks = [
   require('./cron').onText,
   require('./google/calendar').onText,
   require('./roll').onText,
+  require('./set').onText,
 ];
 
 module.exports = { onTextHooks };
