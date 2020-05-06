@@ -4,6 +4,7 @@ const fs = require('fs');
 const ytdl = require('ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
+const validUrl = require('valid-url');
 
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
@@ -57,15 +58,21 @@ const makeEmbed = (message, user, title, footerText) => {
  * embeded message
  * @return {Object} - Returns the constructed embeded message
  */
-const makeEmbedNoUser = (message, title) => {
-  return {
-    embed: {
-      color: COLOR,
-      description: message,
-      author: {
-        name: title,
-      },
+const makeEmbedNoUser = (message, title, thumbnail) => {
+  let embed = {
+    color: COLOR,
+    description: message,
+    author: {
+      name: title,
     },
+  };
+  if (thumbnail && validUrl.isUri(thumbnail)) {
+    embed.thumbnail = {
+      url: `${thumbnail}`,
+    };
+  }
+  return {
+    embed,
   };
 };
 
@@ -171,7 +178,7 @@ const hasFile = ({path = PATH, fileName}) => {
 /**
  * @obj: the json object to change
  * @access: string dot separates route to value
- * @value: new valu
+ * @value: new value
  */
 function setValue(obj, access, value, append){
   if (typeof access === 'string'){
@@ -197,11 +204,13 @@ function setValue(obj, access, value, append){
 }
 
 /**
- * Adds a json object to a file.
+ * Adds a value to a json file.
  *
  * @param {String} path - The path to the file
  * @param {String} key - The key to add
  * @param {Object} value - The value to assign to the key in the file
+ * @param {Boolean} append - Whether to append the value to an existing array
+ * or overwrite the value
  * @param {Function} cb - The callback function
  */
 const addJson = ({ path, key, value, append = true, cb = () => {} }) => {
@@ -262,7 +271,7 @@ const getJson = ({ path, key = '', cb = () => {} }) => {
  * @param {String} key - The key to add
  * @param {Function} cb - The callback function
  */
-const removeJson = ({ path, key, cb = () => {} }) => {
+const removeJson = ({ path, key, value, cb = () => {} }) => {
   // First check if the file exists
   fs.exists(path, (exists) => {
     if (exists) {
@@ -270,9 +279,28 @@ const removeJson = ({ path, key, cb = () => {} }) => {
       fs.readFile(path, (err, data) => {
         if (err) console.log('Could not read file: ', err);
         else {
-          let file = JSON.parse(data);
-          delete file[key];
-          fs.writeFileSync(path, JSON.stringify(file));
+          const originalFile = JSON.parse(data);
+          let file = originalFile;
+          if (key.length === 0) {
+            return cb(value);
+          }
+          let keys = key.split('.');
+          const len = keys.length;
+          for (let i = 0; typeof file === 'object' && i < len - 1; ++i) {
+            file = file[keys[i]];
+          }
+          if (!value) {
+            // If no value specified, delete the json
+            delete file[keys[len - 1]];
+          } else {
+            // Otherwise, remove the element from the array
+            if (file && Array.isArray(file[keys[len - 1]])) {
+              file[keys[len - 1]] = file[keys[len - 1]].filter(storedValue =>
+                storedValue !== value
+              );
+            }
+          }
+          fs.writeFileSync(path, JSON.stringify(originalFile));
           return cb();
         }
       });

@@ -2,12 +2,15 @@
 const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
+const validUrl = require('valid-url');
 const {
   config,
   makeEmbedNoUser,
   formatDateString,
   getJson,
   addJson,
+  removeJson,
+  DATA_PATH,
 } = require('./../util');
 
 // If modifying these scopes, delete token.json.
@@ -220,6 +223,11 @@ const createUpdateInterval = (bot) => {
                 let start = event.start.dateTime || event.start.date;
                 start = formatDateString(new Date(start));
                 removedMessage += `${start} - ${event.summary}\n`;
+                removeJson({
+                  path: DATA_PATH,
+                  key: 'events.discordTriggered',
+                  value: event.id,
+                });
               });
               bot.channels.get(config.calendar.updateChannelId)
                 .send(makeEmbedNoUser(removedMessage,
@@ -237,6 +245,56 @@ const createUpdateInterval = (bot) => {
                   'Events Added:'));
             }
           }
+          // Posting all events just starting
+          events.map((event) => {
+            const start = event.start.dateTime || event.start.date;
+            const eventTime = new Date(start);
+            const today = new Date();
+            const diffMs = eventTime - today;
+            const diffMins = Math.round(diffMs / 60000);
+            if (diffMins <= 0) {
+              let storedEvents = JSON.parse(
+                fs.readFileSync(STORED_EVENTS_PATH)
+              );
+              getJson({
+                path: DATA_PATH,
+                key: 'events.discordTriggered',
+                cb: (triggeredEvents) => {
+                  storedEvents.map((storedEvent, i) => {
+                    let eventTriggered;
+                    if (triggeredEvents) {
+                      eventTriggered = triggeredEvents.find(
+                        e => e === storedEvent.id
+                      );
+                    }
+                    if (storedEvent.id === event.id && !eventTriggered) {
+                      // Basic logic for thumbnail is first looking for
+                      // description. Otherwise default to the bot's picture
+                      const description = event.description
+                        && event.description.match(/href="(.*)"/).length >= 2
+                        && event.description.match(/href="(.*)"/)[1];
+                      let thumbnail = description;
+                      if (!thumbnail || !validUrl.isUri(thumbnail)) {
+                        thumbnail = bot.user.defaultAvatarURL;
+                      }
+                      bot.channels.get(config.calendar.updateChannelId)
+                        .send(makeEmbedNoUser(
+                          event.summary,
+                          'Event is starting now:',
+                          thumbnail));
+                      // Set the discordTriggered to true so we
+                      // don't send a message again
+                      addJson({
+                        path: DATA_PATH,
+                        key: 'events.discordTriggered',
+                        value: storedEvent.id,
+                      });
+                    }
+                  });
+                },
+              });
+            }
+          });
         });
         events.map((event) => {
           const start = event.start.dateTime || event.start.date;
