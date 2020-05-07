@@ -137,7 +137,8 @@ function listEvents(auth, message) {
           printedTime =
           `${formatDateString(start)} => ${formatDateString(end)}`;
         }
-        finalMessage += `(${i + 1}) ${printedTime} - ${event.summary}\n`;
+        finalMessage += `(${i + 1}) ${printedTime} - ${event.summary}`
+        + `${i === events.length ? '' : '\n\n'}`;
       });
     } else {
       // If no events
@@ -515,16 +516,27 @@ const getAttendance = (auth, message, bot) => {
       message.channel.send('No one has set up reminders'
         + ` for ${event.summary}`);
     } else {
-      let finalMessage = 'The following users are '
-        + `attending ${event.summary}:\n\`\`\``;
-      attendees.map((attendee) => {
-        if (config.botGmail && config.botGmail === attendee.email) {
-          return;
-        }
-        finalMessage += `- ${attendee.displayName || attendee.email}\n`;
-      });
-      finalMessage += '```';
-      message.channel.send(finalMessage);
+      // getJson({
+      //   path: DATA_PATH,
+      //   cb: (allUserConfigs) => {
+      //     let finalMessage = 'The following users are '
+      //       + `attending ${event.summary}:\n\`\`\``;
+      //     attendees.map((attendee) => {
+      //       if (config.botGmail && config.botGmail === attendee.email) {
+      //         return;
+      //       }
+      //       let userEmail = attendee.email;
+      //       allUserConfigs && allUserConfigs.map((user) => {
+      //         if (user.email === attendee.email) {
+      //           // bot.fetchUser(user).then(());
+      //         }
+      //       });
+      //       finalMessage += `- ${userEmail}\n`;
+      //     });
+      //     finalMessage += '```';
+      //     message.channel.send(finalMessage);
+      //   },
+      // });
     }
   });
 };
