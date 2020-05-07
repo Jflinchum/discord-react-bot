@@ -125,9 +125,19 @@ function listEvents(auth, message) {
     // Start concating all of the event summaries and times
     if (events.length) {
       events.map((event, i) => {
-        let start = event.start.dateTime || event.start.date;
-        start = formatDateString(new Date(start));
-        finalMessage += `(${i + 1}) ${start} - ${event.summary}\n`;
+        const start = new Date(event.start.dateTime || event.start.date);
+        const end = new Date(event.end.dateTime || event.end.date);
+        let printedTime;
+        if (start.getDate() === end.getDate()
+          && start.getMonth() === end.getMonth()
+          && start.getFullYear() === end.getFullYear()) {
+          printedTime = `${formatDateString(start)} => `
+            + `${formatDateString(end).match(/\d?\d:\d\d:\d\d.*/)}`;
+        } else {
+          printedTime =
+          `${formatDateString(start)} => ${formatDateString(end)}`;
+        }
+        finalMessage += `(${i + 1}) ${printedTime} - ${event.summary}\n`;
       });
     } else {
       // If no events
