@@ -275,7 +275,7 @@ const createUpdateInterval = (bot) => {
                         && event.description.match(/href="(.*)"/)[1];
                       let thumbnail = description;
                       if (!thumbnail || !validUrl.isUri(thumbnail)) {
-                        thumbnail = bot.user.defaultAvatarURL;
+                        thumbnail = bot.user.displayAvatarURL;
                       }
                       bot.channels.get(config.calendar.updateChannelId)
                         .send(makeEmbedNoUser(
