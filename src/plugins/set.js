@@ -24,7 +24,7 @@ const set = (property, value, message) => {
   } else {
     addJson({
       path: DATA_PATH,
-      key: `${userId}.${property}`,
+      key: `userConfigs.${userId}.${property}`,
       value,
       append: false,
       cb: () => {
@@ -45,7 +45,7 @@ const set = (property, value, message) => {
 const printConfig = (message) => {
   getJson({
     path: DATA_PATH,
-    key: message.author.id,
+    key: 'userConfigs.' + message.author.id,
     cb: (config) => {
       if (!config) {
         message.channel.send('No configs found!');

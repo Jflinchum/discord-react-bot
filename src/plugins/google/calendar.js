@@ -512,31 +512,56 @@ const getAttendance = (auth, message, bot) => {
     }
     const event = resp.data.items[index - 1];
     const attendees = event.attendees;
-    if (attendees.length === 0) {
+    if (!attendees || attendees.length === 0) {
       message.channel.send('No one has set up reminders'
         + ` for ${event.summary}`);
     } else {
-      // getJson({
-      //   path: DATA_PATH,
-      //   cb: (allUserConfigs) => {
-      //     let finalMessage = 'The following users are '
-      //       + `attending ${event.summary}:\n\`\`\``;
-      //     attendees.map((attendee) => {
-      //       if (config.botGmail && config.botGmail === attendee.email) {
-      //         return;
-      //       }
-      //       let userEmail = attendee.email;
-      //       allUserConfigs && allUserConfigs.map((user) => {
-      //         if (user.email === attendee.email) {
-      //           // bot.fetchUser(user).then(());
-      //         }
-      //       });
-      //       finalMessage += `- ${userEmail}\n`;
-      //     });
-      //     finalMessage += '```';
-      //     message.channel.send(finalMessage);
-      //   },
-      // });
+      getJson({
+        path: DATA_PATH,
+        key: 'userConfigs',
+        cb: (allUserConfigs) => {
+          let finalMessage = 'The following users are '
+            + `attending ${event.summary}:\n\`\`\``;
+          // An array of discord user ids who have been mapped to an email
+          let configuredUsers = [];
+          // An array of emails that have been found as an attendee but have not
+          // registered their email on the discord bot
+          let nonConfiguredUsers = [];
+          attendees.map((attendee) => {
+            let userEmail = attendee.email;
+            // Don't post that the bot is attending the event
+            // since that is silly
+            if (config.botGmail && config.botGmail === userEmail) {
+              return;
+            }
+            let configurationFound = false;
+            allUserConfigs && Object.keys(allUserConfigs).map((user) => {
+              if (allUserConfigs[user].email
+                  && allUserConfigs[user].email[0] === userEmail) {
+                configurationFound = true;
+                configuredUsers.push(user);
+              }
+            });
+            if (!configurationFound) {
+              nonConfiguredUsers.push(userEmail);
+            }
+          });
+          let configuredUserPromiseArray = [];
+          configuredUsers.map((user) => {
+            configuredUserPromiseArray.push(bot.fetchUser(user));
+          });
+          Promise.all(configuredUserPromiseArray).then((detailedUsers) => {
+            detailedUsers.map((user) => {
+              finalMessage += `- ${user.username}\n`;
+            });
+            nonConfiguredUsers.map((email) => {
+              finalMessage += `- ${email}\n`;
+            });
+            finalMessage += '```';
+            message.channel.send(finalMessage);
+          });
+        },
+      });
     }
   });
 };
