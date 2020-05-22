@@ -65,7 +65,6 @@ const printConfig = (message) => {
 const onText = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
-  console.log(botCommand);
 
   if (botCommand === '!set') {
     if (cmd.length < 2) {
