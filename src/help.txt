@@ -61,5 +61,11 @@
 !roll <amount> [d]<sides>
 - Rolls the amount of dice with the specified sides
 
+!pat <@person>
+- Gives that person a head pat!
+
+!myPats
+- Checks how many pats you have
+
 [!help/!h]
 - Displays this help screen!
