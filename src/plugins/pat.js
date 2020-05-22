@@ -29,14 +29,14 @@ const pat = (userId, message, bot) => {
         path: DATA_PATH,
         key: `patData.${userId}.pats`,
         cb: (pats) => {
-          const userDisplay = message.guild.member(userId).displayName;
+          const userObject = message.guild.member(userId);
           message.channel.send(makeEmbed(
-            `${userDisplay} has received a head pat!\n` +
-            `${userDisplay} now has ${pats.length} ` +
+            `${userObject.displayName} has received a head pat!\n` +
+            `${userObject.displayName} now has ${pats.length} ` +
             `head pat${pats.length === 1 ? '' : 's'}.`,
-            message.author,
-            '',
-            `!pat @${userDisplay}`
+            userObject.user,
+            message.author.username,
+            `!pat @${userObject.displayName}`
           ));
         },
       });
