@@ -104,8 +104,8 @@ bot.on('ready', () => {
 
 
 bot.on('message', message => {
-  // Ignore bot commands
-  if (message.author.bot) {
+  // Ignore commands coming from itself to prevent any recurssive nonsense
+  if (message.author.id === bot.user.id) {
     return;
   }
   if (!isDirectMessageEnabled(message)) {
