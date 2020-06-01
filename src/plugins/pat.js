@@ -78,6 +78,7 @@ const onText = (message, bot) => {
       return;
     } else if (!cmd[1].startsWith('<@')) {
       message.channel.send(USAGE);
+      return;
     }
     const person = getDiscordId(cmd[1]);
     pat(person, message, bot);
