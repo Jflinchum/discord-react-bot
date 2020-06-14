@@ -279,11 +279,13 @@ const createUpdateInterval = (bot) => {
                       );
                     }
                     if (storedEvent.id === event.id && !eventTriggered) {
+                      const hrefRegex = /href="(.*)"/;
                       // Basic logic for thumbnail is first looking for
                       // description. Otherwise default to the bot's picture
                       const description = event.description
-                        && event.description.match(/href="(.*)"/).length >= 2
-                        && event.description.match(/href="(.*)"/)[1];
+                        && hrefRegex.test(event.description)
+                        && event.description.match(hrefRegex).length >= 2
+                        && event.description.match(hrefRegex)[1];
                       let thumbnail = description;
                       if (!thumbnail || !validUrl.isUri(thumbnail)) {
                         thumbnail = bot.user.displayAvatarURL;
