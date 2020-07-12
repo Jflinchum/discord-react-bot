@@ -29,12 +29,12 @@ const addCron = ({
   bot,
   message,
 }) => {
-  const guild = bot.guilds.get(guildId);
+  const guild = bot.guilds.cache.get(guildId);
   const messageRef = {
     messageId: message.id,
     channelId: message.channel.id,
   };
-  if (guild.channels.get(channel)) {
+  if (guild.channels.cache.get(channel)) {
     addJson({
       path: CRON_PATH,
       key: name,
@@ -48,15 +48,16 @@ const addCron = ({
           guildId,
           messageRef,
         };
-        const guild = bot.guilds.get(guildId);
+        const guild = bot.guilds.cache.get(guildId);
         // Schedule the cron job
         newJob.cronJob = cron.schedule(cronTime, () => {
-          const channelToPost = guild.channels.get(channel);
+          const channelToPost = guild.channels.cache.get(channel);
           if (channelToPost) {
             const contentToPost = formatEscapedDates(content, new Date());
             if (contentToPost.startsWith('!')) {
               bot.channels
-                .get(messageRef.channelId).fetchMessage(messageRef.messageId)
+                .cache
+                .get(messageRef.channelId).messages.fetch(messageRef.messageId)
                 .then((simulatedMessage) => {
                   simulatedMessage.content = content;
                   simulatedMessage.delete = () => {};

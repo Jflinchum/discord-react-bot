@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { Attachment } = require('discord.js');
+const { MessageAttachment } = require('discord.js');
 const { PATH, COLOR, makeEmbed } = require('./util');
 const USAGE = '`usage: [!post/!p] <name>`';
 
@@ -37,7 +37,7 @@ const post = (fileName, message, bot) => {
 
   const exten = file.substr((file.lastIndexOf('.') + 1));
   // If we're not streaming to a voice channel, post the attachment
-  const attach = new Attachment(`${PATH}/${file}`);
+  const attach = new MessageAttachment(`${PATH}/${file}`);
   if (!attach) {
     message.channel.send('Could not find file.');
     return;
@@ -74,7 +74,7 @@ const post = (fileName, message, bot) => {
     message.channel.send({
       embed: {
         thumbnail: {
-          url: `${message.author.avatarURL}`,
+          url: `${message.author.avatarURL()}`,
         },
         image: {
           url: `attachment://${file}`,

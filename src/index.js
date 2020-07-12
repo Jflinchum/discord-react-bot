@@ -51,12 +51,12 @@ fs.exists(CRON_PATH, (exists) => {
         messageRef: job.messageRef,
       };
       newJob.cronJob = cron.schedule(job.cronTime, () => {
-        const channel = bot.guilds.get(job.guildId)
-          .channels.get(job.channel);
+        const channel = bot.guilds.cache.get(job.guildId)
+          .channels.cache.get(job.channel);
         if (channel) {
           if (job.content.startsWith('!')) {
-            bot.channels.get(job.messageRef.channelId)
-              .fetchMessage(job.messageRef.messageId)
+            bot.channels.cache.get(job.messageRef.channelId)
+              .messages.fetch(job.messageRef.messageId)
               .then((messageRef) => {
                 messageRef.content = job.content;
                 messageRef.delete = () => {};
@@ -91,7 +91,7 @@ bot.on('ready', () => {
       // Removing any emojis that are not on the server anymore
       let emojiObj = bot.emojiTriggers[triggerWord][index];
       if (!EMOJI_REGEX.test(emojiObj.emoji) &&
-      !bot.guilds.array()[0].emojis.get(emojiObj.emoji)) {
+      !bot.guilds.cache.array()[0].emojis.cache.get(emojiObj.emoji)) {
         removeJson({ path: EMOJI_PATH, key: triggerWord });
         delete bot.emojiTriggers[triggerWord];
       }

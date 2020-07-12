@@ -103,7 +103,7 @@ const joinAndPlay = (vc, media, name, message, connection) => {
  */
 const playSong = ({ connection, song, message }) => {
   // On connecting to a voice channel, play the youtube stream
-  const dispatch = connection.playArbitraryInput(song.media, { volume: 0.3 });
+  const dispatch = connection.play(song.media, { volume: 0.3 });
   // Delete the command message
   message.channel.send(
     makeEmbed(
@@ -113,7 +113,7 @@ const playSong = ({ connection, song, message }) => {
       message.content
     )
   );
-  dispatch.on('end', (reason) => {
+  dispatch.on('finish', (reason) => {
     const nextSong = dequeue();
     if (nextSong && currentChannel
     && nextSong.channel.id === currentChannel.id) {
@@ -226,7 +226,7 @@ const play = ({channel, media, message, bot}) => {
     message.channel.send(USAGEPLAY);
     return;
   }
-  const channelList = bot.channels.array();
+  const channelList = bot.channels.cache.array();
   let vc;
   for (let i = 0; i < channelList.length; i++) {
     // Check if the channel is what we are searching for.

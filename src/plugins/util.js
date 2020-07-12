@@ -35,7 +35,7 @@ const makeEmbed = (message, user, title, footerText) => {
   return {
     embed: {
       thumbnail: {
-        url: `${user.displayAvatarURL}`,
+        url: `${user.displayAvatarURL()}`,
       },
       color: COLOR,
       description: message,
@@ -424,9 +424,9 @@ const exportMessages = (channel) => {
 
   if (channel.type === 'text') {
     console.log('Export started.');
-    channel.fetchMessages({ limit: 100 })
+    channel.messages.fetch({ limit: 100 })
       .then(messages => {
-        messages.tap((message) => {
+        messages.each((message) => {
           if (message.cleanContent.length > 0) {
             exportDictionary[channel.name] += (message.cleanContent + '\n');
           }
@@ -445,9 +445,9 @@ const exportMessages = (channel) => {
 };
 
 const exportRecursive = (message, channel) => {
-  channel.fetchMessages({ limit: 100, before: message.id })
+  channel.messages.fetch({ limit: 100, before: message.id })
     .then(messages => {
-      messages.tap((message) => {
+      messages.each((message) => {
         if (message.cleanContent.length > 0) {
           exportDictionary[channel.name] += (message.cleanContent + '\n');
         }
@@ -465,7 +465,7 @@ const exportRecursive = (message, channel) => {
 };
 
 const exportAllMessages = (guild) => {
-  guild.channels.tap((channel) => { exportMessages(channel); });
+  guild.channels.cache.each((channel) => { exportMessages(channel); });
 };
 
 /**
@@ -478,9 +478,9 @@ const exportFormattedMessages = (channel) => {
 
   if (channel.type === 'text') {
     console.log('Export started.');
-    channel.fetchMessages({ limit: 100 })
+    channel.messages.fetch({ limit: 100 })
       .then(messages => {
-        messages.tap((message) => {
+        messages.each((message) => {
           if (message.cleanContent.length > 0) {
             exportDictionary[channel.name] += (message.author.username +
               '|' + message.cleanContent + '\n');
@@ -500,9 +500,9 @@ const exportFormattedMessages = (channel) => {
 };
 
 const exportFormattedRecursive = (message, channel) => {
-  channel.fetchMessages({ limit: 100, before: message.id })
+  channel.messages.fetch({ limit: 100, before: message.id })
     .then(messages => {
-      messages.tap((message) => {
+      messages.each((message) => {
         if (message.cleanContent.length > 0) {
           exportDictionary[channel.name] += (message.author.username +
             '|' + message.cleanContent + '\n');
@@ -521,7 +521,7 @@ const exportFormattedRecursive = (message, channel) => {
 };
 
 const exportAllFormattedMessages = (guild) => {
-  guild.channels.tap((channel) => { exportFormattedMessages(channel); });
+  guild.channels.cache.each((channel) => { exportFormattedMessages(channel); });
 };
 
 /**

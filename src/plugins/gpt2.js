@@ -89,9 +89,9 @@ const promptGpt2 = (prompt, message, printPrompt = true, title = '') => {
 
 const promptRelevanceGpt2 = (originMessage, channel, n = 10) => {
   let messageArray = [];
-  channel.fetchMessages({ limit: n })
+  channel.messages.fetch({ limit: n })
     .then(messages => {
-      messages.tap((message) => {
+      messages.each((message) => {
         if (message.cleanContent.length > 0) {
           messageArray.unshift(message);
         }

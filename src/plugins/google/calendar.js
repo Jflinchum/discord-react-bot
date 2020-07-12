@@ -240,7 +240,7 @@ const createUpdateInterval = (bot) => {
                   value: event.id,
                 });
               });
-              bot.channels.get(config.calendar.updateChannelId)
+              bot.channels.cache.get(config.calendar.updateChannelId)
                 .send(makeEmbedNoUser(removedMessage,
                   'Events Removed:'));
             }
@@ -251,7 +251,7 @@ const createUpdateInterval = (bot) => {
                 start = formatDateString(new Date(start));
                 addedMessage += `${start} - ${event.summary}\n`;
               });
-              bot.channels.get(config.calendar.updateChannelId)
+              bot.channels.cache.get(config.calendar.updateChannelId)
                 .send(makeEmbedNoUser(addedMessage,
                   'Events Added:'));
             }
@@ -288,9 +288,9 @@ const createUpdateInterval = (bot) => {
                         && event.description.match(hrefRegex)[1];
                       let thumbnail = description;
                       if (!thumbnail || !validUrl.isUri(thumbnail)) {
-                        thumbnail = bot.user.displayAvatarURL;
+                        thumbnail = bot.user.displayAvatarURL();
                       }
-                      bot.channels.get(config.calendar.updateChannelId)
+                      bot.channels.cache.get(config.calendar.updateChannelId)
                         .send(makeEmbedNoUser(
                           event.summary,
                           'Event is starting now:',
@@ -336,7 +336,7 @@ const createUpdateInterval = (bot) => {
                         delete data[event.id];
                       }
                       fs.writeFileSync(REMIND_ME_PATH, JSON.stringify(data));
-                      bot.fetchUser(userId).then((user) => {
+                      bot.users.fetch(userId).then((user) => {
                         user.send(`${event.summary} is happening in ` +
                           `${diffMins} minutes!`);
                       }).catch(
@@ -550,7 +550,7 @@ const getAttendance = (auth, message, bot) => {
           });
           let configuredUserPromiseArray = [];
           configuredUsers.map((user) => {
-            configuredUserPromiseArray.push(bot.fetchUser(user));
+            configuredUserPromiseArray.push(bot.users.fetch(user));
           });
           Promise.all(configuredUserPromiseArray).then((detailedUsers) => {
             detailedUsers.map((user) => {

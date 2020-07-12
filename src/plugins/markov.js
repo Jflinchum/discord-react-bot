@@ -26,10 +26,10 @@ const markovUser = (user, guild, origChannel, phrase) => {
 
   markovCallback = postMarkovUser;
 
-  guild.channels.tap(channel => {
+  guild.channels.cache.each(channel => {
     if (channel.type === 'text') {
       channelLength++;
-      channel.fetchMessages({ limit: 100 })
+      channel.messages.fetch({ limit: 100 })
         .then(messages => {
           if (user != null) {
             asyncMarkov(messages.filter(m => m.author.id === user.id));
@@ -59,7 +59,7 @@ const markovChannel = (channel, guild, origChannel, phrase) => {
 
   if (channel.type === 'text') {
     channelLength++;
-    channel.fetchMessages({ limit: 100 })
+    channel.messages.fetch({ limit: 100 })
       .then(messages => {
         asyncMarkov(messages);
         if (messages.size >= 100) {
@@ -84,7 +84,7 @@ const markovRecursive = (message, user, channel, origChannel, phrase, loop) => {
     return;
   }
 
-  channel.fetchMessages({ limit: 100, before: message.id })
+  channel.messages.fetch({ limit: 100, before: message.id })
     .then(messages => {
       if (user != null) {
         asyncMarkov(messages.filter(m => m.author.id === user.id));
@@ -104,7 +104,7 @@ const markovRecursive = (message, user, channel, origChannel, phrase, loop) => {
 };
 
 const asyncMarkov = (messages) => {
-  messages.tap((message) => { markovString += (message.content + '\n'); });
+  messages.each((message) => { markovString += (message.content + '\n'); });
 };
 
 const postMarkovUser = (user, channel, origChannel, phrase) => {

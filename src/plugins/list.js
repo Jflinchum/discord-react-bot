@@ -93,9 +93,9 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
           `(${emojiString},`
           + ` ${emojiList[emoji].chance}), `;
         } else {
-          if (message.guild && message.guild.emojis.get(emojiString)) {
+          if (message.guild && message.guild.emojis.cache.get(emojiString)) {
             response +=
-            `(:${message.guild.emojis.get(emojiString).name}:,`
+            `(:${message.guild.emojis.cache.get(emojiString).name}:,`
             + ` ${emojiList[emoji].chance}), `;
           } else if (!message.guild) {
             response +=
@@ -114,9 +114,9 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
       let jobList = cronJobs[jobNames[index]];
       response += `  ${jobNames[index]}:`;
       for (let job in jobList) {
-        const guild = bot.guilds.get(jobList[job].guildId);
+        const guild = bot.guilds.cache.get(jobList[job].guildId);
         response += `  (${jobList[job].content}, `
-          + `${guild.channels.get(jobList[job].channel).name}, `
+          + `${guild.channels.cache.get(jobList[job].channel).name}, `
           + `${cronstrue.toString(jobList[job].cronTime)}),`;
       }
       response += '\n';
