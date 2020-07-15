@@ -38,17 +38,11 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
     }
     // Check for youtube videos
     if (url.includes('www.youtube.com') || url.includes('youtu.be')) {
-      ytdl.getBasicInfo(url, (err, info) => {
+      ytdl.getBasicInfo(url).then((info) => {
         const duration = (stopTime - startTime) ||
-        (info.length_seconds - (startTime || 0));
-        if (err) {
-          console.log('Could not get youtube info', err);
-          msg.delete();
-          message.channel.send('Could not get video info.');
-          return;
-        }
+        (info.videoDetails.lengthSeconds - (startTime || 0));
         // Check the length of the video
-        if (info.length_seconds < MAX_YT_TIME
+        if (info.videoDetails.lengthSeconds < MAX_YT_TIME
           || (duration && duration < MAX_YT_TIME)) {
           /**
            * Download the audio from the video as mp3
@@ -64,7 +58,10 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
             cb: () => {
               msg.delete();
               message.channel.send(
-                makeEmbed(`Added ${info.title} as ${fileName}`, message.author)
+                makeEmbed(
+                  `Added ${info.videoDetails.title} as ${fileName}`,
+                  message.author
+                )
               );
             },
           });
@@ -74,6 +71,11 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
             'That video is too long! Keep it at 2:30 or below.'
           );
         }
+      }).catch((err) => {
+        console.log('Could not get youtube info', err);
+        msg.delete();
+        message.channel.send('Could not get video info.');
+        return;
       });
     } else {
       if (!exten) {
@@ -136,19 +138,23 @@ const onText = (message) => {
   const attach = message.attachments.array();
 
   if (botCommand === '!add' || botCommand === '!a') {
+    if (cmd.length < 2) {
+      message.channel.send(USAGE);
+      return;
+    }
     let url, fileName, exten, timeStart, timeStop;
     if (attach.length > 0) {
       // Handling attachment images
       fileName = cmd[1];
       url = attach[0].url;
-      timeStart = cmd[2];
-      timeStop = cmd[3];
+      timeStart = cmd.length >= 3 && cmd[2];
+      timeStop = cmd.length >= 4 && cmd[3];
     } else {
       // If the image is contained in url
-      fileName = cmd[2];
+      fileName = cmd.length >= 3 && cmd[2];
       url = cmd[1];
-      timeStart = cmd[3];
-      timeStop = cmd[4];
+      timeStart = cmd.length >= 4 && cmd[3];
+      timeStop = cmd.length >= 5 && cmd[4];
     }
     // If the user is only uploading a string
     if (url[0] === '"') {
