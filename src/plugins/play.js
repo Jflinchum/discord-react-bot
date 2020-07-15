@@ -168,9 +168,21 @@ const skip = (number, message) => {
       cutSongName = currentSong;
       let oldChannel = currentChannel;
       // Skip the currently playing song
-      currentSong = undefined;
-      currentChannel = undefined;
-      oldChannel.leave();
+      const nextSong = dequeue();
+      if (!nextSong) {
+        currentChannel = null;
+        currentSong = null;
+        oldChannel.leave();
+      }
+      if (nextSong && currentChannel
+      && nextSong.channel.id === currentChannel.id) {
+        // If the next song is on the same channel
+        playNext(nextSong);
+      } else {
+        // Leave the voice channel after finishing the stream
+        oldChannel.leave();
+        playNext(nextSong);
+      }
     } else {
       message.channel.send('Nothing to skip!');
     }
