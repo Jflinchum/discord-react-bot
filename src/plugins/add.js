@@ -28,6 +28,10 @@ const USAGE = '`usage: [!add/!a] [<url>/"Example String Here"] <name>' +
  * music in seconds
  */
 const add = (fileName, url, exten, message, startTime, stopTime) => {
+  if (hasFile({fileName})) {
+    message.channel.send('File name already exists.');
+    return;
+  }
   // Send a loading message that will get deleted later since
   // downloading can take a while
   message.channel.send('Loading...').then(msg => {

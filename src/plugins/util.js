@@ -162,14 +162,22 @@ const ytdownload = ({url, fileName, cb, timeStart, duration}) => {
  *
  * @param {String} path - The path to check
  * @param {String} fileName - The file to search for
+ * @param {Boolean} caseSensitive - If serach should be case sensitive
  * @return {Boolean} - If the file exists in that directory
  */
-const hasFile = ({path = PATH, fileName}) => {
+const hasFile = ({ path = PATH, fileName, caseSensitive = false }) => {
   const files = fs.readdirSync(path);
   // Check if the file already exists
   for (let i = 0; i < files.length; i++) {
-    if (files[i].substr(0, files[i].lastIndexOf('.')) === fileName) {
-      return true;
+    if (caseSensitive) {
+      if (files[i].substr(0, files[i].lastIndexOf('.')) === fileName) {
+        return true;
+      }
+    } else {
+      if (files[i].substr(0, files[i].lastIndexOf('.')).toLowerCase() ===
+          fileName.toLowerCase()) {
+        return true;
+      }
     }
   }
   return false;

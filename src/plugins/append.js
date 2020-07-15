@@ -13,7 +13,7 @@ const USAGE = '`usage: !append <name> <"Example Text">`';
  */
 const append = ({fileName, text, message}) => {
   const fullPath = `${PATH}/${fileName}.txt`;
-  if (!hasFile({ fileName })) {
+  if (!hasFile({ fileName, caseSensitive: true })) {
     message.channel.send('Could not find text file.');
     return;
   }

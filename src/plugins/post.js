@@ -25,7 +25,8 @@ const post = (fileName, message, bot) => {
   let file;
   // Find the file associated with the name
   for (let i = 0; i < files.length; i++) {
-    if (files[i].substr(0, files[i].lastIndexOf('.')) === fileName) {
+    if (files[i].substr(0, files[i].lastIndexOf('.')).toLowerCase() ===
+        fileName.toLowerCase()) {
       file = files[i];
       break;
     }

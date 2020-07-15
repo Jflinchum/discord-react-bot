@@ -232,7 +232,7 @@ const play = ({channel, media, message, bot}) => {
     // Check if the channel is what we are searching for.
     // If the channel is a ., then join the vc with any users in it
     if (channelList[i].type === 'voice'
-        && ((channel === channelList[i].name) ||
+        && ((channel.toLowerCase() === channelList[i].name.toLowerCase()) ||
         (channel === '.' && channelList[i].members.array().length > 0))) {
       vc = channelList[i];
     }
@@ -282,7 +282,9 @@ const play = ({channel, media, message, bot}) => {
     } else {
       // Find the file associated with the name
       for (let i = 0; i < musicFiles.length; i++) {
-        if (musicFiles[i].substr(0, musicFiles[i].lastIndexOf('.')) === media) {
+        if (
+          musicFiles[i].substr(0, musicFiles[i].lastIndexOf('.')).toLowerCase()
+            === media.toLowerCase()) {
           fileToPlay = musicFiles[i];
           break;
         }
