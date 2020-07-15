@@ -260,8 +260,11 @@ const play = ({channel, media, message, bot}) => {
     }
     const ytStream = ytdl(media, { filter: 'audioonly' });
     ytdl.getBasicInfo(media, (err, info) => {
-      if (err)
+      if (err) {
         console.log('Could not get youtube info: ', err);
+        message.channel.send('Error getting youtube video.');
+        return;
+      }
       joinAndPlay(vc, ytStream, info.title, message);
     });
   } else {
