@@ -289,7 +289,7 @@ const play = ({channel, media, message, bot}) => {
       }
     }
     if (!fileToPlay) {
-      message.channel.send('Could not find file.');
+      message.channel.send(`Could not find ${media}.`);
       return;
     }
     const filePath = `${PATH}/${fileToPlay}`;

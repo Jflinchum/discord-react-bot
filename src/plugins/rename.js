@@ -31,7 +31,7 @@ const rename = (oldName, newName, message) => {
   }
   // If the file does not exist
   if (!oldFile) {
-    message.channel.send('Could not find file.');
+    message.channel.send(`Could not find ${oldName}.`);
     return;
   } else if (newFile) {
     // All files should have unique names

@@ -38,7 +38,7 @@ const remove = ({ fileName, message, emojis, cb }) => {
       }
     }
     if (!file) {
-      message.channel.send('Could not find file.');
+      message.channel.send(`Could not find ${fileName}.`);
     } else {
       fs.unlink(`${PATH}/${file}`, () => {
         message.channel.send(

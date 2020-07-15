@@ -31,7 +31,7 @@ const post = (fileName, message, bot) => {
     }
   }
   if (!file) {
-    message.channel.send('Could not find file.');
+    message.channel.send(`Could not find ${fileName}.`);
     return;
   }
 
@@ -39,7 +39,7 @@ const post = (fileName, message, bot) => {
   // If we're not streaming to a voice channel, post the attachment
   const attach = new MessageAttachment(`${PATH}/${file}`);
   if (!attach) {
-    message.channel.send('Could not find file.');
+    message.channel.send(`Could not find ${fileName}.`);
     return;
   }
   if (exten === 'mp3' || exten === 'wav') {
