@@ -76,7 +76,8 @@ const onText = (message, bot) => {
     if (cmd.length < 2) {
       message.channel.send(USAGE);
       return;
-    } else if (!cmd[1].startsWith('<@')) {
+    } else if (!cmd[1].startsWith('<@') || cmd[1].startsWith('<@&')) {
+      // Make sure it starts with the user mention but not a role mention
       message.channel.send(USAGE);
       return;
     }
