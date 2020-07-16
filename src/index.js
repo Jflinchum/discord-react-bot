@@ -6,6 +6,7 @@ const fs = require('fs');
 const cron = require('node-cron');
 const {
   PATH,
+  DATA_PATH,
   EMOJI_PATH,
   EMOJI_REGEX,
   CRON_PATH,
@@ -14,6 +15,7 @@ const {
   config,
   isDirectMessageEnabled,
   formatDateString,
+  getJson,
 } = require('./plugins/util');
 const { onTextHooks } = require('./plugins');
 const { createUpdateInterval } = require('./plugins/google/calendar');
@@ -123,19 +125,28 @@ bot.on('message', message => {
   }
   // React with any emojis
   const emojiKeys = Object.keys(bot.emojiTriggers);
-  for (let i = 0; i < emojiKeys.length; i++) {
-    if (message.content.toLowerCase().includes(emojiKeys[i])) {
-      const random = Math.random();
-      let emojiArray = bot.emojiTriggers[emojiKeys[i]];
-      emojiArray.forEach((emojiChance) => {
-        if (emojiChance.chance >= random && !message.deleted) {
-          message.react(emojiChance.emoji).catch((err) => {
-            console.log('Could not react to message: ', err);
+  getJson({
+    path: DATA_PATH,
+    key: 'userConfigs.' + message.author.id,
+    cb: (config) => {
+      if (config && config.emojiReacts && config.emojiReacts[0] === 'false') {
+        return;
+      }
+      for (let i = 0; i < emojiKeys.length; i++) {
+        if (message.content.toLowerCase().includes(emojiKeys[i])) {
+          const random = Math.random();
+          let emojiArray = bot.emojiTriggers[emojiKeys[i]];
+          emojiArray.forEach((emojiChance) => {
+            if (emojiChance.chance >= random && !message.deleted) {
+              message.react(emojiChance.emoji).catch((err) => {
+                console.log('Could not react to message: ', err);
+              });
+            }
           });
         }
-      });
-    }
-  }
+      }
+    },
+  });
   // Check to make sure the message is a command
   if (message.content[0] !== '!') {
     return;

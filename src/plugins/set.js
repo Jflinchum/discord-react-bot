@@ -1,7 +1,13 @@
 'use strict';
-const { makeEmbed, DATA_PATH, addJson, getJson } = require('./util');
+const {
+  makeEmbed,
+  DATA_PATH,
+  addJson,
+  getJson,
+  removeJson,
+} = require('./util');
 const USAGE = '`usage: !set <property> <value>`';
-const AVAILABLE_PROPERTIES = ['email'];
+const AVAILABLE_PROPERTIES = ['email', 'emojiReacts'];
 
 /**
  * Sets the property for the user who sent the message
@@ -22,17 +28,29 @@ const set = (property, value, message) => {
     finalMessage += '```';
     message.channel.send(finalMessage);
   } else {
-    addJson({
-      path: DATA_PATH,
-      key: `userConfigs.${userId}.${property}`,
-      value,
-      append: false,
-      cb: () => {
-        message.channel.send(
-          makeEmbed(`Set ${property} to ${value}`, message.author)
-        );
-      },
-    });
+    if (value) {
+      addJson({
+        path: DATA_PATH,
+        key: `userConfigs.${userId}.${property}`,
+        value,
+        append: false,
+        cb: () => {
+          message.channel.send(
+            makeEmbed(`Set ${property} to ${value}`, message.author)
+          );
+        },
+      });
+    } else {
+      removeJson({
+        path: DATA_PATH,
+        key: `userConfigs.${userId}.${property}`,
+        cb: () => {
+          message.channel.send(
+            makeEmbed(`Removed ${property}`, message.author)
+          );
+        },
+      });
+    }
   }
 };
 
@@ -54,7 +72,7 @@ const printConfig = (message) => {
         const properties = Object.keys(config);
         let finalMessage = 'The following configs have been found:\n';
         properties.map((property) => {
-          finalMessage += ` - ${property}: ${config[property]}`;
+          finalMessage += ` - ${property}: ${config[property]}\n`;
         });
         message.channel.send(makeEmbed(finalMessage, message.author));
       }
