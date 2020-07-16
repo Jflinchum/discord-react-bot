@@ -35,7 +35,7 @@ const makeEmbed = (message, user, title, footerText) => {
   return {
     embed: {
       thumbnail: {
-        url: `${user.displayAvatarURL()}`,
+        url: `${user.displayAvatarURL({ dynamic: true })}`,
       },
       color: COLOR,
       description: message,

@@ -75,7 +75,7 @@ const post = (fileName, message, bot) => {
     message.channel.send({
       embed: {
         thumbnail: {
-          url: `${message.author.avatarURL()}`,
+          url: `${message.author.displayAvatarURL({ dynamic: true })}`,
         },
         image: {
           url: `attachment://${file}`,

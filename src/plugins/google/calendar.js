@@ -288,7 +288,8 @@ const createUpdateInterval = (bot) => {
                         && event.description.match(hrefRegex)[1];
                       let thumbnail = description;
                       if (!thumbnail || !validUrl.isUri(thumbnail)) {
-                        thumbnail = bot.user.displayAvatarURL();
+                        thumbnail =
+                          bot.user.displayAvatarURL({ dynamic: true });
                       }
                       bot.channels.cache.get(config.calendar.updateChannelId)
                         .send(makeEmbedNoUser(
