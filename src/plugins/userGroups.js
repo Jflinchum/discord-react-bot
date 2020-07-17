@@ -156,7 +156,7 @@ const listUserGroups = (message, page) => {
     key: `userGroupsConfig.${message.guild.id}.userGroups`,
     cb: (userGroups) => {
       let userGroupList = '';
-      if (userGroups.length) {
+      if (userGroups && userGroups.length) {
         userGroups.map((userGroup) => {
           userGroupList += ` - ${userGroup.name}\n`;
         });
