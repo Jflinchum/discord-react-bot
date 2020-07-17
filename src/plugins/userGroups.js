@@ -9,10 +9,10 @@ const {
 const fs = require('fs');
 
 const USERGROUP_USAGE = '`usage: !userGroup add/remove/sub/unsub`';
-const ADD_USAGE = '`usage: !userGroup add "Example Group" color`';
+const ADD_USAGE = '`usage: !userGroup add "Example Group" colorCode`';
 const REMOVE_USAGE = '`usage: !userGroup remove "Example Group"`';
-const SUBSCRIBE_USAGE = '`usage: !userGroup sub @Role Name`';
-const UNSUBSCRIBE_USAGE = '`usage: !userGroup unsub @Role Name`';
+const SUBSCRIBE_USAGE = '`usage: !userGroup sub "Role Name"`';
+const UNSUBSCRIBE_USAGE = '`usage: !userGroup unsub "Role Name"`';
 
 /**
  * Creates a user group role for the guild
@@ -192,19 +192,17 @@ const onText = (message, bot) => {
       }
       removeUserGroup(cmd[2].replace(/\"/g, ''), message);
     } else if (userGroupCommand === 'sub') {
-      if (cmd.length < 3 || !(message.mentions && message.mentions.roles &&
-          message.mentions.roles.first())) {
+      if (cmd.length < 3) {
         message.channel.send(SUBSCRIBE_USAGE);
         return;
       }
-      subscribeUserGroup(message.mentions.roles.first(), message);
+      subscribeUserGroup(cmd[2].replace(/\"/g, ''), message);
     } else if (userGroupCommand === 'unsub') {
-      if (cmd.length < 3 || !(message.mentions && message.mentions.roles &&
-          message.mentions.roles.first())) {
+      if (cmd.length < 3) {
         message.channel.send(UNSUBSCRIBE_USAGE);
         return;
       }
-      unsubscribeUserGroup(message.mentions.roles.first(), message);
+      unsubscribeUserGroup(cmd[2].replace(/\"/g, ''), message);
     } else if (userGroupCommand === 'list') {
       const page = cmd[2];
       listUserGroups(message, page);

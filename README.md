@@ -90,8 +90,8 @@ A react bot for discord that can download and store files locally and post them 
 - !userGroup list - lists all currently configured user groups
 - !userGroup add "Group Name" [<colorCode>] - creates a role on the server with the Group Name and color code (in hex value i.e FFFFFF for white)
 - !userGroup remove "Group Name" - removes the role from the server
-- !userGroup sub @Group Name - adds yourself to the Group Name role
-- !userGroup unsub @Group Name - removes yourself from the Group Name role
+- !userGroup sub "Group Name" - adds yourself to the Group Name role
+- !userGroup unsub "Group Name" - removes yourself from the Group Name role
 
 [!help/!h]
 - Displays this help screen!
