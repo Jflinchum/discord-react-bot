@@ -22,29 +22,40 @@ const UNSUBSCRIBE_USAGE = '`usage: !userGroup unsub "Role Name"`';
  * the command
  */
 const addUserGroup = (userGroup, color, message) => {
-  message.guild.roles.create({
-    data: {
-      name: userGroup,
-      permissions: [],
-      mentionable: true,
-      color,
+  getJson({
+    path: DATA_PATH,
+    key: `userGroupsConfig.${message.guild.id}.userGroups`,
+    cb: (userGroups) => {
+      const role = userGroups.filter(e => e.name === userGroup.name);
+      if (role.length > 0) {
+        message.channel.send('User group already created!');
+        return;
+      }
+      message.guild.roles.create({
+        data: {
+          name: userGroup,
+          permissions: [],
+          mentionable: true,
+          color,
+        },
+        reason: `Created by ${message.author.username}.`,
+      }).then((role) => {
+        addJson(({
+          path: DATA_PATH,
+          key: `userGroupsConfig.${message.guild.id}.userGroups`,
+          value: {
+            id: role.id,
+            name: role.name,
+          },
+          cb: () => {
+            message.channel.send(`${userGroup} successfully created!`);
+          },
+        }));
+      }).catch((err) => {
+        message.channel.send('Could not create role: ' + err);
+        console.log(err);
+      });
     },
-    reason: `Created by ${message.author.username}.`,
-  }).then((role) => {
-    addJson(({
-      path: DATA_PATH,
-      key: `userGroupsConfig.${message.guild.id}.userGroups`,
-      value: {
-        id: role.id,
-        name: role.name,
-      },
-      cb: () => {
-        message.channel.send(`${userGroup} successfully created!`);
-      },
-    }));
-  }).catch((err) => {
-    message.channel.send('Could not create role: ' + err);
-    console.log(err);
   });
 };
 
@@ -101,16 +112,21 @@ const subscribeUserGroup = (userGroup, message) => {
     path: DATA_PATH,
     key: `userGroupsConfig.${message.guild.id}.userGroups`,
     cb: (userGroups) => {
-      const role = userGroups.filter(e => e.id === userGroup.id);
+      const role = userGroups.filter(e => e.name === userGroup);
       if (role.length === 0) {
         message.channel.send('Could not find user group.');
         return;
       }
-      message.member.roles.add(userGroup).then(() => {
-        message.channel.send(`Successfully subscribed to ${role[0].name}!`);
+      message.guild.roles.fetch(role[0].id).then((discordRole) => {
+        message.member.roles.add(discordRole).then(() => {
+          message.channel.send(`Successfully subscribed to ${role[0].name}!`);
+        }).catch((err) => {
+          message.channel.send(`Unable to subscribe to ${role[0].name}`);
+          console.log(err);
+        });
       }).catch((err) => {
-        message.channel.send(`Unable to subscribe to ${role[0].name}`);
         console.log(err);
+        message.channel.send('Could not find discord role.');
       });
     },
   });
@@ -128,16 +144,21 @@ const unsubscribeUserGroup = (userGroup, message) => {
     path: DATA_PATH,
     key: `userGroupsConfig.${message.guild.id}.userGroups`,
     cb: (userGroups) => {
-      const role = userGroups.filter(e => e.id === userGroup.id);
+      const role = userGroups.filter(e => e.name === userGroup);
       if (role.length === 0) {
         message.channel.send('Could not find user group.');
         return;
       }
-      message.member.roles.remove(userGroup).then(() => {
-        message.channel.send(`Successfully unsubscribed to ${role[0].name}!`);
+      message.guild.roles.fetch(role[0].id).then((discordRole) => {
+        message.member.roles.remove(discordRole).then(() => {
+          message.channel.send(`Successfully unsubscribed to ${role[0].name}!`);
+        }).catch((err) => {
+          message.channel.send(`Unable to unsubscribe to ${role[0].name}`);
+          console.log(err);
+        });
       }).catch((err) => {
-        message.channel.send(`Unable to unsubscribe to ${role[0].name}`);
         console.log(err);
+        message.channel.send('Could not find discord role.');
       });
     },
   });
