@@ -17,6 +17,7 @@ const onTextHooks = [
   require('./roll').onText,
   require('./set').onText,
   require('./pat').onText,
+  require('./userGroups').onText,
 ];
 
 module.exports = { onTextHooks };

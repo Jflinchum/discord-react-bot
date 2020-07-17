@@ -28,7 +28,7 @@ A react bot for discord that can download and store files locally and post them 
 [!list/!l] [image/music/text/emoji/cron]
 - Lists all files currently saved in the local storage. If a file type is requested, it will only list files under that type.
 
-[!skip/!s] <index>]
+[!skip/!s] [<index>]
 - Skips the current song if no index is given. Skips the song listed in the queue at the index otherwise.
 
 !markov <@user/#textChannel/all> [messageStart]
@@ -67,8 +67,31 @@ A react bot for discord that can download and store files locally and post them 
 !clearReminders <n>
 - Clears all reminders that you have set up for the nth event from the current date
 
+!attendance <n>
+- Shows all users who have are on the guest list for the nth event from the current date
+
+!set <property> <value>
+- Stores the defined value under the property in the user's config file
+
+!config
+- Displays what is in your config file
+
 !roll <amount> [d]<sides>
 - Rolls the amount of dice with the specified sides
+
+!pat <@person>
+- Gives that person a head pat!
+
+!myPats
+- Checks how many pats you have
+
+!userGroup
+- There are five subcommands for userGroup management
+- !userGroup list - lists all currently configured user groups
+- !userGroup add "Group Name" [<colorCode>] - creates a role on the server with the Group Name and color code (in hex value i.e FFFFFF for white)
+- !userGroup remove "Group Name" - removes the role from the server
+- !userGroup sub @Group Name - adds yourself to the Group Name role
+- !userGroup unsub @Group Name - removes yourself from the Group Name role
 
 [!help/!h]
 - Displays this help screen!
