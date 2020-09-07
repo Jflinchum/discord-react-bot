@@ -93,6 +93,9 @@ A react bot for discord that can download and store files locally and post them 
 - !userGroup sub "Group Name" - adds yourself to the Group Name role
 - !userGroup unsub "Group Name" - removes yourself from the Group Name role
 
+!changeIcon [<url>/<attachment>]
+- Changes the server icon to the image using the url or the attachment. Restricted to admins only
+
 [!help/!h]
 - Displays this help screen!
 ```
