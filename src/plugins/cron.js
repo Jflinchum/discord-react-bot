@@ -31,6 +31,10 @@ const addCron = ({
   bot,
   message,
 }) => {
+  if (!cron.validate(cronTime)) {
+    message.channel.send('`Invalid cron syntax`');
+    return;
+  }
   const guild = bot.guilds.cache.get(guildId);
   const messageRef = {
     messageId: message.id,
