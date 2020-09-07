@@ -18,6 +18,7 @@ const onTextHooks = [
   require('./set').onText,
   require('./pat').onText,
   require('./userGroups').onText,
+  require('./changeIcon').onText,
 ];
 
 module.exports = { onTextHooks };

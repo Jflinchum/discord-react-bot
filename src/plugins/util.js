@@ -594,6 +594,10 @@ const isDirectMessageEnabled = (message) => {
   return true;
 };
 
+const isAdmin = (userId) => {
+  return config.admins && config.admins.includes(userId);
+};
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -623,4 +627,5 @@ module.exports = {
   getDiscordId,
   formatDateString,
   isDirectMessageEnabled,
+  isAdmin,
 };
