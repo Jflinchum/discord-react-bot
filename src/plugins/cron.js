@@ -3,12 +3,14 @@ const cron = require('node-cron');
 const {
   CRON_PATH,
   addJson,
+  getJson,
   removeJson,
   makeEmbed,
   formatEscapedDates,
   getDiscordId,
   splitArgsWithQuotes,
 } = require('./util');
+const ADDUSAGE = '`usage: !addCron <name> <#channel> <"message"> <cronSyntax>`';
 // Cron Time Params
 // # ┌────────────── second (optional)
 // # │ ┌──────────── minute
@@ -35,55 +37,67 @@ const addCron = ({
     channelId: message.channel.id,
   };
   if (guild.channels.cache.get(channel)) {
-    addJson({
+    getJson({
       path: CRON_PATH,
       key: name,
-      value: { cronTime, content, channel, guildId, messageRef },
-      cb: () => {
-        let newJob = {
-          channel,
-          name,
-          content,
-          cronTime,
-          guildId,
-          messageRef,
-        };
-        const guild = bot.guilds.cache.get(guildId);
-        // Schedule the cron job
-        newJob.cronJob = cron.schedule(cronTime, () => {
-          const channelToPost = guild.channels.cache.get(channel);
-          if (channelToPost) {
-            const contentToPost = formatEscapedDates(content, new Date());
-            if (contentToPost.startsWith('!')) {
-              bot.channels
-                .cache
-                .get(messageRef.channelId).messages.fetch(messageRef.messageId)
-                .then((simulatedMessage) => {
-                  simulatedMessage.content = content;
-                  simulatedMessage.delete = () => {};
-                  simulatedMessage.channel = channelToPost;
-
-                  require('./index').onTextHooks.map((onTextFunc) => {
-                    onTextFunc(simulatedMessage, bot);
-                  });
-                })
-                .catch((err) => {
-                  console.log('Could not fetch messages: ', err);
-                });
-            } else {
-              channelToPost.send(contentToPost);
-            }
-          }
-        });
-        // Start the cron job and append it to the bot
-        if (bot.cronJobs[name]) {
-          bot.cronJobs[name].push(newJob);
+      cb: (value) => {
+        if (value) {
+          message.channel.send('Cron name already exists.');
+          return;
         } else {
-          bot.cronJobs[name] = [newJob];
+          addJson({
+            path: CRON_PATH,
+            key: name,
+            value: { cronTime, content, channel, guildId, messageRef },
+            cb: () => {
+              let newJob = {
+                channel,
+                name,
+                content,
+                cronTime,
+                guildId,
+                messageRef,
+              };
+              const guild = bot.guilds.cache.get(guildId);
+              // Schedule the cron job
+              newJob.cronJob = cron.schedule(cronTime, () => {
+                const channelToPost = guild.channels.cache.get(channel);
+                if (channelToPost) {
+                  const contentToPost = formatEscapedDates(content, new Date());
+                  if (contentToPost.startsWith('!')) {
+                    bot.channels
+                      .cache
+                      .get(messageRef.channelId)
+                      .messages.fetch(messageRef.messageId)
+                      .then((simulatedMessage) => {
+                        simulatedMessage.content = content;
+                        simulatedMessage.delete = () => {};
+                        simulatedMessage.channel = channelToPost;
+
+                        require('./index').onTextHooks.map((onTextFunc) => {
+                          onTextFunc(simulatedMessage, bot);
+                        });
+                      })
+                      .catch((err) => {
+                        console.log('Could not fetch messages: ', err);
+                      });
+                  } else {
+                    channelToPost.send(contentToPost);
+                  }
+                }
+              });
+              // Start the cron job and append it to the bot
+              if (bot.cronJobs[name]) {
+                bot.cronJobs[name].push(newJob);
+              } else {
+                bot.cronJobs[name] = [newJob];
+              }
+              message.channel.send(
+                makeEmbed(`Added cron job: ${name}`, message.author)
+              );
+            },
+          });
         }
-        message.channel.send(
-          makeEmbed(`Added cron job: ${name}`, message.author)
-        );
       },
     });
   } else {
@@ -127,6 +141,10 @@ const onText = (message, bot) => {
   const botCommand = cmd[0];
 
   if (botCommand === '!addCron') {
+    if (cmd.length < 4) {
+      message.channel.send(ADDUSAGE);
+      return;
+    }
     // i.e !addCron [name] [channel] [link/"message here"] [cron time]
     const cronArgs = formatCmd(cmd);
     addCron({
