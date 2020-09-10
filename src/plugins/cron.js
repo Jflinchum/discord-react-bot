@@ -1,5 +1,6 @@
 'use strict';
 const cron = require('node-cron');
+const fs = require('fs');
 const {
   CRON_PATH,
   addJson,
@@ -10,6 +11,7 @@ const {
   getDiscordId,
   splitArgsWithQuotes,
 } = require('./util');
+const { onTextHooks } = require('./index');
 const ADDUSAGE = '`usage: !addCron <name> <#channel> <"message"> <cronSyntax>`';
 // Cron Time Params
 // # ┌────────────── second (optional)
@@ -21,6 +23,64 @@ const ADDUSAGE = '`usage: !addCron <name> <#channel> <"message"> <cronSyntax>`';
 // # │ │ │ │ │ │
 // # │ │ │ │ │ │
 // # * * * * * *
+
+
+// Set up cron jobs on first time launch
+const setUpCronJobs = (bot) => {
+  // Set up cron jobs
+  fs.exists(CRON_PATH, (exists) => {
+    if (!exists) {
+      fs.writeFileSync(CRON_PATH, '{}');
+    }
+    bot.cronJobs = [];
+    let cronJobs = JSON.parse(fs.readFileSync(CRON_PATH));
+    const cronKeys = Object.keys(cronJobs);
+    for (let i = 0; i < cronKeys.length; i += 1) {
+      const key = cronKeys[i];
+      const jobs = cronJobs[key];
+      for (let j = 0; j < jobs.length; j += 1) {
+        const job = jobs[j];
+        const newJob = {
+          channel: job.channel,
+          name: key,
+          content: job.content,
+          cronTime: job.cronTime,
+          guildId: job.guildId,
+          messageRef: job.messageRef,
+        };
+        newJob.cronJob = cron.schedule(job.cronTime, () => {
+          const channel = bot.guilds.cache.get(job.guildId)
+            .channels.cache.get(job.channel);
+          if (channel) {
+            if (job.content.startsWith('!')) {
+              bot.channels.cache.get(job.messageRef.channelId)
+                .messages.fetch(job.messageRef.messageId)
+                .then((messageRef) => {
+                  messageRef.content = job.content;
+                  messageRef.delete = () => {};
+                  messageRef.channel = channel;
+
+                  onTextHooks.map((onTextFunc) => {
+                    onTextFunc(messageRef, bot);
+                  });
+                })
+                .catch((err) => {
+                  console.log('Could not fetch messages: ', err);
+                });
+            } else {
+              channel.send(formatEscapedDates(job.content, new Date()));
+            }
+          }
+        });
+        if (bot.cronJobs[newJob.name]) {
+          bot.cronJobs[newJob.name].push(newJob);
+        } else {
+          bot.cronJobs[newJob.name] = [newJob];
+        }
+      }
+    }
+  });
+};
 
 const addCron = ({
   name,
@@ -168,4 +228,5 @@ const onText = (message, bot) => {
 
 module.exports = {
   onText,
+  setUpCronJobs,
 };
