@@ -2,7 +2,7 @@
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const request = require('request');
-const { PATH, makeEmbed } = require('./util');
+const { PATH, makeEmbed, setReplayButton } = require('./util');
 const USAGEPLAY = '`usage: [!play/!pl] [<name>] [<voiceChannel>/.]`';
 const USAGESKIP = '`usage: [!skip/!s] [<index>]`';
 
@@ -104,7 +104,6 @@ const joinAndPlay = (vc, media, name, message, connection) => {
 const playSong = ({ connection, song, message }) => {
   // On connecting to a voice channel, play the youtube stream
   const dispatch = connection.play(song.media, { volume: 0.3 });
-  // Delete the command message
   message.channel.send(
     makeEmbed(
       `Playing: ${song.name}\nTo: ${song.channel.name}`,
@@ -112,7 +111,26 @@ const playSong = ({ connection, song, message }) => {
       null,
       message.content
     )
-  );
+  ).then((playMessage) => {
+    setReplayButton(playMessage, (reaction) => {
+      const cmd = message.content.split(' ');
+      let media;
+      let channel;
+      if (cmd.length === 2) {
+        channel = cmd[1];
+      } else {
+        media = cmd[1];
+        channel = cmd.splice(2, cmd.length).join(' ');
+      }
+      // Set the author to whoever just reacted with the emoji
+      message.author = reaction.users.cache.last();
+      play({
+        channel,
+        media,
+        message,
+      });
+    });
+  });
   dispatch.on('finish', (reason) => {
     const nextSong = dequeue();
     if (nextSong && currentChannel
@@ -230,15 +248,13 @@ const queue = (message) => {
  * @param {String} Object.media - The url to the music to enqueue
  * @param {Object} Object.message - The Discord Message Object that initiated
  * the command
- * @param {Object} Object.bot - The Discord Client object that represents
- * the bot
  */
-const play = ({channel, media, message, bot}) => {
+const play = ({channel, media, message}) => {
   if (!channel) {
     message.channel.send(USAGEPLAY);
     return;
   }
-  const channelList = bot.channels.cache.array();
+  const channelList = message.guild.channels.cache.array();
   let vc;
   for (let i = 0; i < channelList.length; i++) {
     // Check if the channel is what we are searching for.
@@ -316,7 +332,7 @@ const play = ({channel, media, message, bot}) => {
   }
 };
 
-const onText = (message, bot) => {
+const onText = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!play' || botCommand === '!pl') {
@@ -327,9 +343,8 @@ const onText = (message, bot) => {
     } else {
       media = cmd[1];
       channel = cmd.splice(2, cmd.length).join(' ');
-      console.log(channel);
     }
-    play({channel, media, message, bot});
+    play({channel, media, message});
   } else if (botCommand === '!queue' || botCommand === '!q') {
     queue(message);
   } else if (botCommand === '!skip' || botCommand === '!s') {

@@ -598,6 +598,15 @@ const isAdmin = (userId) => {
   return config.admins && config.admins.includes(userId);
 };
 
+const setReplayButton = (message, func = () => {}) => {
+  const replayEmoji = '♻️';
+  message.react(replayEmoji);
+  const filter = (reaction, user) => reaction.emoji.name === '♻️' && !user.bot;
+  const collector = message.createReactionCollector(filter);
+  collector.on('collect', func);
+  collector.on('end', collected => console.log('Stopped Collecting'));
+};
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -628,4 +637,5 @@ module.exports = {
   formatDateString,
   isDirectMessageEnabled,
   isAdmin,
+  setReplayButton,
 };
