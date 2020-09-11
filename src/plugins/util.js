@@ -412,7 +412,24 @@ const sendTextBlock = ({text, message, page = 1}) => {
     + `${(parseInt(page, 10) === totalPages) ? '' : '...'}`
     + `\nPage: ${page + 1} of ${totalPages + 1}`
     + '\n```';
-    message.channel.send(messageText);
+    message.channel.send(messageText).then((discordMessage) => {
+      // Left button to see previous page
+      if (page) {
+        createReactionCallback('⬅️', discordMessage, () => {
+          // Page is 1 indexed and converted to 0 index.
+          // Does not need to decrement
+          sendTextBlock({ text, message, page: page });
+        });
+      }
+      // Right button to see next page
+      if (page < totalPages) {
+        createReactionCallback('➡️', discordMessage, () => {
+          // Page is 1 indexed and converted to 0 index.
+          // Needs to increment by 2 to get back
+          sendTextBlock({ text, message, page: page + 2 });
+        });
+      }
+    });
   } else {
     // If there are no pages
     message.channel.send('```\n' + text + '\n```');
@@ -598,13 +615,19 @@ const isAdmin = (userId) => {
   return config.admins && config.admins.includes(userId);
 };
 
-const setReplayButton = (message, func = () => {}) => {
-  const replayEmoji = '♻️';
-  message.react(replayEmoji);
-  const filter = (reaction, user) => reaction.emoji.name === '♻️' && !user.bot;
+const createReactionCallback = (emojiName, message, func = () => {}) => {
+  message.react(emojiName);
+  const filter = (reaction, user) => {
+    return reaction.emoji.name === emojiName && !user.bot;
+  };
   const collector = message.createReactionCollector(filter);
   collector.on('collect', func);
   collector.on('end', collected => console.log('Stopped Collecting'));
+  return collector;
+};
+
+const setReplayButton = (message, func = () => {}) => {
+  return createReactionCallback('♻️', message, func);
 };
 
 module.exports = {
