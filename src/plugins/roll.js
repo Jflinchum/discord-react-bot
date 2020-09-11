@@ -1,6 +1,7 @@
 'use strict';
 const ROLL_USAGE = '`usage: !roll <amount> d<sides>`';
 const MAX_DICE = 20;
+const { setReplayButton } = require('./util');
 
 const parseSides = (sides) => {
   if (sides[0] === 'd') {
@@ -38,7 +39,13 @@ const roll = (amount, sides, message) => {
     finalMessage += `${diceArray[i]}\n`;
   }
   finalMessage += '```';
-  message.channel.send(finalMessage);
+  message.channel.send(finalMessage).then((rollMessage) => {
+    setReplayButton(rollMessage, (reaction) => {
+      const reactionUser = reaction.users.cache.last();
+      message.author = reactionUser;
+      roll(amount, sides, message);
+    });
+  });
 };
 
 
