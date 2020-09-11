@@ -1,7 +1,7 @@
 'use strict';
 const MarkovChain = require('markovchain');
-const { makeEmbed, makeEmbedNoUser } = require('./util');
-const USAGE = '`usage: !markov <@user/#textChannel/all> [messageStart]`';
+const { makeEmbed, makeEmbedNoUser, setReplayButton } = require('./util');
+const USAGE = '`usage: !markov <@user/#textChannel/all> ["messageStart"]`';
 
 
 var markovString = '';
@@ -119,8 +119,8 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     ];
   };
 
+  const originalPhrase = phrase;
   if (phrase !== null && phrase !== '') {
-    console.log(phrase);
     getAll = phrase.split(' ');
     getAll = getAll[getAll.length - 1];
     var lastIndex = phrase.lastIndexOf(' ');
@@ -141,7 +141,11 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     '*"';
     origChannel.send(
       makeEmbedNoUser(markovMessage, 'Everyone')
-    );
+    ).then((markovResponse) => {
+      setReplayButton(markovResponse, () => {
+        postMarkovUser(user, channel, origChannel, originalPhrase);
+      });
+    });
   } else {
     let markovMessage = user.username +
     intros[Math.floor(Math.random() * intros.length)] +
@@ -151,7 +155,11 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     '*"';
     origChannel.send(
       makeEmbed(markovMessage, user)
-    );
+    ).then((markovResponse) => {
+      setReplayButton(markovResponse, () => {
+        postMarkovUser(user, channel, origChannel, originalPhrase);
+      });
+    });
   }
 };
 
@@ -167,6 +175,7 @@ const postMarkovChannel = (user, channel, origChannel, phrase) => {
     ];
   };
 
+  const originalPhrase = phrase;
   if (phrase !== null && phrase !== '') {
     getAll = phrase.split(' ');
     getAll = getAll[getAll.length - 1];
@@ -187,7 +196,11 @@ const postMarkovChannel = (user, channel, origChannel, phrase) => {
   '*"';
   origChannel.send(
     makeEmbedNoUser(markovMessage, channel.name)
-  );
+  ).then((markovResponse) => {
+    setReplayButton(markovResponse, () => {
+      postMarkovChannel(user, channel, origChannel, originalPhrase);
+    });
+  });
 };
 
 const onText = (message) => {
