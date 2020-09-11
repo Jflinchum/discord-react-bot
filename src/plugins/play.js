@@ -20,13 +20,15 @@ let playingQueue = [];
  * @param {String} name - The title of the music to play
  * @param {Object} message - The Discord Message Object that initiated
  * the command
+ * @param {Object} author - The author that instantiated the command
  */
-const enqueue = (channel, media, name, message) => {
+const enqueue = (channel, media, name, message, author) => {
   playingQueue.push({
-    channel: channel,
-    media: media,
-    name: name,
-    message: message,
+    channel,
+    media,
+    name,
+    message,
+    author,
   });
 };
 
@@ -49,8 +51,9 @@ const dequeue = () => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  * @param {Object|Optional} connection - A Discord Voice Connection Object
+ * @param {Object} author - The author of the person trying to play the media
  */
-const joinAndPlay = (vc, media, name, message, connection) => {
+const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
   if (!message.deleted)
     message.delete();
   if (!currentSong) {
@@ -63,6 +66,7 @@ const joinAndPlay = (vc, media, name, message, connection) => {
         media,
         name,
         message,
+        author,
       };
       playSong({ connection, song, message });
     } else {
@@ -74,6 +78,7 @@ const joinAndPlay = (vc, media, name, message, connection) => {
             media,
             name,
             message,
+            author,
           };
           playSong({ connection, song, message });
         })
@@ -85,9 +90,9 @@ const joinAndPlay = (vc, media, name, message, connection) => {
         });
     }
   } else {
-    enqueue(vc, media, name, message);
+    enqueue(vc, media, name, message, author);
     message.channel.send(
-      makeEmbed(`Added ${name} to the queue!`, message.author)
+      makeEmbed(`Added ${name} to the queue!`, author)
     );
   }
 };
@@ -107,7 +112,7 @@ const playSong = ({ connection, song, message }) => {
   message.channel.send(
     makeEmbed(
       `Playing: ${song.name}\nTo: ${song.channel.name}`,
-      message.author,
+      song.author,
       null,
       message.content
     )
@@ -123,11 +128,12 @@ const playSong = ({ connection, song, message }) => {
         channel = cmd.splice(2, cmd.length).join(' ');
       }
       // Set the author to whoever just reacted with the emoji
-      message.author = reaction.users.cache.last();
+      const newAuthor = reaction.users.cache.last();
       play({
         channel,
         media,
         message,
+        author: newAuthor,
       });
     });
   });
@@ -159,13 +165,14 @@ const playNext = (song, connection) => {
   currentChannel = undefined;
   setTimeout(() => {
     if (song) {
-      joinAndPlay(
-        song.channel,
-        song.media,
-        song.name,
-        song.message,
+      joinAndPlay({
+        vc: song.channel,
+        media: song.media,
+        name: song.name,
+        message: song.message,
         connection,
-      );
+        author: song.author,
+      });
     }
   }, nextSongDelay);
 };
@@ -248,8 +255,10 @@ const queue = (message) => {
  * @param {String} Object.media - The url to the music to enqueue
  * @param {Object} Object.message - The Discord Message Object that initiated
  * the command
+ * @param {Object} Object.author - The author of the person trying to play the
+ * media
  */
-const play = ({channel, media, message}) => {
+const play = ({ channel, media, message, author }) => {
   if (!channel) {
     message.channel.send(USAGEPLAY);
     return;
@@ -278,7 +287,13 @@ const play = ({channel, media, message}) => {
       message.channel.send(USAGEPLAY);
       return;
     }
-    joinAndPlay(vc, request(attach[0].url), attach[0].filename, message);
+    joinAndPlay({
+      vc,
+      media: request(attach[0].url),
+      name: attach[0].filename,
+      message,
+      author,
+    });
   } else if (media.includes('www.youtube.com') || media.includes('youtu.be')) {
     // For youtube video streaming
     // Check if the url is valid
@@ -288,7 +303,13 @@ const play = ({channel, media, message}) => {
     }
     const ytStream = ytdl(media, { filter: 'audioonly' });
     ytdl.getBasicInfo(media).then((info) => {
-      joinAndPlay(vc, ytStream, info.videoDetails.title, message);
+      joinAndPlay({
+        vc,
+        media: ytStream,
+        name: info.videoDetails.title,
+        message,
+        author,
+      });
     }).catch((err) => {
       console.log('Could not get youtube info: ', err);
       message.channel.send('Error getting youtube video.');
@@ -323,12 +344,13 @@ const play = ({channel, media, message}) => {
       return;
     }
     const filePath = `${PATH}/${fileToPlay}`;
-    joinAndPlay(
+    joinAndPlay({
       vc,
-      fs.createReadStream(filePath),
-      fileToPlay.substr(0, fileToPlay.lastIndexOf('.')),
-      message
-    );
+      media: fs.createReadStream(filePath),
+      name: fileToPlay.substr(0, fileToPlay.lastIndexOf('.')),
+      message,
+      author,
+    });
   }
 };
 
@@ -344,7 +366,7 @@ const onText = (message) => {
       media = cmd[1];
       channel = cmd.splice(2, cmd.length).join(' ');
     }
-    play({channel, media, message});
+    play({ channel, media, message, author: message.author });
   } else if (botCommand === '!queue' || botCommand === '!q') {
     queue(message);
   } else if (botCommand === '!skip' || botCommand === '!s') {
