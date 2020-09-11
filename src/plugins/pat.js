@@ -5,6 +5,7 @@ const {
   addJson,
   getJson,
   getDiscordId,
+  setReplayButton,
 } = require('./util');
 const USAGE = '`usage: !pat <@person>`';
 
@@ -37,7 +38,13 @@ const pat = (userId, message, bot) => {
             userObject.user,
             message.author.username,
             `!pat @${userObject.displayName}`
-          ));
+          )).then((patMessage) => {
+            setReplayButton(patMessage, (reaction) => {
+              const reactionUser = reaction.users.cache.last();
+              message.author = reactionUser;
+              pat(userId, message, bot);
+            });
+          });
         },
       });
     },
