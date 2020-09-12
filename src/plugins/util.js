@@ -447,52 +447,6 @@ const sendTextBlock = ({text, message, page = 1}) => {
         });
       });
   }
-  // const textSplit = text.split(' ');
-  // if (textSplit && textSplit.length > MESSAGE_MAX_WORD_LENGTH) {
-  //   const firstIndex = page * MESSAGE_MAX_WORD_LENGTH;
-  //   let lastIndex = firstIndex + MESSAGE_MAX_WORD_LENGTH;
-  //   const totalPages = Math.floor(textSplit.length / MESSAGE_MAX_WORD_LENGTH);
-  //   // Sanity check page index
-  //   if (firstIndex > textSplit.length) {
-  //     message.channel.send('Could not find page!');
-  //     return;
-  //   }
-  //   if (lastIndex > textSplit.length) {
-  //     lastIndex = textSplit.length;
-  //   }
-  //   if (isNaN(page) || page > totalPages || page < 0) {
-  //     message.channel.send('Could not find page!');
-  //     return;
-  //   }
-  //   // Response text
-  //   const messageText = '```\n'
-  //   + textSplit.slice(firstIndex, lastIndex).join(' ')
-  //   + `${(parseInt(page, 10) === totalPages) ? '' : '...'}`
-  //   + `\nPage: ${page + 1} of ${totalPages + 1}`
-  //   + '\n```';
-  //   message.channel.send(messageText).then((discordMessage) => {
-  //     // Left button to see previous page
-  //     if (page) {
-  //       createReactionCallback('⬅️', discordMessage, () => {
-  //         // Page is 1 indexed and converted to 0 index.
-  //         // Does not need to decrement
-  //         sendTextBlock({ text, message, page: page });
-  //       });
-  //     }
-  //     // Right button to see next page
-  //     if (page < totalPages) {
-  //       createReactionCallback('➡️', discordMessage, () => {
-  //         // Page is 1 indexed and converted to 0 index.
-  //         // Needs to increment by 2 to get back
-  //         sendTextBlock({ text, message, page: page + 2 });
-  //       });
-  //     }
-  //   });
-  // } else {
-  //   // If there are no pages
-  //   message.channel.send('```\n' + text + '\n```');
-  //   return;
-  // }
 };
 
 let exportDictionary = {};
