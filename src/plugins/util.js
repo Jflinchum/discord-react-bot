@@ -379,6 +379,32 @@ const sendText = ({text, message, page = 0}) => {
   }
 };
 
+const getPaginatedText = ({ text, page }) => {
+  const textSplit = text.split(' ');
+  if (textSplit && textSplit.length > MESSAGE_MAX_WORD_LENGTH) {
+    const firstIndex = page * MESSAGE_MAX_WORD_LENGTH;
+    let lastIndex = firstIndex + MESSAGE_MAX_WORD_LENGTH;
+    const totalPages = Math.floor(textSplit.length / MESSAGE_MAX_WORD_LENGTH);
+    // Sanity check page index
+    if (firstIndex > textSplit.length) {
+      return;
+    }
+    if (lastIndex > textSplit.length) {
+      lastIndex = textSplit.length;
+    }
+    if (isNaN(page) || page > totalPages || page < 0) {
+      return;
+    }
+    // Response text
+    const messageText = textSplit.slice(firstIndex, lastIndex).join(' ')
+    + `${(parseInt(page, 10) === totalPages) ? '' : '...'}`
+    + `\nPage: ${page + 1} of ${totalPages + 1}`;
+    return { text: messageText, totalPages, firstIndex, lastIndex };
+  } else {
+    return { text, totalPages: 0, firstIndex: 0, lastIndex: 0 };
+  }
+};
+
 /**
  * Sends the text string in a block comment (```text```) to the message channel,
  * paginating it based off of MESSAGE_MAX_LENGTH.
@@ -389,52 +415,84 @@ const sendText = ({text, message, page = 0}) => {
  */
 const sendTextBlock = ({text, message, page = 1}) => {
   page -= 1;
-  const textSplit = text.split(' ');
-  if (textSplit && textSplit.length > MESSAGE_MAX_WORD_LENGTH) {
-    const firstIndex = page * MESSAGE_MAX_WORD_LENGTH;
-    let lastIndex = firstIndex + MESSAGE_MAX_WORD_LENGTH;
-    const totalPages = Math.floor(textSplit.length / MESSAGE_MAX_WORD_LENGTH);
-    // Sanity check page index
-    if (firstIndex > textSplit.length) {
-      message.channel.send('Could not find page!');
-      return;
-    }
-    if (lastIndex > textSplit.length) {
-      lastIndex = textSplit.length;
-    }
-    if (isNaN(page) || page > totalPages || page < 0) {
-      message.channel.send('Could not find page!');
-      return;
-    }
-    // Response text
-    const messageText = '```\n'
-    + textSplit.slice(firstIndex, lastIndex).join(' ')
-    + `${(parseInt(page, 10) === totalPages) ? '' : '...'}`
-    + `\nPage: ${page + 1} of ${totalPages + 1}`
-    + '\n```';
-    message.channel.send(messageText).then((discordMessage) => {
-      // Left button to see previous page
-      if (page) {
-        createReactionCallback('⬅️', discordMessage, () => {
-          // Page is 1 indexed and converted to 0 index.
-          // Does not need to decrement
-          sendTextBlock({ text, message, page: page });
-        });
-      }
-      // Right button to see next page
-      if (page < totalPages) {
-        createReactionCallback('➡️', discordMessage, () => {
-          // Page is 1 indexed and converted to 0 index.
-          // Needs to increment by 2 to get back
-          sendTextBlock({ text, message, page: page + 2 });
-        });
-      }
-    });
+  const paginatedObject = getPaginatedText({ text, page });
+  if (!paginatedObject) {
+    message.channel.send('Could not find page!');
   } else {
-    // If there are no pages
-    message.channel.send('```\n' + text + '\n```');
-    return;
+    message.channel.send('```\n' + paginatedObject.text + '\n```')
+      .then((discordMessage) => {
+        // Left button to see previous page
+        createReactionCallback('⬅️', discordMessage, () => {
+          const newPaginatedObject = getPaginatedText({ text, page: page - 1 });
+          if (newPaginatedObject) {
+            // Update page state
+            page = page - 1;
+            const editedText = '```\n'
+            + newPaginatedObject.text
+            + '\n```';
+            discordMessage.edit(editedText);
+          }
+        });
+        // Right button to see next page
+        createReactionCallback('➡️', discordMessage, () => {
+          const newPaginatedObject = getPaginatedText({ text, page: page + 1 });
+          if (newPaginatedObject) {
+            // Update page state
+            page = page + 1;
+            const editedText = '```\n'
+            + newPaginatedObject.text
+            + '\n```';
+            discordMessage.edit(editedText);
+          }
+        });
+      });
   }
+  // const textSplit = text.split(' ');
+  // if (textSplit && textSplit.length > MESSAGE_MAX_WORD_LENGTH) {
+  //   const firstIndex = page * MESSAGE_MAX_WORD_LENGTH;
+  //   let lastIndex = firstIndex + MESSAGE_MAX_WORD_LENGTH;
+  //   const totalPages = Math.floor(textSplit.length / MESSAGE_MAX_WORD_LENGTH);
+  //   // Sanity check page index
+  //   if (firstIndex > textSplit.length) {
+  //     message.channel.send('Could not find page!');
+  //     return;
+  //   }
+  //   if (lastIndex > textSplit.length) {
+  //     lastIndex = textSplit.length;
+  //   }
+  //   if (isNaN(page) || page > totalPages || page < 0) {
+  //     message.channel.send('Could not find page!');
+  //     return;
+  //   }
+  //   // Response text
+  //   const messageText = '```\n'
+  //   + textSplit.slice(firstIndex, lastIndex).join(' ')
+  //   + `${(parseInt(page, 10) === totalPages) ? '' : '...'}`
+  //   + `\nPage: ${page + 1} of ${totalPages + 1}`
+  //   + '\n```';
+  //   message.channel.send(messageText).then((discordMessage) => {
+  //     // Left button to see previous page
+  //     if (page) {
+  //       createReactionCallback('⬅️', discordMessage, () => {
+  //         // Page is 1 indexed and converted to 0 index.
+  //         // Does not need to decrement
+  //         sendTextBlock({ text, message, page: page });
+  //       });
+  //     }
+  //     // Right button to see next page
+  //     if (page < totalPages) {
+  //       createReactionCallback('➡️', discordMessage, () => {
+  //         // Page is 1 indexed and converted to 0 index.
+  //         // Needs to increment by 2 to get back
+  //         sendTextBlock({ text, message, page: page + 2 });
+  //       });
+  //     }
+  //   });
+  // } else {
+  //   // If there are no pages
+  //   message.channel.send('```\n' + text + '\n```');
+  //   return;
+  // }
 };
 
 let exportDictionary = {};
