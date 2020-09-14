@@ -512,6 +512,37 @@ const clearReminder = (auth, message) => {
             delete data[event.id];
           }
           fs.writeFileSync(REMIND_ME_PATH, JSON.stringify(data));
+          getJson({
+            path: DATA_PATH,
+            key: 'userConfigs',
+            cb: (allUserConfigs) => {
+              allUserConfigs &&
+              Object.keys(allUserConfigs).map((confUserId) => {
+                let currentAttendees = event.attendees || [];
+                // If the user clearing the reminder has an email on file and is
+                // an attendee already
+                if (confUserId === userId &&
+                  allUserConfigs[confUserId].email &&
+                  currentAttendees.filter(attendee =>
+                    attendee.email === allUserConfigs[confUserId].email[0]
+                  )
+                ) {
+                  const removeUserList = currentAttendees.filter((attendee) => {
+                    return attendee.email !==
+                      allUserConfigs[confUserId].email[0];
+                  });
+                  calendar.events.patch({
+                    calendarId: 'primary',
+                    eventId: event.id,
+                    resource: {
+                      attendees: [
+                        ...removeUserList,
+                      ],
+                    },
+                  });
+                }
+              });
+            }});
           message.channel.send(`Cleared all reminders for ${event.summary}`);
         } else {
           message.channel.send(`No reminders found for ${event.summary}`);
