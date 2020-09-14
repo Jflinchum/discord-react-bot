@@ -14,7 +14,10 @@ const {
 } = require('./../util');
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/calendar.readonly'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/calendar.events',
+];
 // The file token.json stores the user's access and refresh tokens, and is
 // created automatically when the authorization flow completes for the first
 // time.
@@ -388,6 +391,32 @@ const addReminder = (auth, message) => {
       key: `${eventId}.${userId}`,
       value: minutes,
       cb: () => {
+        getJson({
+          path: DATA_PATH,
+          key: 'userConfigs',
+          cb: (allUserConfigs) => {
+            allUserConfigs && Object.keys(allUserConfigs).map((confUserId) => {
+              let currentAttendees = event.attendees || [];
+              // If the user adding the reminder has an email on file and is
+              // not an attendee already
+              if (confUserId === userId &&
+                allUserConfigs[confUserId].email &&
+                !currentAttendees.filter(attendee =>
+                  attendee.email === allUserConfigs[confUserId].email[0]
+                )) {
+                calendar.events.patch({
+                  calendarId: 'primary',
+                  eventId: event.id,
+                  resource: {
+                    attendees: [
+                      ...currentAttendees,
+                      { email: allUserConfigs[confUserId].email },
+                    ],
+                  },
+                });
+              }
+            });
+          }});
         message.channel.send(`Set up a reminder for ${minutes} minutes` +
           ` before ${event.summary}`);
       },
