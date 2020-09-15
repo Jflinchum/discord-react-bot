@@ -51,6 +51,7 @@ const post = (fileName, message, bot) => {
         message: fileName,
         user: message.author,
         footerText: message.content,
+        color: message.guild.member(message.author.id).displayColor,
       })
     ).catch(() => {
       message.channel.send('Could not find user posting.');
@@ -74,6 +75,7 @@ const post = (fileName, message, bot) => {
             message: text.toString(),
             user: message.author,
             footerText: message.content,
+            color: message.guild.member(message.author.id).displayColor,
           })
         );
       });
@@ -87,7 +89,7 @@ const post = (fileName, message, bot) => {
         image: {
           url: `attachment://${file}`,
         },
-        color: COLOR,
+        color: message.guild.member(message.author.id).displayColor || COLOR,
         author: {
           name: message.author.username,
         },

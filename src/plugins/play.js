@@ -92,7 +92,11 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
   } else {
     enqueue(vc, media, name, message, author);
     message.channel.send(
-      makeEmbed({ message: `Added ${name} to the queue!`, user: author })
+      makeEmbed({
+        message: `Added ${name} to the queue!`,
+        user: author,
+        color: message.guild.member(message.author.id).displayColor,
+      })
     );
   }
 };
@@ -114,6 +118,7 @@ const playSong = ({ connection, song, message }) => {
       message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
       user: song.author,
       footerText: message.content,
+      color: message.guild.member(message.author.id).displayColor,
     })
   ).then((playMessage) => {
     setReplayButton(playMessage, (reaction) => {
@@ -221,7 +226,11 @@ const skip = (number, message) => {
   }
   if (cutSongName) {
     message.channel.send(
-      makeEmbed({ message: `Skipped: ${cutSongName}`, user: message.author })
+      makeEmbed({
+        message: `Skipped: ${cutSongName}`,
+        user: message.author,
+        color: message.guild.member(message.author.id).displayColor,
+      })
     );
   }
 };

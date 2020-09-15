@@ -38,6 +38,7 @@ const pat = (userId, message, bot) => {
             user: userObject.user,
             title: message.author.username,
             footerText: `!pat @${userObject.displayName}`,
+            color: userObject.displayColor,
           })).then((patMessage) => {
             setReplayButton(patMessage, (reaction) => {
               const reactionUser = reaction.users.cache.last();
@@ -69,6 +70,7 @@ const printPats = (message, bot) => {
           message: `${userDisplay} has been pat ${pats.length} ` +
           ` time${pats.length === 1 ? '' : 's'}!`,
           user: message.author,
+          color: message.guild.member(message.author.id).displayColor,
         })
       );
     },

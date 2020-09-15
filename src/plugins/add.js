@@ -65,6 +65,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
                 makeEmbed({
                   message: `Added ${info.videoDetails.title} as ${fileName}`,
                   user: message.author,
+                  color: message.guild.member(message.author.id).displayColor,
                 })
               );
             },
@@ -101,7 +102,11 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
           } else {
             msg.delete();
             message.channel.send(
-              makeEmbed({ message: `Added: ${fileName}`, user: message.author })
+              makeEmbed({
+                message: `Added: ${fileName}`,
+                user: message.author,
+                color: message.guild.member(message.author.id).displayColor,
+              })
             );
           }
         },
@@ -130,7 +135,11 @@ const addText = (fileName, text, message) => {
     }
     message.delete();
     message.channel.send(
-      makeEmbed({ message: `Added: ${fileName}`, user: message.author })
+      makeEmbed({
+        message: `Added: ${fileName}`,
+        user: message.author,
+        color: message.guild.member(message.author.id).displayColor,
+      })
     );
   });
 };
