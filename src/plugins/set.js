@@ -36,7 +36,10 @@ const set = (property, value, message) => {
         append: false,
         cb: () => {
           message.channel.send(
-            makeEmbed(`Set ${property} to ${value}`, message.author)
+            makeEmbed({
+              message: `Set ${property} to ${value}`,
+              user: message.author,
+            })
           );
         },
       });
@@ -46,7 +49,10 @@ const set = (property, value, message) => {
         key: `userConfigs.${userId}.${property}`,
         cb: () => {
           message.channel.send(
-            makeEmbed(`Removed ${property}`, message.author)
+            makeEmbed({
+              message: `Removed ${property}`,
+              user: message.author,
+            })
           );
         },
       });
@@ -74,7 +80,10 @@ const printConfig = (message) => {
         properties.map((property) => {
           finalMessage += ` - ${property}: ${config[property]}\n`;
         });
-        message.channel.send(makeEmbed(finalMessage, message.author));
+        message.channel.send(makeEmbed({
+          message: finalMessage,
+          user: message.author,
+        }));
       }
     },
   });

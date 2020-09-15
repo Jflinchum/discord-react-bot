@@ -154,7 +154,7 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     markovGen.start(getAll).end().process() +
     '*"';
     origChannel.send(
-      makeEmbed(markovMessage, user)
+      makeEmbed({ message: markovMessage, user })
     ).then((markovResponse) => {
       setReplayButton(markovResponse, () => {
         postMarkovUser(user, channel, origChannel, originalPhrase);

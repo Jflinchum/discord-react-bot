@@ -29,15 +29,16 @@ const config = require('./../../config.json');
  * @param {Object} user - Discord User object. Will post avatar and
  * username along with message
  * @param {String} title - The title of the message
+ * @param {Hexadecimal} color - The color of the embed
  * @return {Object} - Returns the constructed embeded message
  */
-const makeEmbed = (message, user, title, footerText) => {
+const makeEmbed = ({ message, user, title, footerText, color }) => {
   return {
     embed: {
       thumbnail: {
         url: `${user.displayAvatarURL({ dynamic: true })}`,
       },
-      color: COLOR,
+      color: color || COLOR,
       description: message,
       author: {
         name: title || user.username,

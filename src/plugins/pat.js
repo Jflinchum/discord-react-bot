@@ -31,14 +31,14 @@ const pat = (userId, message, bot) => {
         key: `patData.${userId}.pats`,
         cb: (pats) => {
           const userObject = message.guild.member(userId);
-          message.channel.send(makeEmbed(
-            `${userObject.displayName} has received a head pat!\n` +
+          message.channel.send(makeEmbed({
+            message: `${userObject.displayName} has received a head pat!\n` +
             `${userObject.displayName} now has ${pats.length} ` +
             `head pat${pats.length === 1 ? '' : 's'}.`,
-            userObject.user,
-            message.author.username,
-            `!pat @${userObject.displayName}`
-          )).then((patMessage) => {
+            user: userObject.user,
+            title: message.author.username,
+            footerText: `!pat @${userObject.displayName}`,
+          })).then((patMessage) => {
             setReplayButton(patMessage, (reaction) => {
               const reactionUser = reaction.users.cache.last();
               message.author = reactionUser;
@@ -65,11 +65,11 @@ const printPats = (message, bot) => {
     cb: (pats) => {
       const userDisplay = message.guild.member(message.author.id).displayName;
       message.channel.send(
-        makeEmbed(
-          `${userDisplay} has been pat ${pats.length} ` +
+        makeEmbed({
+          message: `${userDisplay} has been pat ${pats.length} ` +
           ` time${pats.length === 1 ? '' : 's'}!`,
-          message.author
-        )
+          user: message.author,
+        })
       );
     },
   });

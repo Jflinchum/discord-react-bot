@@ -46,7 +46,10 @@ const rename = (oldName, newName, message) => {
         return;
       }
       message.channel.send(
-        makeEmbed(`Renamed ${oldName} to ${newName}`, message.author)
+        makeEmbed({
+          message: `Renamed ${oldName} to ${newName}`,
+          user: message.author,
+        })
       );
     });
   }

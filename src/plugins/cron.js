@@ -157,7 +157,10 @@ const addCron = ({
                 bot.cronJobs[name] = [newJob];
               }
               message.channel.send(
-                makeEmbed(`Added cron job: ${name}`, message.author)
+                makeEmbed({
+                  message: `Added cron job: ${name}`,
+                  user: message.author,
+                })
               );
             },
           });
@@ -180,7 +183,10 @@ const removeCron = ({ name, bot, message }) => {
       delete bot.cronJobs[name];
       message.delete();
       message.channel.send(
-        makeEmbed(`Removed cron job: ${name}`, message.author)
+        makeEmbed({
+          message: `Removed cron job: ${name}`,
+          user: message.author,
+        })
       );
     } else {
       message.delete();

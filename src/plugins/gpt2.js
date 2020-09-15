@@ -50,11 +50,11 @@ if (gpt2Enabled) {
     if (channel && author) {
       messageSplit.map((message, index) => {
         channel.send(
-          makeEmbed(
+          makeEmbed({
             message,
-            author,
-            `${title} Response [${index + 1}/${messageSplit.length}]`
-          )
+            user: author,
+            title: `${title} Response [${index + 1}/${messageSplit.length}]`,
+          })
         );
       });
     } else if (channel) {

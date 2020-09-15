@@ -47,11 +47,14 @@ const post = (fileName, message, bot) => {
     // Audio files don't work with embeded messages, so send the attachments
     // afterwards
     message.channel.send(
-      makeEmbed(fileName, message.author, null, message.content)
-    )
-      .catch(() => {
-        message.channel.send('Could not find user posting.');
-      });
+      makeEmbed({
+        message: fileName,
+        user: message.author,
+        footerText: message.content,
+      })
+    ).catch(() => {
+      message.channel.send('Could not find user posting.');
+    });
     message.channel.send(attach);
   } else if (exten === 'txt') {
     // If the file is a text file, post the contents with text to speech
@@ -67,7 +70,11 @@ const post = (fileName, message, bot) => {
       .then(msg => {
         msg.delete();
         message.channel.send(
-          makeEmbed(text.toString(), message.author, null, message.content)
+          makeEmbed({
+            message: text.toString(),
+            user: message.author,
+            footerText: message.content,
+          })
         );
       });
   } else {

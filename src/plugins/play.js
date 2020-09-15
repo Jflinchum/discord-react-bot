@@ -92,7 +92,7 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
   } else {
     enqueue(vc, media, name, message, author);
     message.channel.send(
-      makeEmbed(`Added ${name} to the queue!`, author)
+      makeEmbed({ message: `Added ${name} to the queue!`, user: author })
     );
   }
 };
@@ -110,12 +110,11 @@ const playSong = ({ connection, song, message }) => {
   // On connecting to a voice channel, play the youtube stream
   const dispatch = connection.play(song.media, { volume: 0.3 });
   message.channel.send(
-    makeEmbed(
-      `Playing: ${song.name}\nTo: ${song.channel.name}`,
-      song.author,
-      null,
-      message.content
-    )
+    makeEmbed({
+      message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
+      user: song.author,
+      footerText: message.content,
+    })
   ).then((playMessage) => {
     setReplayButton(playMessage, (reaction) => {
       const cmd = message.content.split(' ');
@@ -222,7 +221,7 @@ const skip = (number, message) => {
   }
   if (cutSongName) {
     message.channel.send(
-      makeEmbed(`Skipped: ${cutSongName}`, message.author)
+      makeEmbed({ message: `Skipped: ${cutSongName}`, user: message.author })
     );
   }
 };

@@ -23,7 +23,10 @@ const append = ({fileName, text, message}) => {
       return;
     }
     message.channel.send(
-      makeEmbed(`Added ${text} to ${fileName}`, message.author)
+      makeEmbed({
+        message: `Added ${text} to ${fileName}`,
+        user: message.author,
+      })
     );
   });
 };

@@ -62,10 +62,10 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
             cb: () => {
               msg.delete();
               message.channel.send(
-                makeEmbed(
-                  `Added ${info.videoDetails.title} as ${fileName}`,
-                  message.author
-                )
+                makeEmbed({
+                  message: `Added ${info.videoDetails.title} as ${fileName}`,
+                  user: message.author,
+                })
               );
             },
           });
@@ -101,7 +101,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
           } else {
             msg.delete();
             message.channel.send(
-              makeEmbed(`Added: ${fileName}`, message.author)
+              makeEmbed({ message: `Added: ${fileName}`, user: message.author })
             );
           }
         },
@@ -130,7 +130,7 @@ const addText = (fileName, text, message) => {
     }
     message.delete();
     message.channel.send(
-      makeEmbed(`Added: ${fileName}`, message.author)
+      makeEmbed({ message: `Added: ${fileName}`, user: message.author })
     );
   });
 };

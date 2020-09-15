@@ -23,7 +23,7 @@ const remove = ({ fileName, message, emojis, cb }) => {
     // If the file is an emoji reaction
     removeJson({ path: EMOJI_PATH, key: fileName, cb: () => {
       message.channel.send(
-        makeEmbed(`Removed ${fileName}`, message.author)
+        makeEmbed({ message: `Removed ${fileName}`, user: message.author })
       );
       return cb();
     }});
@@ -43,7 +43,7 @@ const remove = ({ fileName, message, emojis, cb }) => {
     } else {
       fs.unlink(`${PATH}/${file}`, () => {
         message.channel.send(
-          makeEmbed(`Removed ${file}`, message.author)
+          makeEmbed({ message: `Removed ${file}`, user: message.author })
         );
       });
     }
