@@ -39,6 +39,7 @@ const pat = (userId, message, bot) => {
             title: message.author.username,
             footerText: `!pat @${userObject.displayName}`,
             color: userObject.displayColor,
+            authorIcon: message.author.displayAvatarURL(),
           })).then((patMessage) => {
             setReplayButton(patMessage, (reaction) => {
               const reactionUser = reaction.users.cache.last();

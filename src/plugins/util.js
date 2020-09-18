@@ -31,10 +31,11 @@ const config = require('./../../config.json');
  * @param {String} title - The title of the message
  * @param {ColorResolvable} color - The color of the embed. Can be hex, decimal,
  * or just base colors such as WHITE, BLUE, RED
+ * @param {String} authorIcon - The icon for the author of the embed
  * @return {Object} - Returns the constructed embeded message
  */
-const makeEmbed = ({ message, user, title, footerText, color }) => {
-  return {
+const makeEmbed = ({ message, user, title, footerText, color, authorIcon }) => {
+  let returnMessage = {
     embed: {
       thumbnail: {
         url: `${user.displayAvatarURL({ dynamic: true })}`,
@@ -49,6 +50,10 @@ const makeEmbed = ({ message, user, title, footerText, color }) => {
       },
     },
   };
+  if (authorIcon) {
+    returnMessage.embed.author.icon_url = authorIcon;
+  }
+  return returnMessage;
 };
 
 /**
