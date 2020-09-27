@@ -190,7 +190,7 @@ const playNext = (song, connection) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-const skip = (number, message) => {
+const skip = ({ number, guild, author, channel }) => {
   let cutSongName;
   if (!number) {
     if (currentSong) {
@@ -213,7 +213,7 @@ const skip = (number, message) => {
         playNext(nextSong);
       }
     } else {
-      message.channel.send('Nothing to skip!');
+      channel.send('Nothing to skip!');
     }
   } else {
     // Skip the song at number in the queue
@@ -221,15 +221,15 @@ const skip = (number, message) => {
       cutSongName = playingQueue[number].name;
       playingQueue.splice(number, 1);
     } else {
-      message.channel.send(USAGESKIP);
+      channel.send(USAGESKIP);
     }
   }
   if (cutSongName) {
-    message.channel.send(
+    channel.send(
       makeEmbed({
         message: `Skipped: ${cutSongName}`,
-        user: message.author,
-        color: message.guild.member(message.author.id).displayColor,
+        user: author,
+        color: guild.member(author.id).displayColor,
       })
     );
   }
@@ -378,8 +378,13 @@ const onText = (message) => {
   } else if (botCommand === '!queue' || botCommand === '!q') {
     queue(message);
   } else if (botCommand === '!skip' || botCommand === '!s') {
-    const num = cmd[1];
-    skip(num, message);
+    const number = cmd[1];
+    skip({
+      number,
+      guild: message.guild,
+      channel: message.channel,
+      author: message.author,
+    });
   }
 };
 
