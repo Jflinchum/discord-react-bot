@@ -680,4 +680,5 @@ module.exports = {
   isDirectMessageEnabled,
   isAdmin,
   setReplayButton,
+  createReactionCallback,
 };

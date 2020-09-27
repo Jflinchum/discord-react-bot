@@ -2,7 +2,12 @@
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const request = require('request');
-const { PATH, makeEmbed, setReplayButton } = require('./util');
+const {
+  PATH,
+  makeEmbed,
+  setReplayButton,
+  createReactionCallback,
+} = require('./util');
 const USAGEPLAY = '`usage: [!play/!pl] [<name>] [<voiceChannel>/.]`';
 const USAGESKIP = '`usage: [!skip/!s] [<index>]`';
 
@@ -138,6 +143,15 @@ const playSong = ({ connection, song, message }) => {
         media,
         message,
         author: newAuthor,
+      });
+    });
+    createReactionCallback('🛑', playMessage, (reaction) => {
+      // Set the author to whoever just reacted with the emoji
+      const newAuthor = reaction.users.cache.last();
+      skip({
+        author: newAuthor,
+        guild: message.guild,
+        channel: message.channel,
       });
     });
   });
