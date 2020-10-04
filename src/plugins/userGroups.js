@@ -8,11 +8,12 @@ const {
 } = require('./util');
 const fs = require('fs');
 
-const USERGROUP_USAGE = '`usage: !userGroup add/remove/sub/unsub`';
+const USERGROUP_USAGE = '`usage: !userGroup add/remove/sub/unsub/rename`';
 const ADD_USAGE = '`usage: !userGroup add "Example Group" colorCode`';
 const REMOVE_USAGE = '`usage: !userGroup remove "Example Group"`';
 const SUBSCRIBE_USAGE = '`usage: !userGroup sub "Role Name"`';
 const UNSUBSCRIBE_USAGE = '`usage: !userGroup unsub "Role Name"`';
+const RENAME_USAGE = '`usage: !userGroup rename "Old Role Name" "New Role Name"`';
 
 /**
  * Creates a user group role for the guild
@@ -189,6 +190,45 @@ const listUserGroups = (message, page) => {
   });
 };
 
+const renameUserGroup = (oldGroup, newGroup, message) => {
+  getJson({
+    path: DATA_PATH,
+    key: `userGroupsConfig.${message.guild.id}.userGroups`,
+    cb: (userGroups) => {
+      const role = userGroups.filter(e => e.name === oldGroup);
+      if (role.length === 0) {
+        message.channel.send('Could not find user group to rename.');
+        return;
+      }
+      message.guild.roles.fetch(role[0].id).then((discordRole) => {
+        discordRole.edit({ name: newGroup }).then(() => {
+          fs.readFile(DATA_PATH, (err, data) => {
+            if (err) {
+              console.log(err);
+              return;
+            }
+            data = JSON.parse(data);
+            // Modify local storage to match the name change
+            data.userGroupsConfig[`${message.guild.id}`].userGroups.forEach(userGroup => {
+              if (userGroup.id === role[0].id) {
+                userGroup.name = newGroup;
+              }
+            });
+            fs.writeFileSync(DATA_PATH, JSON.stringify(data));
+            message.channel.send(`Successfully renamed ${oldGroup} to ${newGroup}!`);
+          });
+        }).catch((err) => {
+          message.channel.send(`Unable to rename ${oldGroup}`);
+          console.log(err);
+        });
+      }).catch((err) => {
+        console.log(err);
+        message.channel.send('Could not find discord role.');
+      });
+    },
+  });
+};
+
 const onText = (message, bot) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
@@ -227,6 +267,12 @@ const onText = (message, bot) => {
     } else if (userGroupCommand === 'list') {
       const page = cmd[2];
       listUserGroups(message, page);
+    } else if (userGroupCommand === 'rename') {
+      if (cmd.length < 4) {
+        message.channel.send(RENAME_USAGE);
+        return;
+      }
+      renameUserGroup(cmd[2].replace(/\"/g, ''), cmd[3].replace(/\"/g, ''), message);
     }
   }
 };
