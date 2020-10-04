@@ -227,7 +227,17 @@ const skip = ({ number, guild, author, channel }) => {
         playNext(nextSong);
       }
     } else {
-      channel.send('Nothing to skip!');
+      if (currentChannel) {
+        currentChannel.leave();
+      } else {
+        // Check if the bot is in any channels in the guild and leave it
+        if (channel.guild.me.voice.channel) {
+          channel.guild.me.voice.channel.leave();
+        } else {
+          channel.send('Nothing to skip!');
+        }
+      }
+      return;
     }
   } else {
     // Skip the song at number in the queue
