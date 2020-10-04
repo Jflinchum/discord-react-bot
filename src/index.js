@@ -116,4 +116,17 @@ bot.on('message', message => {
 
 bot.on('error', console.error);
 
+const cleanUp = () => {
+  bot.destroy();
+};
+
+process.on('exit', () => {
+  console.log('Logging out');
+  cleanUp();
+});
+
+process.on('SIGINT', () => {
+  process.exit();
+});
+
 bot.login(TOKEN);
