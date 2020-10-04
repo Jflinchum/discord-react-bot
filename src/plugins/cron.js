@@ -11,7 +11,6 @@ const {
   getDiscordId,
   splitArgsWithQuotes,
 } = require('./util');
-const { onTextHooks } = require('./index');
 const ADDUSAGE = '`usage: !addCron <name> <#channel> <"message"> <cronSyntax>`';
 // Cron Time Params
 // # ┌────────────── second (optional)
@@ -60,7 +59,7 @@ const setUpCronJobs = (bot) => {
                   messageRef.delete = () => {};
                   messageRef.channel = channel;
 
-                  onTextHooks.map((onTextFunc) => {
+                  require('./index').onTextHooks.map((onTextFunc) => {
                     onTextFunc(messageRef, bot);
                   });
                 })
