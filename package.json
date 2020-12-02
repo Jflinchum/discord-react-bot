@@ -25,6 +25,8 @@
   },
   "dependencies": {
     "@discordjs/opus": "^0.3.2",
+    "chart.js": "^2.9.4",
+    "chartjs-node-canvas": "^3.0.6",
     "cronstrue": "^1.92.0",
     "discord.io": "^2.5.3",
     "discord.js": "^12.0.0",

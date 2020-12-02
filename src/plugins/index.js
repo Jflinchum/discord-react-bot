@@ -19,6 +19,7 @@ const onTextHooks = [
   require('./pat').onText,
   require('./userGroups').onText,
   require('./changeIcon').onText,
+  require('./chart').onText,
 ];
 
 module.exports = { onTextHooks };
