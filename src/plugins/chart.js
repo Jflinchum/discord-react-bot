@@ -22,7 +22,7 @@ const getPatData = (guild, cb) => {
       const userIds = Object.keys(patData);
       // Sort user ids from largest to smallest
       userIds.sort((userA, userB) => patData[userB].pats.length - patData[userA].pats.length);
-      const topFive = userIds.slice(0, 4);
+      const topFive = userIds.slice(0, 5);
       let promiseArray = [];
       for (let i = 0; i < topFive.length; i++) {
         promiseArray.push(new Promise((resolve, reject) => {
