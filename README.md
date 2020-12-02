@@ -96,6 +96,9 @@ A react bot for discord that can download and store files locally and post them 
 !changeIcon [<url>/<attachment>]
 - Changes the server icon to the image using the url or the attachment. Restricted to admins only
 
+!chart [pats]
+- Generates a chart for all pats on the server. Only lists the top 5
+
 [!help/!h]
 - Displays this help screen!
 ```
