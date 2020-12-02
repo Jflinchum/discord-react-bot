@@ -114,7 +114,8 @@ const onText = (message, bot) => {
       }
       const chartTitle = cmd[1].charAt(0).toUpperCase() + cmd[1].slice(1);
       generateChart({ chartTitle, chartData, cb: (chartImage) => {
-      // Send the attachment
+        message.delete();
+        // Send the attachment
         message.channel.send({
           embed: {
             thumbnail: {
