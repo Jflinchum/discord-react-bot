@@ -6,8 +6,9 @@ const {
   getJson,
   removeJson,
 } = require('./util');
-const USAGE = '`usage: !set <property> <value>`';
 const AVAILABLE_PROPERTIES = ['email', 'emojiReacts'];
+const USAGE = '`usage: !set <property> <value>\nAvailable config settings are: ' +
+  `${AVAILABLE_PROPERTIES.join(' | ')}\``;
 
 /**
  * Sets the property for the user who sent the message
