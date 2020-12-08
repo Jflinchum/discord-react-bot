@@ -4,7 +4,7 @@
 [!post/!p] <name>
 - Posts the file to the current channel.
 
-[!remove/!r] <name>
+[!remove/!r] "<name>"
 - Deletes the file from the local storage.
 
 [!list/!l] [image/music/text/emoji/cron]

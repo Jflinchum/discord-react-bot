@@ -22,7 +22,7 @@ A react bot for discord that can download and store files locally and post them 
 [!post/!p] <name>
 - Posts the file to the current channel.
 
-[!remove/!r] <name>
+[!remove/!r] "<name>"
 - Deletes the file from the local storage.
 
 [!list/!l] [image/music/text/emoji/cron]
@@ -86,12 +86,12 @@ A react bot for discord that can download and store files locally and post them 
 - Checks how many pats you have
 
 !userGroup
-- There are five subcommands for userGroup management
 - !userGroup list - lists all currently configured user groups
 - !userGroup add "Group Name" [<colorCode>] - creates a role on the server with the Group Name and color code (in hex value i.e FFFFFF for white)
 - !userGroup remove "Group Name" - removes the role from the server
 - !userGroup sub "Group Name" - adds yourself to the Group Name role
 - !userGroup unsub "Group Name" - removes yourself from the Group Name role
+- !userGroup rename "Old Group Name" "New Group Name" - renames a user group role to a new name
 
 !changeIcon [<url>/<attachment>]
 - Changes the server icon to the image using the url or the attachment. Restricted to admins only
