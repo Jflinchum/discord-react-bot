@@ -82,13 +82,15 @@ bot.on('message', message => {
         if (message.content.toLowerCase().includes(emojiKeys[i])) {
           const random = Math.random();
           let emojiArray = bot.emojiTriggers[emojiKeys[i]];
-          emojiArray.forEach((emojiChance) => {
-            if (emojiChance.chance >= random && !message.deleted) {
-              message.react(emojiChance.emoji).catch((err) => {
-                console.log('Could not react to message: ', err);
-              });
-            }
-          });
+          if (emojiArray) {
+            emojiArray.forEach((emojiChance) => {
+              if (emojiChance.chance >= random && !message.deleted) {
+                message.react(emojiChance.emoji).catch((err) => {
+                  console.log('Could not react to message: ', err);
+                });
+              }
+            });
+          }
         }
       }
     },
