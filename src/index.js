@@ -13,6 +13,7 @@ const {
   formatDateString,
   getJson,
 } = require('./plugins/util');
+const { onEvent } = require('./titles');
 const { onTextHooks } = require('./plugins');
 const { setUpCronJobs } = require('./plugins/cron');
 const { createUpdateInterval } = require('./plugins/google/calendar');
@@ -52,6 +53,7 @@ bot.on('ready', () => {
 
 
 bot.on('message', message => {
+  onEvent({ event: 'text', data: message, user: message.author, guild: message.guild, bot });
   // Ignore commands coming from itself to prevent any recurssive nonsense
   if (message.author.id === bot.user.id) {
     return;
@@ -114,6 +116,10 @@ bot.on('message', message => {
       `Ran into unexpected error. Check error log.\n${err.message}`
     );
   }
+});
+
+bot.on('messageReactionAdd', (reaction, user) => {
+  onEvent({ event: 'reaction', data: reaction, user, guild: reaction.message.guild, bot });
 });
 
 bot.on('error', console.error);

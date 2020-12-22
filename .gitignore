@@ -79,3 +79,4 @@ src/plugins/gpt2/models
 credentials.json
 token.json
 reminders.json
+achievements.js
