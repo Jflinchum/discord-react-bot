@@ -106,8 +106,16 @@ const onEvent = ({ event, data, user, guild, bot }) => {
       case 'reaction':
         userToAward = achievementObject.onReaction && achievementObject.onReaction(data, user);
         break;
+      case 'guildMemberUpdate':
+        userToAward = achievementObject.onGuildMemberUpdate &&
+          achievementObject.onGuildMemberUpdate(data.oldMember, data.newMember);
+        break;
+      case 'voiceStateUpdate':
+        userToAward = achievementObject.onVoiceStateUpdate &&
+          achievementObject.onVoiceStateUpdate(data.oldVoiceState, data.newVoiceState);
+        break;
     }
-    if (userToAward && !userToAward.bot) {
+    if (userToAward && userToAward.id && !userToAward.bot) {
       return accPromise.then(() => {
         return checkProgressAndAward({
           user: userToAward,
@@ -133,6 +141,8 @@ const getRarityColor = (rarity) => {
       return '#a335ee';
     case ('legendary'):
       return '#ff8000';
+    case ('mythic'):
+      return '#ff4040';
   }
 };
 

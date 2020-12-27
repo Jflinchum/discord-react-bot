@@ -122,6 +122,26 @@ bot.on('messageReactionAdd', (reaction, user) => {
   onEvent({ event: 'reaction', data: reaction, user, guild: reaction.message.guild, bot });
 });
 
+bot.on('guildMemberUpdate', (oldMember, newMember) => {
+  onEvent({
+    event: 'guildMemberUpdate',
+    data: { oldMember, newMember },
+    user: newMember.user,
+    guild: newMember.guild,
+    bot,
+  });
+});
+
+bot.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
+  onEvent({
+    event: 'voiceStateUpdate',
+    data: { oldVoiceState, newVoiceState },
+    user: newVoiceState.member.user,
+    guild: newVoiceState.guild,
+    bot,
+  });
+});
+
 bot.on('error', console.error);
 
 const cleanUp = () => {
