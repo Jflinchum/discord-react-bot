@@ -25,7 +25,7 @@ const awardAchievement = ({ user, achievement, rarity, guild, achievementChannel
       data: {
         name: achievement,
         permissions: [],
-        mentionable: true,
+        mentionable: false,
         color: getRarityColor(rarity),
       },
       reason: `Created by ${user.username}.`,
