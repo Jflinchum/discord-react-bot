@@ -37,6 +37,6 @@
     "node-cron": "^2.0.3",
     "request": "^2.88.0",
     "valid-url": "^1.0.9",
-    "ytdl-core": "^4.0.0"
+    "ytdl-core": "^4.4.0"
   }
 }
