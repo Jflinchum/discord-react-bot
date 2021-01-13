@@ -1,7 +1,7 @@
 'use strict';
 const { CanvasRenderService } = require('chartjs-node-canvas');
-const { COLOR, COLOR_FORMATTED, getJson, DATA_PATH } = require('./util');
-const USAGE = '`usage: !chart [pats]`';
+const { COLOR, COLOR_FORMATTED, getJson, DATA_PATH, splitArgsWithQuotes } = require('./util');
+const USAGE = '`usage: !chart <pats/achievements> ["achievementName"]`';
 
 const width = 400; // px
 const height = 400; // px
@@ -54,12 +54,61 @@ const getPatData = (guild, cb) => {
   });
 };
 
-const getChartData = ({ type, guild, cb = () => {} }) => {
+const getAchievementData = ({ guild, achievement, cb = () => {} }) => {
+  getJson({
+    path: DATA_PATH,
+    key: 'achievementData',
+    cb: (achievementData) => {
+      // AchievementData is an object with userIds mapped to achievements gained
+      const userIds = Object.keys(achievementData);
+      userIds.sort((userA, userB) => {
+        const userBAchievementProgress = achievementData[userB][achievement] ?
+          achievementData[userB][achievement].progress[0] : 0;
+        const userAAchievementProgress = achievementData[userA][achievement] ?
+          achievementData[userA][achievement].progress[0] : 0;
+        return userBAchievementProgress - userAAchievementProgress;
+      });
+      const topFive = userIds.slice(0, 5);
+      let promiseArray = [];
+      for (let i = 0; i < topFive.length; i++) {
+        promiseArray.push(new Promise((resolve, reject) => {
+          const userId = topFive[i];
+          guild.members.fetch(userId).then((member) => {
+            if (member) {
+              return resolve({
+                key: member.displayName,
+                value: achievementData[userId][achievement] ?
+                  achievementData[userId][achievement].progress[0] : 0,
+                color: member.displayHexColor !== '#000000' ?
+                  member.displayHexColor : COLOR_FORMATTED,
+              });
+            } else {
+              return resolve();
+            }
+          }).catch((err) => {
+            console.log(err);
+            return resolve();
+          });
+        }));
+      }
+      Promise.all(promiseArray)
+        .then((promiseAll) => {
+          return cb(promiseAll);
+        }).catch((err) => {
+          console.log(err);
+        });
+    },
+  });
+};
+
+const getChartData = ({ type, param, guild, cb = () => {} }) => {
   switch (type) {
     case 'pats':
       return getPatData(guild, cb);
+    case 'achievements':
+      return getAchievementData({ guild, achievement: param, cb });
   }
-  return;
+  return cb();
 };
 
 const generateChart = ({ chartTitle, chartData, cb = () => {} }) => {
@@ -99,7 +148,7 @@ const generateChart = ({ chartTitle, chartData, cb = () => {} }) => {
 };
 
 const onText = (message, bot) => {
-  const cmd = message.content.split(' ');
+  const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
 
   if (botCommand === '!chart') {
@@ -107,7 +156,9 @@ const onText = (message, bot) => {
       message.channel.send(USAGE);
       return;
     }
-    getChartData({ type: cmd[1], guild: message.guild, cb: (chartData) => {
+    let extraParams = cmd.length > 2 ? cmd[2] : '';
+    extraParams = extraParams.replace(/\"/g, '');
+    getChartData({ type: cmd[1], param: extraParams, guild: message.guild, cb: (chartData) => {
       if (!chartData) {
         message.channel.send(USAGE);
         return;
