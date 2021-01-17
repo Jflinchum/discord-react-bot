@@ -3,7 +3,12 @@ const { CanvasRenderService } = require('chartjs-node-canvas');
 const { COLOR, COLOR_FORMATTED, getJson, DATA_PATH, splitArgsWithQuotes } = require('./util');
 const achievements = require('./../../achievements') || {};
 const { getRarityColor } = require('./../titles');
-const USAGE = '`usage: !chart <pats/achievements/rarities> ["achievementName"/@user]`';
+const USAGE = `\`\`\`
+usage: !chart
+  - pats
+  - achievements "achievementName"
+  - rarities [@user]
+\`\`\``;
 
 const width = 400; // px
 const height = 400; // px
