@@ -27,6 +27,7 @@ const remove = ({ fileName, message, emojis, cb }) => {
         makeEmbed({
           message: `Removed ${fileName}`,
           user: message.author,
+          member: message.guild.member(message.author.id).displayName,
           color: message.guild.member(message.author.id).displayColor,
         })
       );
@@ -51,6 +52,7 @@ const remove = ({ fileName, message, emojis, cb }) => {
           makeEmbed({
             message: `Removed ${file}`,
             user: message.author,
+            member: message.guild.member(message.author.id).displayName,
             color: message.guild.member(message.author.id).displayColor,
           })
         );

@@ -40,6 +40,7 @@ const set = (property, value, message) => {
             makeEmbed({
               message: `Set ${property} to ${value}`,
               user: message.author,
+              member: message.guild.member(message.author.id).displayName,
               color: message.guild.member(message.author.id).displayColor,
             })
           );
@@ -54,6 +55,7 @@ const set = (property, value, message) => {
             makeEmbed({
               message: `Removed ${property}`,
               user: message.author,
+              member: message.guild.member(message.author.id).displayName,
               color: message.guild.member(message.author.id).displayColor,
             })
           );
@@ -86,6 +88,7 @@ const printConfig = (message) => {
         message.channel.send(makeEmbed({
           message: finalMessage,
           user: message.author,
+          member: message.guild.member(message.author.id).displayName,
           color: message.guild.member(message.author.id).displayColor,
         }));
       }

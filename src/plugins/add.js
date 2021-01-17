@@ -65,6 +65,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
                 makeEmbed({
                   message: `Added ${info.videoDetails.title} as ${fileName}`,
                   user: message.author,
+                  member: message.guild.member(message.author.id).displayName,
                   color: message.guild.member(message.author.id).displayColor,
                 })
               );
@@ -105,6 +106,7 @@ const add = (fileName, url, exten, message, startTime, stopTime) => {
               makeEmbed({
                 message: `Added: ${fileName}`,
                 user: message.author,
+                member: message.guild.member(message.author.id).displayName,
                 color: message.guild.member(message.author.id).displayColor,
               })
             );
@@ -138,6 +140,7 @@ const addText = (fileName, text, message) => {
       makeEmbed({
         message: `Added: ${fileName}`,
         user: message.author,
+        member: message.guild.member(message.author.id).displayName,
         color: message.guild.member(message.author.id).displayColor,
       })
     );

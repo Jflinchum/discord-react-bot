@@ -36,7 +36,8 @@ const pat = (userId, message, bot) => {
             `${userObject.displayName} now has ${pats.length} ` +
             `head pat${pats.length === 1 ? '' : 's'}.`,
             user: userObject.user,
-            title: message.author.username,
+            member: message.guild.member(userObject.user.id).displayName,
+            title: message.guild.member(message.author.id).displayName,
             footerText: `!pat @${userObject.displayName}`,
             color: userObject.displayColor,
             authorIcon: message.author.displayAvatarURL(),
@@ -71,6 +72,7 @@ const printPats = (message, bot) => {
           message: `${userDisplay} has been pat ${pats.length} ` +
           ` time${pats.length === 1 ? '' : 's'}!`,
           user: message.author,
+          member: message.guild.member(message.author.id).displayName,
           color: message.guild.member(message.author.id).displayColor,
         })
       );

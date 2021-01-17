@@ -27,6 +27,7 @@ const config = require('./../../config.json');
  *
  * @param {String} message - Message to put in the description box of the
  * embeded message
+ * @param {String} member - Discord member display name
  * @param {Object} user - Discord User object. Will post avatar and
  * username along with message
  * @param {String} title - The title of the message
@@ -35,7 +36,7 @@ const config = require('./../../config.json');
  * @param {String} authorIcon - The icon for the author of the embed
  * @return {Object} - Returns the constructed embeded message
  */
-const makeEmbed = ({ message, user, title, footerText, color, authorIcon }) => {
+const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon }) => {
   let returnMessage = {
     embed: {
       thumbnail: {
@@ -44,7 +45,7 @@ const makeEmbed = ({ message, user, title, footerText, color, authorIcon }) => {
       color: color || COLOR,
       description: message,
       author: {
-        name: title || user.username,
+        name: title || member || user.username,
       },
       footer: {
         text: footerText,

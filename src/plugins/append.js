@@ -26,6 +26,7 @@ const append = ({fileName, text, message}) => {
       makeEmbed({
         message: `Added ${text} to ${fileName}`,
         user: message.author,
+        member: message.guild.member(message.author.id).displayName,
         color: message.guild.member(message.author.id).displayColor,
       })
     );

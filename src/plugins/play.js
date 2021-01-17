@@ -100,6 +100,7 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
       makeEmbed({
         message: `Added ${name} to the queue!`,
         user: author,
+        member: message.guild.member(author.id).displayName,
         color: message.guild.member(message.author.id).displayColor,
       })
     );
@@ -122,6 +123,7 @@ const playSong = ({ connection, song, message }) => {
     makeEmbed({
       message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
       user: song.author,
+      member: message.guild.member(song.author.id).displayName,
       footerText: message.content,
       color: message.guild.member(message.author.id).displayColor,
     })
@@ -253,6 +255,7 @@ const skip = ({ number, guild, author, channel }) => {
       makeEmbed({
         message: `Skipped: ${cutSongName}`,
         user: author,
+        member: guild.member(author.id).displayName,
         color: guild.member(author.id).displayColor,
       })
     );

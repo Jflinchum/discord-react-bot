@@ -50,6 +50,7 @@ const post = (fileName, message, bot) => {
       makeEmbed({
         message: fileName,
         user: message.author,
+        member: message.guild.member(message.author.id).displayName,
         footerText: message.content,
         color: message.guild.member(message.author.id).displayColor,
       })
@@ -74,6 +75,7 @@ const post = (fileName, message, bot) => {
           makeEmbed({
             message: text.toString(),
             user: message.author,
+            member: message.guild.member(message.author.id).displayName,
             footerText: message.content,
             color: message.guild.member(message.author.id).displayColor,
           })
@@ -91,7 +93,7 @@ const post = (fileName, message, bot) => {
         },
         color: message.guild.member(message.author.id).displayColor || COLOR,
         author: {
-          name: message.author.username,
+          name: message.guild.member(message.author.id).displayName,
         },
         footer: {
           text: message.cleanContent,

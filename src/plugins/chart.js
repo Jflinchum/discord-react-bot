@@ -225,7 +225,7 @@ const onText = (message, bot) => {
               },
               color: message.guild.member(message.author.id).displayColor || COLOR,
               author: {
-                name: message.author.username,
+                name: message.guild.member(message.author.id).displayName,
               },
               footer: {
                 text: message.cleanContent,

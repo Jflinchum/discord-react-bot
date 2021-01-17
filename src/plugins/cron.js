@@ -159,6 +159,7 @@ const addCron = ({
                 makeEmbed({
                   message: `Added cron job: ${name}`,
                   user: message.author,
+                  member: message.guild.member(message.author.id).displayName,
                   color: message.guild.member(message.author.id).displayColor,
                 })
               );
@@ -186,6 +187,7 @@ const removeCron = ({ name, bot, message }) => {
         makeEmbed({
           message: `Removed cron job: ${name}`,
           user: message.author,
+          member: message.guild.member(message.author.id).displayName,
           color: message.guild.member(message.author.id).displayColor,
         })
       );
