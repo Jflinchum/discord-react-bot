@@ -154,4 +154,5 @@ const getCongratsText = (user, achievement, rarity) => {
 
 module.exports = {
   onEvent,
+  getRarityColor,
 };

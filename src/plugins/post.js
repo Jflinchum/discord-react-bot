@@ -94,7 +94,7 @@ const post = (fileName, message, bot) => {
           name: message.author.username,
         },
         footer: {
-          text: message.content,
+          text: message.cleanContent,
         },
       },
       files: [{
