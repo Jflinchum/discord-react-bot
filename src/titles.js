@@ -1,6 +1,7 @@
 'use strict';
 let configuredTitles = {};
 const { addJson, getJson, DATA_PATH, config, makeEmbed } = require('./plugins/util');
+const { readFileSync } = require('fs');
 
 // Achievements configurations is optional
 try {
@@ -86,6 +87,14 @@ const clearAchievements = ({ user }) => {
   });
 };
 
+const achievementAPI = {
+  getAchievements: (userId) => {
+    // This must be syncronous since achievements are syncronous
+    const dataObject = JSON.parse(readFileSync(DATA_PATH));
+    return dataObject.achievementData && dataObject.achievementData[userId] || {};
+  },
+};
+
 const onEvent = ({ event, data, user, guild, bot }) => {
   // Don't check bot messages
   if (user.bot) {
@@ -101,18 +110,26 @@ const onEvent = ({ event, data, user, guild, bot }) => {
     let userToAward;
     switch (event) {
       case 'text':
-        userToAward = achievementObject.onText && achievementObject.onText(data);
+        userToAward = achievementObject.onText && achievementObject.onText(data, achievementAPI);
         break;
       case 'reaction':
-        userToAward = achievementObject.onReaction && achievementObject.onReaction(data, user);
+        userToAward = achievementObject.onReaction && achievementObject.onReaction(
+          data,
+          user,
+          achievementAPI
+        );
         break;
       case 'guildMemberUpdate':
         userToAward = achievementObject.onGuildMemberUpdate &&
-          achievementObject.onGuildMemberUpdate(data.oldMember, data.newMember);
+          achievementObject.onGuildMemberUpdate(data.oldMember, data.newMember, achievementAPI);
         break;
       case 'voiceStateUpdate':
         userToAward = achievementObject.onVoiceStateUpdate &&
-          achievementObject.onVoiceStateUpdate(data.oldVoiceState, data.newVoiceState);
+          achievementObject.onVoiceStateUpdate(
+            data.oldVoiceState,
+            data.newVoiceState,
+            achievementAPI
+          );
         break;
     }
     if (userToAward && userToAward.id && !userToAward.bot) {
