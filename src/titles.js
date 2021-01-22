@@ -44,6 +44,7 @@ const checkProgressAndAward = ({
   achievementObject,
   guild,
   achievementChannel,
+  newProgress,
 }) => {
   return new Promise((resolve) => {
     getJson({
@@ -54,8 +55,12 @@ const checkProgressAndAward = ({
           (userAchievements && userAchievements[achievementLabel]) || {};
 
         let progress = userCurrentAchievement.progress ? userCurrentAchievement.progress[0] : 0;
-        // Increment the user's progress
-        progress++;
+        if (newProgress) {
+          progress = newProgress;
+        } else {
+          // Increment the user's progress
+          progress++;
+        }
         if (progress === achievementObject.threshold) {
           awardAchievement({
             user,
@@ -132,14 +137,15 @@ const onEvent = ({ event, data, user, guild, bot }) => {
           );
         break;
     }
-    if (userToAward && userToAward.id && !userToAward.bot) {
+    if (userToAward && userToAward.user && userToAward.user.id && !userToAward.user.bot) {
       return accPromise.then(() => {
         return checkProgressAndAward({
-          user: userToAward,
+          user: userToAward.user,
           achievementObject,
           achievementLabel: title,
           guild,
           achievementChannel,
+          newProgress: userToAward.progress,
         });
       });
     } else {
