@@ -6,6 +6,7 @@ const { getRarityColor } = require('./../titles');
 const USAGE = `\`\`\`
 usage: !chart
   - pats
+  - patrons [@user]
   - achievements "achievementName"
   - rarities [@user]
 \`\`\``;
@@ -143,6 +144,52 @@ const getRarityData = ({ guild, userId, cb = () => {} }) => {
   });
 };
 
+const getPatronData = ({ guild, userId, cb }) => {
+  getJson({
+    path: DATA_PATH,
+    key: 'patData',
+    cb: (patData) => {
+      // Patdata is an object with userIds mapped to pats
+      const userPats = patData[userId] && patData[userId].pats || [];
+      const userIdsToPats = {};
+      userPats.forEach((userPat) => {
+        userIdsToPats[userPat.patronId] = (userIdsToPats[userPat.patronId] || 0) + 1;
+      });
+      const userIds = Object.keys(userIdsToPats);
+      // Sort user ids from largest to smallest
+      userIds.sort((userA, userB) => userIdsToPats[userB] - userIdsToPats[userA]);
+      const topFive = userIds.slice(0, 5);
+      let promiseArray = [];
+      for (let i = 0; i < topFive.length; i++) {
+        promiseArray.push(new Promise((resolve, reject) => {
+          const userId = topFive[i];
+          guild.members.fetch(userId).then((member) => {
+            if (member) {
+              return resolve({
+                key: member.displayName,
+                value: userIdsToPats[userId],
+                color: member.displayHexColor !== '#000000' ?
+                  member.displayHexColor : COLOR_FORMATTED,
+              });
+            } else {
+              return resolve();
+            }
+          }).catch((err) => {
+            console.log(err);
+            return resolve();
+          });
+        }));
+      }
+      Promise.all(promiseArray)
+        .then((promiseAll) => {
+          return cb(promiseAll);
+        }).catch((err) => {
+          console.log(err);
+        });
+    },
+  });
+};
+
 const getChartData = ({ type, message, param, guild, cb = () => {} }) => {
   switch (type) {
     case 'pats':
@@ -150,9 +197,13 @@ const getChartData = ({ type, message, param, guild, cb = () => {} }) => {
     case 'achievements':
       return getAchievementData({ guild, achievement: param, cb });
     case 'rarities':
-      const firstMention = message.mentions.members.first();
-      const userId = firstMention && firstMention.id || message.author.id;
-      return getRarityData({ guild, userId: userId, cb });
+      const rarityFirstMention = message.mentions.members.first();
+      const rarityUserId = rarityFirstMention && rarityFirstMention.id || message.author.id;
+      return getRarityData({ guild, userId: rarityUserId, cb });
+    case 'patrons':
+      const patronFirstMention = message.mentions.members.first();
+      const patronUserId = patronFirstMention && patronFirstMention.id || message.author.id;
+      return getPatronData({ guild, userId: patronUserId, cb });
   }
   return cb();
 };
