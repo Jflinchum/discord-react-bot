@@ -651,6 +651,13 @@ const setReplayButton = (message, func = () => {}) => {
   return createReactionCallback('♻️', message, func);
 };
 
+/**
+ * Gets a nested property in an object via the string path provided
+ */
+const getNestedProperty = (object, string) => {
+  return string.split('.').reduce((p, prop) => p[prop], object);
+};
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -684,4 +691,5 @@ module.exports = {
   isAdmin,
   setReplayButton,
   createReactionCallback,
+  getNestedProperty,
 };

@@ -1,6 +1,12 @@
 'use strict';
 const { CanvasRenderService } = require('chartjs-node-canvas');
-const { COLOR, COLOR_FORMATTED, getJson, DATA_PATH, splitArgsWithQuotes } = require('./util');
+const {
+  COLOR,
+  COLOR_FORMATTED,
+  getJson,
+  DATA_PATH,
+  splitArgsWithQuotes,
+} = require('./util');
 const achievements = require('./../../achievements') || {};
 const { getRarityColor } = require('./../titles');
 const USAGE = `\`\`\`
@@ -21,6 +27,36 @@ const chartCallback = (ChartJS) => {
 };
 const canvasRenderService = new CanvasRenderService(width, height, chartCallback);
 
+const mapMemberNamesToData = ({ userIds, dataset, valueFunc, guild, cb }) => {
+  let promiseArray = [];
+  for (let i = 0; i < userIds.length; i++) {
+    promiseArray.push(new Promise((resolve, reject) => {
+      const userId = userIds[i];
+      guild.members.fetch(userId).then((member) => {
+        if (member) {
+          return resolve({
+            key: member.displayName,
+            value: valueFunc(dataset, userId),
+            color: member.displayHexColor !== '#000000' ?
+              member.displayHexColor : COLOR_FORMATTED,
+          });
+        } else {
+          return resolve();
+        }
+      }).catch((err) => {
+        console.log(err);
+        return resolve();
+      });
+    }));
+  }
+  Promise.all(promiseArray)
+    .then((promiseAll) => {
+      return cb(promiseAll);
+    }).catch((err) => {
+      console.log(err);
+    });
+};
+
 const getPatData = (guild, cb) => {
   getJson({
     path: DATA_PATH,
@@ -31,33 +67,13 @@ const getPatData = (guild, cb) => {
       // Sort user ids from largest to smallest
       userIds.sort((userA, userB) => patData[userB].pats.length - patData[userA].pats.length);
       const topFive = userIds.slice(0, 5);
-      let promiseArray = [];
-      for (let i = 0; i < topFive.length; i++) {
-        promiseArray.push(new Promise((resolve, reject) => {
-          const userId = topFive[i];
-          guild.members.fetch(userId).then((member) => {
-            if (member) {
-              return resolve({
-                key: member.displayName,
-                value: patData[userId].pats.length,
-                color: member.displayHexColor !== '#000000' ?
-                  member.displayHexColor : COLOR_FORMATTED,
-              });
-            } else {
-              return resolve();
-            }
-          }).catch((err) => {
-            console.log(err);
-            return resolve();
-          });
-        }));
-      }
-      Promise.all(promiseArray)
-        .then((promiseAll) => {
-          return cb(promiseAll);
-        }).catch((err) => {
-          console.log(err);
-        });
+      return mapMemberNamesToData({
+        userIds: topFive,
+        dataset: patData,
+        valueFunc: (dataset, userId) => dataset[userId].pats.length,
+        guild,
+        cb,
+      });
     },
   });
 };
@@ -77,34 +93,14 @@ const getAchievementData = ({ guild, achievement, cb = () => {} }) => {
         return userBAchievementProgress - userAAchievementProgress;
       });
       const topFive = userIds.slice(0, 5);
-      let promiseArray = [];
-      for (let i = 0; i < topFive.length; i++) {
-        promiseArray.push(new Promise((resolve, reject) => {
-          const userId = topFive[i];
-          guild.members.fetch(userId).then((member) => {
-            if (member) {
-              return resolve({
-                key: member.displayName,
-                value: achievementData[userId][achievement] ?
-                  achievementData[userId][achievement].progress[0] : 0,
-                color: member.displayHexColor !== '#000000' ?
-                  member.displayHexColor : COLOR_FORMATTED,
-              });
-            } else {
-              return resolve();
-            }
-          }).catch((err) => {
-            console.log(err);
-            return resolve();
-          });
-        }));
-      }
-      Promise.all(promiseArray)
-        .then((promiseAll) => {
-          return cb(promiseAll);
-        }).catch((err) => {
-          console.log(err);
-        });
+      return mapMemberNamesToData({
+        userIds: topFive,
+        dataset: achievementData,
+        valueFunc: (dataset, userId) => dataset[userId][achievement] ?
+          dataset[userId][achievement].progress[0] : 0,
+        guild,
+        cb,
+      });
     },
   });
 };
@@ -159,33 +155,13 @@ const getPatronData = ({ guild, userId, cb }) => {
       // Sort user ids from largest to smallest
       userIds.sort((userA, userB) => userIdsToPats[userB] - userIdsToPats[userA]);
       const topFive = userIds.slice(0, 5);
-      let promiseArray = [];
-      for (let i = 0; i < topFive.length; i++) {
-        promiseArray.push(new Promise((resolve, reject) => {
-          const userId = topFive[i];
-          guild.members.fetch(userId).then((member) => {
-            if (member) {
-              return resolve({
-                key: member.displayName,
-                value: userIdsToPats[userId],
-                color: member.displayHexColor !== '#000000' ?
-                  member.displayHexColor : COLOR_FORMATTED,
-              });
-            } else {
-              return resolve();
-            }
-          }).catch((err) => {
-            console.log(err);
-            return resolve();
-          });
-        }));
-      }
-      Promise.all(promiseArray)
-        .then((promiseAll) => {
-          return cb(promiseAll);
-        }).catch((err) => {
-          console.log(err);
-        });
+      return mapMemberNamesToData({
+        userIds: topFive,
+        dataset: userIdsToPats,
+        valueFunc: (dataset, userId) => dataset[userId],
+        guild,
+        cb,
+      });
     },
   });
 };
