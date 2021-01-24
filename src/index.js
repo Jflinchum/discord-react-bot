@@ -142,6 +142,16 @@ bot.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
   });
 });
 
+bot.on('presenceUpdate', (oldPresence, newPresence) => {
+  onEvent({
+    event: 'presenceUpdate',
+    data: { oldPresence, newPresence },
+    user: newPresence.member.user,
+    guild: newPresence.guild,
+    bot,
+  });
+});
+
 bot.on('error', console.error);
 
 const cleanUp = () => {

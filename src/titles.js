@@ -136,6 +136,13 @@ const onEvent = ({ event, data, user, guild, bot }) => {
             achievementAPI
           );
         break;
+      case 'presenceUpdate':
+        userToAward = achievementObject.onPresenceUpdate &&
+          achievementObject.onPresenceUpdate(
+            data.oldPresence,
+            data.newPresence,
+            achievementAPI
+          );
     }
     if (userToAward && userToAward.user && userToAward.user.id && !userToAward.user.bot) {
       return accPromise.then(() => {
