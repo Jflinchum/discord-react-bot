@@ -20,23 +20,23 @@
   },
   "homepage": "https://github.com/Jflinchum/discord-react-bot#readme",
   "devDependencies": {
-    "eslint": "^5.8.0",
+    "eslint": "^5.16.0",
     "eslint-config-strongloop": "^2.1.0"
   },
   "dependencies": {
-    "@discordjs/opus": "^0.3.2",
+    "@discordjs/opus": "^0.3.3",
     "chart.js": "^2.9.4",
-    "chartjs-node-canvas": "^3.0.6",
-    "cronstrue": "^1.92.0",
+    "chartjs-node-canvas": "3.0.6",
+    "cronstrue": "^1.108.0",
     "discord.io": "^2.5.3",
-    "discord.js": "^12.0.0",
+    "discord.js": "^12.5.1",
     "fluent-ffmpeg": "^2.1.2",
     "googleapis": "^39.2.0",
     "markovchain": "^1.0.2",
     "mkdirp": "^0.5.1",
     "node-cron": "^2.0.3",
-    "request": "^2.88.0",
+    "request": "^2.88.2",
     "valid-url": "^1.0.9",
-    "ytdl-core": "^4.4.0"
+    "ytdl-core": "^4.4.5"
   }
 }
