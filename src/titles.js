@@ -144,22 +144,24 @@ const onEvent = ({ event, data, user, guild, bot }) => {
             achievementAPI
           );
     }
-    if (userToAward && userToAward.user && userToAward.user.id && !userToAward.user.bot) {
-      return accPromise.then(() => {
-        return checkProgressAndAward({
-          user: userToAward.user,
-          achievementObject,
-          achievementLabel: title,
-          guild,
-          achievementChannel,
-          newProgress: userToAward.progress,
+    const userObject = userToAward && userToAward.user;
+    if (userObject && userObject && userObject.id && !userObject.bot) {
+      if (userObject && config && config.activeMemberWhitelist.includes(userObject.id.toString())) {
+        return accPromise.then(() => {
+          return checkProgressAndAward({
+            user: userToAward.user,
+            achievementObject,
+            achievementLabel: title,
+            guild,
+            achievementChannel,
+            newProgress: userToAward.progress,
+          });
         });
-      });
-    } else {
-      return accPromise.then(() => {
-        return Promise.resolve();
-      });
+      }
     }
+    return accPromise.then(() => {
+      return Promise.resolve();
+    });
   }, Promise.resolve());
 };
 
