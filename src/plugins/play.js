@@ -328,8 +328,14 @@ const play = ({ channel, media, message, author }) => {
       message.channel.send('Could not find youtube video.');
       return;
     }
-    const ytStream = ytdl(media, { filter: 'audioonly' });
     ytdl.getBasicInfo(media).then((info) => {
+      let options = {
+        quality: 'highestaudio',
+      };
+      if (info.videoDetails.isLive) {
+        options.isHLS = true;
+      }
+      const ytStream = ytdl(media, options);
       joinAndPlay({
         vc,
         media: ytStream,
