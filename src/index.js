@@ -154,6 +154,8 @@ bot.on('presenceUpdate', (oldPresence, newPresence) => {
 
 bot.on('error', console.error);
 
+bot.on('debug', console.log);
+
 const cleanUp = () => {
   bot.destroy();
 };
