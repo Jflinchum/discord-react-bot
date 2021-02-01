@@ -132,8 +132,16 @@ const playSong = ({ connection, song, message }) => {
       const cmd = message.content.split(' ');
       let media;
       let channel;
-      if (cmd.length === 2) {
-        channel = cmd[1];
+      if (cmd.length <= 2) {
+        // For attachments
+        const attach = message.attachments.array();
+        if (attach.length > 0) {
+          media = attach[0];
+          channel = cmd[1];
+        } else {
+          media = cmd[1];
+          cmd.splice(2, cmd.length).join(' ');
+        }
       } else {
         media = cmd[1];
         channel = cmd.splice(2, cmd.length).join(' ');
