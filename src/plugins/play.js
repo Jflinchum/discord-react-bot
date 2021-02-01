@@ -1,7 +1,7 @@
 'use strict';
 const ytdl = require('ytdl-core');
 const fs = require('fs');
-const request = require('request');
+const https = require('https');
 const {
   PATH,
   makeEmbed,
@@ -312,12 +312,14 @@ const play = ({ channel, media, message, author }) => {
   }
 
   if (media && media.url || media.filename) {
-    joinAndPlay({
-      vc,
-      media: request(media.url),
-      name: media.filename,
-      message,
-      author,
+    https.get(media.url, (response) => {
+      joinAndPlay({
+        vc,
+        media: response,
+        name: media.name,
+        message,
+        author,
+      });
     });
   } else if (media.includes('www.youtube.com') || media.includes('youtu.be')) {
     // For youtube video streaming
