@@ -294,18 +294,14 @@ const queue = (message) => {
  * media
  */
 const play = ({ channel, media, message, author }) => {
-  if (!channel) {
-    message.channel.send(USAGEPLAY);
-    return;
-  }
   const channelList = message.guild.channels.cache.array();
   let vc;
   for (let i = 0; i < channelList.length; i++) {
     // Check if the channel is what we are searching for.
-    // If the channel is a ., then join the vc with any users in it
+    // If the channel is a . or if no channel is provided, then join the vc with any users in it
     if (channelList[i].type === 'voice'
-        && ((channel.toLowerCase() === channelList[i].name.toLowerCase()) ||
-        (channel === '.' && channelList[i].members.array().length > 0))) {
+        && ((channel && channel.toLowerCase() === channelList[i].name.toLowerCase()) ||
+        ((channel === '.' || !channel) && channelList[i].members.array().length > 0))) {
       vc = channelList[i];
     }
   }
@@ -315,17 +311,11 @@ const play = ({ channel, media, message, author }) => {
     return;
   }
 
-  if (!media) {
-    // For attachments
-    const attach = message.attachments.array();
-    if (attach.length === 0) {
-      message.channel.send(USAGEPLAY);
-      return;
-    }
+  if (media && media.url || media.filename) {
     joinAndPlay({
       vc,
-      media: request(attach[0].url),
-      name: attach[0].filename,
+      media: request(media.url),
+      name: media.filename,
       message,
       author,
     });
@@ -395,11 +385,23 @@ const onText = (message) => {
   if (botCommand === '!play' || botCommand === '!pl') {
     let media;
     let channel;
-    if (cmd.length === 2) {
-      channel = cmd[1];
+    if (cmd.length <= 2) {
+      // For attachments
+      const attach = message.attachments.array();
+      if (attach.length > 0) {
+        media = attach[0];
+        channel = cmd[1];
+      } else {
+        media = cmd[1];
+        cmd.splice(2, cmd.length).join(' ');
+      }
     } else {
       media = cmd[1];
       channel = cmd.splice(2, cmd.length).join(' ');
+    }
+    if (!media) {
+      message.channel.send(USAGEPLAY);
+      return;
     }
     play({ channel, media, message, author: message.author });
   } else if (botCommand === '!queue' || botCommand === '!q') {
