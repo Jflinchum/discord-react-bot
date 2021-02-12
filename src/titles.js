@@ -61,7 +61,11 @@ const checkProgressAndAward = ({
           // Increment the user's progress
           progress++;
         }
-        if (progress === achievementObject.threshold) {
+        // Check if the user has the role assigned to them
+        const hasRole = guild.member(user.id).roles.cache.filter(
+          role => role.name === achievementLabel
+        ).first();
+        if (progress >= achievementObject.threshold && !hasRole) {
           awardAchievement({
             user,
             achievement: achievementLabel,
