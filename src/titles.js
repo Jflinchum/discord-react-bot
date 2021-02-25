@@ -9,16 +9,7 @@ try {
 } catch (err) {}
 
 const awardAchievement = ({ user, achievement, rarity, guild, achievementChannel }) => {
-  if (config.achievementChannelId) {
-    achievementChannel.send(`<@${user.id}>`,
-      makeEmbed({
-        message: getCongratsText(user, achievement, rarity),
-        user,
-        title: guild.member(user.id).displayName,
-        color: getRarityColor(rarity),
-      })
-    );
-  }
+  sendCongratsMessage({ user, achievement, rarity, guild, achievementChannel });
   const achievementRole = guild.roles.cache.findKey(role => role.name === achievement);
   // Find the existing role. If it doesn't exist, make it
   if (!achievementRole) {
@@ -55,6 +46,7 @@ const checkProgressAndAward = ({
           (userAchievements && userAchievements[achievementLabel]) || {};
 
         let progress = userCurrentAchievement.progress ? userCurrentAchievement.progress[0] : 0;
+        const currentProgress = progress;
         if (newProgress) {
           progress = newProgress;
         } else {
@@ -72,6 +64,17 @@ const checkProgressAndAward = ({
             rarity: achievementObject.rarity,
             guild,
             achievementChannel,
+          });
+        } else if (hasRole &&
+            getAchievementLevel(currentProgress, achievementObject.threshold) <
+            getAchievementLevel(progress, achievementObject.threshold)) {
+          sendCongratsMessage({
+            user,
+            achievement: achievementLabel,
+            rarity: achievementObject.rarity,
+            guild,
+            achievementChannel,
+            level: getAchievementLevel(progress, achievementObject.threshold),
           });
         }
         addJson({
@@ -185,10 +188,34 @@ const getRarityColor = (rarity) => {
   }
 };
 
-const getCongratsText = (user, achievement, rarity) => {
-  let message = `Congratulations <@${user.id}>! You've earned the title: '${achievement}'`;
-  message += `\nRarity: ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`;
-  return message;
+const getCongratsText = (user, achievement, rarity, level) => {
+  if (level) {
+    let message = `Congratulations <@${user.id}>! Your '${achievement}' title leveled up!`;
+    message += `\nLevel: ${level}`;
+    message += `\nRarity: ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`;
+    return message;
+  } else {
+    let message = `Congratulations <@${user.id}>! You've earned the title: '${achievement}'`;
+    message += `\nRarity: ${rarity.charAt(0).toUpperCase() + rarity.slice(1)}`;
+    return message;
+  }
+};
+
+const sendCongratsMessage = ({ user, achievement, rarity, guild, achievementChannel, level }) => {
+  if (config.achievementChannelId) {
+    achievementChannel.send(`<@${user.id}>`,
+      makeEmbed({
+        message: getCongratsText(user, achievement, rarity, level),
+        user,
+        title: guild.member(user.id).displayName,
+        color: getRarityColor(rarity),
+      })
+    );
+  }
+};
+
+const getAchievementLevel = (achievementProgress, achievementThreshold) => {
+  return Math.floor(Math.pow(achievementProgress / achievementThreshold, 1 / 1.5));
 };
 
 module.exports = {
