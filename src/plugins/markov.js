@@ -142,6 +142,7 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     origChannel.send(
       makeEmbedNoUser(markovMessage, 'Everyone')
     ).then((markovResponse) => {
+      origChannel.stopTyping(true);
       setReplayButton(markovResponse, () => {
         postMarkovUser(user, channel, origChannel, originalPhrase);
       });
@@ -156,6 +157,7 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     origChannel.send(
       makeEmbed({ message: markovMessage, user })
     ).then((markovResponse) => {
+      origChannel.stopTyping(true);
       setReplayButton(markovResponse, () => {
         postMarkovUser(user, channel, origChannel, originalPhrase);
       });
@@ -197,6 +199,7 @@ const postMarkovChannel = (user, channel, origChannel, phrase) => {
   origChannel.send(
     makeEmbedNoUser(markovMessage, channel.name)
   ).then((markovResponse) => {
+    origChannel.stopTyping(true);
     setReplayButton(markovResponse, () => {
       postMarkovChannel(user, channel, origChannel, originalPhrase);
     });
@@ -222,16 +225,19 @@ const onText = (message) => {
     }
     if (cmd[1] === 'all') {
       markovUser(null, message.guild, message.channel, string);
+      message.channel.startTyping();
       return;
     }
     const channel = message.mentions.channels.first();
     const user = message.mentions.users.first();
     if (user != null) {
       markovUser(user, message.guild, message.channel, string);
+      message.channel.startTyping();
       return;
     }
     if (channel != null) {
       markovChannel(channel, message.guild, message.channel, string);
+      message.channel.startTyping();
       return;
     }
     message.channel.send(USAGE);
