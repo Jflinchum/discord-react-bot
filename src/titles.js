@@ -150,7 +150,10 @@ const onEvent = ({ event, data, user, guild, bot }) => {
     }
     const userObject = userToAward && userToAward.user;
     if (userObject && userObject && userObject.id && !userObject.bot) {
-      if (userObject && config && config.activeMemberWhitelist.includes(userObject.id.toString())) {
+      if (userObject &&
+        config &&
+        config.activeMemberWhitelist &&
+        config.activeMemberWhitelist.includes(userObject.id.toString())) {
         return accPromise.then(() => {
           return checkProgressAndAward({
             user: userToAward.user,
