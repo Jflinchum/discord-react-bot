@@ -46,7 +46,6 @@ const checkProgressAndAward = ({
           (userAchievements && userAchievements[achievementLabel]) || {};
 
         let progress = userCurrentAchievement.progress ? userCurrentAchievement.progress[0] : 0;
-        const currentProgress = progress;
         if (newProgress) {
           progress = newProgress;
         } else {
@@ -57,6 +56,9 @@ const checkProgressAndAward = ({
         const hasRole = guild.member(user.id).roles.cache.filter(
           role => role.name === achievementLabel
         ).first();
+
+        const level = getAchievementLevel(progress, achievementObject.threshold);
+
         if (progress >= achievementObject.threshold && !hasRole) {
           awardAchievement({
             user,
@@ -65,9 +67,7 @@ const checkProgressAndAward = ({
             guild,
             achievementChannel,
           });
-        } else if (hasRole &&
-            getAchievementLevel(currentProgress, achievementObject.threshold) <
-            getAchievementLevel(progress, achievementObject.threshold)) {
+        } else if (hasRole && (userCurrentAchievement.level || 1) < level) {
           sendCongratsMessage({
             user,
             achievement: achievementLabel,
@@ -82,7 +82,19 @@ const checkProgressAndAward = ({
           key: `achievementData.${user.id}.${achievementLabel}.progress`,
           value: progress,
           append: false,
-          cb: () => resolve(),
+          cb: () => {
+            if ((userCurrentAchievement.level || 1) < level) {
+              addJson({
+                path: DATA_PATH,
+                key: `achievementData.${user.id}.${achievementLabel}.level`,
+                value: getAchievementLevel(progress, achievementObject.threshold),
+                append: false,
+                cb: () => resolve(),
+              });
+            } else {
+              return resolve();
+            }
+          },
         });
       },
     });
