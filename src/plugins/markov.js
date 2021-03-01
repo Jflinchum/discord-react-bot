@@ -140,7 +140,7 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     markovGen.start(getAll).end().process() +
     '*"';
     origChannel.send(
-      makeEmbedNoUser(markovMessage, 'Everyone')
+      makeEmbedNoUser({ message: markovMessage, title: 'Everyone' })
     ).then((markovResponse) => {
       origChannel.stopTyping(true);
       setReplayButton(markovResponse, () => {
@@ -197,7 +197,7 @@ const postMarkovChannel = (user, channel, origChannel, phrase) => {
   markovGen.start(getAll).end().process() +
   '*"';
   origChannel.send(
-    makeEmbedNoUser(markovMessage, channel.name)
+    makeEmbedNoUser({ message: markovMessage, title: channel.name })
   ).then((markovResponse) => {
     origChannel.stopTyping(true);
     setReplayButton(markovResponse, () => {

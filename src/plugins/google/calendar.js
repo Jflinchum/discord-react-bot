@@ -148,14 +148,12 @@ function listEvents(auth, message) {
       finalMessage += 'No upcoming events found.';
     }
     message.channel.send(
-      makeEmbedNoUser(
-        finalMessage,
-        `Upcoming Events: (${formatDateString(timeMin).split(',')[0]}) - ` +
+      makeEmbedNoUser({
+        message: finalMessage,
+        title: `Upcoming Events: (${formatDateString(timeMin).split(',')[0]}) - ` +
         `(${formatDateString(timeMax).split(',')[0]})` +
         `\n${config.timeZone}`,
-        null,
-        message.content
-      )
+      })
     );
   });
 }
@@ -244,8 +242,10 @@ const createUpdateInterval = (bot) => {
                 });
               });
               bot.channels.cache.get(config.calendar.updateChannelId)
-                .send(makeEmbedNoUser(removedMessage,
-                  'Events Removed:'));
+                .send(makeEmbedNoUser({
+                  message: removedMessage,
+                  title: 'Events Removed:',
+                }));
             }
             if (addedEvents.length > 0) {
               let addedMessage = '';
@@ -255,8 +255,10 @@ const createUpdateInterval = (bot) => {
                 addedMessage += `${start} - ${event.summary}\n`;
               });
               bot.channels.cache.get(config.calendar.updateChannelId)
-                .send(makeEmbedNoUser(addedMessage,
-                  'Events Added:'));
+                .send(makeEmbedNoUser({
+                  message: addedMessage,
+                  title: 'Events Added:',
+                }));
             }
           }
           // Posting all events just starting
@@ -295,10 +297,11 @@ const createUpdateInterval = (bot) => {
                           bot.user.displayAvatarURL({ dynamic: true });
                       }
                       bot.channels.cache.get(config.calendar.updateChannelId)
-                        .send(makeEmbedNoUser(
-                          event.summary,
-                          'Event is starting now:',
-                          thumbnail));
+                        .send(makeEmbedNoUser({
+                          message: event.summary,
+                          title: 'Event is starting now:',
+                          thumbnail,
+                        }));
                       // Set the discordTriggered to true so we
                       // don't send a message again
                       addJson({

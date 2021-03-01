@@ -60,10 +60,10 @@ if (gpt2Enabled) {
     } else if (channel) {
       messageSplit.map((message, index) => {
         channel.send(
-          makeEmbedNoUser(
+          makeEmbedNoUser({
             message,
-            `${title} Response [${index + 1}/${messageSplit.length}]`
-          )
+            title: `${title} Response [${index + 1}/${messageSplit.length}]`,
+          })
         );
       });
     }
