@@ -19,7 +19,7 @@ var intros = [
   ' says: ',
 ];
 
-const markovUser = (user, guild, origChannel, phrase) => {
+const markovUser = (user, guild, origChannel, phrase, message) => {
   markovString = '';
   channelsDone = 0;
   channelLength = 0;
@@ -38,11 +38,11 @@ const markovUser = (user, guild, origChannel, phrase) => {
           }
           if (messages.size >= 100) {
             markovRecursive(messages.last(), user, channel,
-              origChannel, phrase, 10);
+              origChannel, phrase, 10, message);
           } else {
             channelsDone++;
             if (channelsDone === channelLength) {
-              markovCallback(user, channel, origChannel, phrase);
+              markovCallback(user, channel, origChannel, phrase, message);
             }
           }
         }).catch(console.error);
@@ -50,7 +50,7 @@ const markovUser = (user, guild, origChannel, phrase) => {
   });
 };
 
-const markovChannel = (channel, guild, origChannel, phrase) => {
+const markovChannel = (channel, guild, origChannel, phrase, message) => {
   markovString = '';
   channelsDone = 0;
   channelLength = 0;
@@ -64,22 +64,22 @@ const markovChannel = (channel, guild, origChannel, phrase) => {
         asyncMarkov(messages);
         if (messages.size >= 100) {
           markovRecursive(messages.last(), null, channel,
-            origChannel, phrase, 10);
+            origChannel, phrase, 10, message);
         } else {
           channelsDone++;
           if (channelsDone === channelLength) {
-            markovCallback(null, channel, origChannel, phrase);
+            markovCallback(null, channel, origChannel, phrase, message);
           }
         }
       }).catch(console.error);
   }
 };
 
-const markovRecursive = (message, user, channel, origChannel, phrase, loop) => {
+const markovRecursive = (message, user, channel, origChannel, phrase, loop, messageObj) => {
   if (loop <= 0) {
     channelsDone++;
     if (channelsDone === channelLength) {
-      markovCallback(user, channel, origChannel, phrase);
+      markovCallback(user, channel, origChannel, phrase, messageObj);
     }
     return;
   }
@@ -93,11 +93,11 @@ const markovRecursive = (message, user, channel, origChannel, phrase, loop) => {
       }
       if (messages.size >= 100) {
         markovRecursive(messages.last(), user, channel,
-          origChannel, phrase, loop - 1);
+          origChannel, phrase, loop - 1, messageObj);
       } else {
         channelsDone++;
         if (channelsDone === channelLength) {
-          markovCallback(user, channel, origChannel, phrase);
+          markovCallback(user, channel, origChannel, phrase, messageObj);
         }
       }
     }).catch(console.error);
@@ -107,7 +107,7 @@ const asyncMarkov = (messages) => {
   messages.each((message) => { markovString += (message.content + '\n'); });
 };
 
-const postMarkovUser = (user, channel, origChannel, phrase) => {
+const postMarkovUser = (user, channel, origChannel, phrase, message) => {
   channelsDone = 0;
   channelLength = 0;
 
@@ -140,11 +140,15 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     markovGen.start(getAll).end().process() +
     '*"';
     origChannel.send(
-      makeEmbedNoUser({ message: markovMessage, title: 'Everyone' })
+      makeEmbedNoUser({
+        message: markovMessage,
+        title: 'Everyone',
+        footerText: message.cleanContent,
+      })
     ).then((markovResponse) => {
       origChannel.stopTyping(true);
       setReplayButton(markovResponse, () => {
-        postMarkovUser(user, channel, origChannel, originalPhrase);
+        postMarkovUser(user, channel, origChannel, originalPhrase, message);
       });
     });
   } else {
@@ -155,17 +159,17 @@ const postMarkovUser = (user, channel, origChannel, phrase) => {
     markovGen.start(getAll).end().process() +
     '*"';
     origChannel.send(
-      makeEmbed({ message: markovMessage, user })
+      makeEmbed({ message: markovMessage, user, footerText: message.cleanContent })
     ).then((markovResponse) => {
       origChannel.stopTyping(true);
       setReplayButton(markovResponse, () => {
-        postMarkovUser(user, channel, origChannel, originalPhrase);
+        postMarkovUser(user, channel, origChannel, originalPhrase, message);
       });
     });
   }
 };
 
-const postMarkovChannel = (user, channel, origChannel, phrase) => {
+const postMarkovChannel = (user, channel, origChannel, phrase, message) => {
   channelsDone = 0;
   channelLength = 0;
 
@@ -197,11 +201,15 @@ const postMarkovChannel = (user, channel, origChannel, phrase) => {
   markovGen.start(getAll).end().process() +
   '*"';
   origChannel.send(
-    makeEmbedNoUser({ message: markovMessage, title: channel.name })
+    makeEmbedNoUser({
+      message: markovMessage,
+      title: channel.name,
+      footerText: message.cleanContent,
+    })
   ).then((markovResponse) => {
     origChannel.stopTyping(true);
     setReplayButton(markovResponse, () => {
-      postMarkovChannel(user, channel, origChannel, originalPhrase);
+      postMarkovChannel(user, channel, origChannel, originalPhrase, message);
     });
   });
 };
@@ -224,19 +232,19 @@ const onText = (message) => {
       string = '';
     }
     if (cmd[1] === 'all') {
-      markovUser(null, message.guild, message.channel, string);
+      markovUser(null, message.guild, message.channel, string, message);
       message.channel.startTyping();
       return;
     }
     const channel = message.mentions.channels.first();
     const user = message.mentions.users.first();
     if (user != null) {
-      markovUser(user, message.guild, message.channel, string);
+      markovUser(user, message.guild, message.channel, string, message);
       message.channel.startTyping();
       return;
     }
     if (channel != null) {
-      markovChannel(channel, message.guild, message.channel, string);
+      markovChannel(channel, message.guild, message.channel, string, message);
       message.channel.startTyping();
       return;
     }

@@ -67,12 +67,15 @@ const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon
  * embeded message
  * @return {Object} - Returns the constructed embeded message
  */
-const makeEmbedNoUser = ({ message, title, thumbnail }) => {
+const makeEmbedNoUser = ({ message, title, thumbnail, footerText }) => {
   let embed = {
     color: COLOR,
     description: message,
     author: {
       name: title,
+    },
+    footer: {
+      text: footerText,
     },
   };
   if (thumbnail && validUrl.isUri(thumbnail)) {
