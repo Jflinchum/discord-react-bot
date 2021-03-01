@@ -85,19 +85,22 @@ const getAchievementData = ({ guild, achievement, cb = () => {} }) => {
     cb: (achievementData) => {
       // AchievementData is an object with userIds mapped to achievements gained
       const userIds = Object.keys(achievementData);
+      const achievementLookup = Object.keys(achievements)
+        .filter(achievementName => achievementName.toLowerCase() === achievement.toLowerCase());
+      const achievementLookupName = achievementLookup ? achievementLookup[0] : achievement;
       userIds.sort((userA, userB) => {
-        const userBAchievementProgress = achievementData[userB][achievement] ?
-          achievementData[userB][achievement].progress[0] : 0;
-        const userAAchievementProgress = achievementData[userA][achievement] ?
-          achievementData[userA][achievement].progress[0] : 0;
+        const userBAchievementProgress = achievementData[userB][achievementLookupName] ?
+          achievementData[userB][achievementLookupName].progress[0] : 0;
+        const userAAchievementProgress = achievementData[userA][achievementLookupName] ?
+          achievementData[userA][achievementLookupName].progress[0] : 0;
         return userBAchievementProgress - userAAchievementProgress;
       });
       const topFive = userIds.slice(0, 5);
       return mapMemberNamesToData({
         userIds: topFive,
         dataset: achievementData,
-        valueFunc: (dataset, userId) => dataset[userId][achievement] ?
-          dataset[userId][achievement].progress[0] : 0,
+        valueFunc: (dataset, userId) => dataset[userId][achievementLookupName] ?
+          dataset[userId][achievementLookupName].progress[0] : 0,
         guild,
         cb,
       });
