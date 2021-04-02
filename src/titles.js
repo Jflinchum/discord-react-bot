@@ -124,6 +124,10 @@ const onEvent = ({ event, data, user, guild, bot }) => {
   if (user.bot) {
     return;
   }
+  // If we don't receive a guild, then don't bother
+  if (!guild) {
+    return;
+  }
   const achievementChannel = bot.channels.cache.get(config.achievementChannelId);
 
   const titleNames = Object.keys(configuredTitles);
