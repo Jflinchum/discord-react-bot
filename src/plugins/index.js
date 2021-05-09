@@ -27,6 +27,7 @@ const commandData = [
   ...require('./pat').commandData,
   ...require('./roll').commandData,
   ...require('./post').commandData,
+  ...require('./play').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
