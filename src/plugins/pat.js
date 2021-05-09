@@ -75,19 +75,23 @@ const pat = (userId, message, bot) => {
  * the command
  */
 const printPats = (message) => {
-  message.delete();
+  if (!isDiscordCommand) {
+    message.delete();
+  }
+  const author = message?.author || message?.user
+  let replyFunction = getReplyFunction(message);
   getJson({
     path: DATA_PATH,
-    key: `patData.${message.author.id}.pats`,
+    key: `patData.${author.id}.pats`,
     cb: (pats) => {
-      const userDisplay = message.guild.members.cache.get(message.author.id).displayName;
-      message.channel.send(
+      const userDisplay = message.guild.members.cache.get(author.id).displayName;
+      replyFunction(
         makeEmbed({
           message: `${userDisplay} has been pat ${pats.length} ` +
           ` time${pats.length === 1 ? '' : 's'}!`,
-          user: message.author,
-          member: message.guild.members.cache.get(message.author.id).displayName,
-          color: message.guild.members.cache.get(message.author.id).displayColor,
+          user: author,
+          member: message.guild.members.cache.get(author.id).displayName,
+          color: message.guild.members.cache.get(author.id).displayColor,
         })
       );
     },
@@ -118,6 +122,8 @@ const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'pat') {
     const person = interaction.options[0].value;
     pat(person, interaction, bot);
+  } else if (interaction.commandName === 'my_pats') {
+    printPats(interaction, bot);
   }
 };
 
@@ -129,16 +135,22 @@ const onText = (discordTrigger, bot) => {
   }
 };
 
-const commandData = [{
-  name: 'pat',
-  description: 'Gives another member a pat!',
-  options: [{
-    name: 'user',
-    type: 'USER',
-    description: 'The member you want to pat',
-    required: true,
-  }],
-}];
+const commandData = [
+  {
+    name: 'pat',
+    description: 'Gives another member a pat!',
+    options: [{
+      name: 'user',
+      type: 'USER',
+      description: 'The member you want to pat',
+      required: true,
+    }],
+  },
+  {
+    name: 'my_pats',
+    description: 'Check how many pats you have received',
+  }
+];
 
 module.exports = {
   onText,

@@ -43,7 +43,7 @@ const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon
   returnMessage.setColor(color || COLOR);
   returnMessage.setDescription(message);
   returnMessage.setAuthor(title || member || user.username, authorIcon);
-  returnMessage.setFooter(footerText);
+  returnMessage.setFooter(footerText || '');
   return returnMessage;
 };
 
