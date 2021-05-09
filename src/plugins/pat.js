@@ -75,7 +75,7 @@ const pat = (userId, message, bot) => {
  * the command
  */
 const printPats = (message) => {
-  if (!isDiscordCommand) {
+  if (!isDiscordCommand(message)) {
     message.delete();
   }
   const author = message?.author || message?.user

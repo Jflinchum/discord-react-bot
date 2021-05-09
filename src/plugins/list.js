@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const cronstrue = require('cronstrue/i18n');
-const { PATH, EMOJI_REGEX, sendTextBlock, isDiscordCommand } = require('./util');
+const { PATH, EMOJI_REGEX, sendTextBlock, isDiscordCommand, getReplyFunction } = require('./util');
 const USAGE = '`usage: [!list/!l] [image/music/text/emoji]`';
 
 /**
@@ -39,7 +39,8 @@ const findFiles = (regex, files) => {
  * @param {Object} bot - The discord bot
  */
 const list = ({ type, message, emojis, cronJobs, page, bot }) => {
-  if (message.channel.type !== 'dm') {
+  let replyFunction = getReplyFunction(message);
+  if (message.channel.type !== 'dm' && !isDiscordCommand(message)) {
     message.delete();
   }
   const files = fs.readdirSync(PATH);
@@ -124,10 +125,10 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
   }
 
   if (!imageType && !musicType && !textType && !emojiType && !cronType) {
-    message.channel.send(USAGE);
+    replyFunction(USAGE);
     return;
   }
-  sendTextBlock({text: response, message, page});
+  sendTextBlock({ text: response, message, page });
 };
 
 const handleDiscordMessage = (message, bot) => {
@@ -154,19 +155,74 @@ const handleDiscordMessage = (message, bot) => {
   }
 };
 
-const handleDiscordCommand = () => {
-
+const handleDiscordCommand = (interaction, bot) => {
+  if (interaction.commandName === 'list') {
+    const category = interaction.options[0]?.value;
+    const page = interaction.options[1]?.value
+    list({
+      type: category,
+      message: interaction,
+      emojis: bot.emojiTriggers,
+      cronJobs: bot.cronJobs,
+      page,
+      bot,
+    });
+  }
 };
 
 const onText = (discordTrigger, bot) => {
   if (isDiscordCommand(discordTrigger)) {
-    handleDiscordCommand(discordTrigger);
+    handleDiscordCommand(discordTrigger, bot);
   } else {
     handleDiscordMessage(discordTrigger, bot);
   }
 };
 
+const commandData = [
+  {
+    name: 'list',
+    description: 'Displays all stored files.',
+    options: [
+      {
+        name: 'category',
+        type: 'STRING',
+        description: 'The category of files that you want to list',
+        required: false,
+        choices: [
+          {
+            name: 'Images',
+            value: 'image'
+          },
+          {
+            name: 'Sound Clips',
+            value: 'music'
+          },
+          {
+            name: 'Text Files',
+            value: 'text'
+          },
+          {
+            name: 'Emoji Triggers',
+            value: 'emoji'
+          },
+          {
+            name: 'Cron Jobs',
+            value: 'cron'
+          },
+        ],
+      },
+      {
+        name: 'page',
+        type: 'INTEGER',
+        description: 'The page number for the list',
+        required: false,
+      },
+    ],
+  },
+];
+
 module.exports = {
   list,
   onText,
+  commandData,
 };

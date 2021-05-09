@@ -18,7 +18,7 @@ const post = (fileName, message) => {
   const author = message?.author || message?.user
   let replyFunction = getReplyFunction(message);
   // Posting files
-  if (!isDiscordCommand) {
+  if (!isDiscordCommand(message)) {
     message.delete();
   }
   const files = fs.readdirSync(PATH);
