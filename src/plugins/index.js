@@ -28,6 +28,7 @@ const commandData = [
   ...require('./roll').commandData,
   ...require('./post').commandData,
   ...require('./play').commandData,
+  ...require('./rename').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
