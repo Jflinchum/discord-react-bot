@@ -152,7 +152,7 @@ const playSong = ({ connection, song, message }) => {
           skip({
             author: newAuthor,
             guild: message.guild,
-            channel: message.channel,
+            message,
           });
         });
       });
@@ -190,7 +190,7 @@ const playSong = ({ connection, song, message }) => {
         skip({
           author: newAuthor,
           guild: message.guild,
-          channel: message.channel,
+          message,
         });
       });
     }
@@ -244,7 +244,8 @@ const playNext = (song, connection) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-const skip = ({ number, guild, author, channel }) => {
+const skip = ({ number, guild, author, message }) => {
+  let replyFunction = getReplyFunction(message);
   let cutSongName;
   if (!number) {
     if (currentSong) {
@@ -271,10 +272,10 @@ const skip = ({ number, guild, author, channel }) => {
         currentChannel.leave();
       } else {
         // Check if the bot is in any channels in the guild and leave it
-        if (channel.guild.me.voice.channel) {
-          channel.guild.me.voice.channel.leave();
+        if (message.channel.guild.me.voice.channel) {
+          message.channel.guild.me.voice.channel.leave();
         } else {
-          channel.send('Nothing to skip!');
+          replyFunction('Nothing to skip!');
         }
       }
       return;
@@ -285,11 +286,11 @@ const skip = ({ number, guild, author, channel }) => {
       cutSongName = playingQueue[number].name;
       playingQueue.splice(number, 1);
     } else {
-      channel.send(USAGESKIP);
+      replyFunction(USAGESKIP);
     }
   }
   if (cutSongName) {
-    channel.send(
+    replyFunction(
       makeEmbed({
         message: `Skipped: ${cutSongName}`,
         user: author,
@@ -459,7 +460,7 @@ const handleDiscordMessage = (message) => {
     skip({
       number,
       guild: message.guild,
-      channel: message.channel,
+      message,
       author: message.author,
     });
   }
@@ -469,8 +470,15 @@ const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'play') {
     const media = interaction.options[0]?.value;
     const channel = interaction.options[1]?.value;
-    console.log(interaction);
     play({ channel, media, interaction, author: interaction.user, message: interaction });
+  } else if (interaction.commandName === 'skip') {
+    const index = interaction.options[0]?.value;
+    skip({
+      number: index,
+      guild: interaction.guild,
+      message: interaction,
+      author: interaction.user,
+    });
   }
 };
 
@@ -499,6 +507,18 @@ const commandData = [
         description: 'The channel you want to play the sound clip to. Defaults to the first channel with users.',
         required: false,
       }
+    ],
+  },
+  {
+    name: 'skip',
+    description: 'Skips sound clips playing or in the queue.',
+    options: [
+      {
+        name: 'index',
+        type: 'INTEGER',
+        description: 'The index of the song in queue that you want to skip.',
+        required: false,
+      },
     ],
   }
 ];
