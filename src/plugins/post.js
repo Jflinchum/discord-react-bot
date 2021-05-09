@@ -50,9 +50,9 @@ const post = (fileName, message) => {
       makeEmbed({
         message: fileName,
         user: message.author,
-        member: message.guild.member(message.author.id).displayName,
+        member: message.guild.members.cache.get(message.author.id).displayName,
         footerText: message.content,
-        color: message.guild.member(message.author.id).displayColor,
+        color: message.guild.members.cache.get(message.author.id).displayColor,
       })
     ).catch(() => {
       message.channel.send('Could not find user posting.');
@@ -75,9 +75,9 @@ const post = (fileName, message) => {
           makeEmbed({
             message: text.toString(),
             user: message.author,
-            member: message.guild.member(message.author.id).displayName,
+            member: message.guild.members.cache.get(message.author.id).displayName,
             footerText: message.content,
-            color: message.guild.member(message.author.id).displayColor,
+            color: message.guild.members.cache.get(message.author.id).displayColor,
           })
         );
       });
@@ -91,9 +91,9 @@ const post = (fileName, message) => {
         image: {
           url: `attachment://${file}`,
         },
-        color: message.guild.member(message.author.id).displayColor || COLOR,
+        color: message.guild.members.cache.get(message.author.id).displayColor || COLOR,
         author: {
-          name: message.guild.member(message.author.id).displayName,
+          name: message.guild.members.cache.get(message.author.id).displayName,
         },
         footer: {
           text: message.cleanContent,

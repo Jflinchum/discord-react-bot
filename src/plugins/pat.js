@@ -7,6 +7,7 @@ const {
   getDiscordId,
   setReplayButton,
   isDiscordCommand,
+  getReplyFunction,
 } = require('./util');
 const USAGE = '`usage: !pat <@person>`';
 
@@ -18,9 +19,10 @@ const USAGE = '`usage: !pat <@person>`';
  * the command
  */
 const pat = (userId, message, bot) => {
+  const author = message?.author || message?.user
   const patJson = {
     date: new Date(),
-    patronId: message.author.id,
+    patronId: author.id,
   };
   addJson({
     path: DATA_PATH,
@@ -31,23 +33,34 @@ const pat = (userId, message, bot) => {
         path: DATA_PATH,
         key: `patData.${userId}.pats`,
         cb: (pats) => {
-          const userObject = message.guild.member(userId);
-          message.channel.send(makeEmbed({
+          let replyFunction = getReplyFunction(message);
+          const userObject = message.guild.members.cache.get(userId);
+          replyFunction(makeEmbed({
             message: `${userObject.displayName} has received a head pat!\n` +
             `${userObject.displayName} now has ${pats.length} ` +
             `head pat${pats.length === 1 ? '' : 's'}.`,
             user: userObject.user,
-            member: message.guild.member(userObject.user.id).displayName,
-            title: message.guild.member(message.author.id).displayName,
+            member: message.guild.members.cache.get(userObject.user.id).displayName,
+            title: message.guild.members.cache.get(author.id).displayName,
             footerText: `!pat @${userObject.displayName}`,
             color: userObject.displayColor,
-            authorIcon: message.author.displayAvatarURL(),
+            authorIcon: author.displayAvatarURL(),
           })).then((patMessage) => {
-            setReplayButton(patMessage, (reaction) => {
-              const reactionUser = reaction.users.cache.last();
-              message.author = reactionUser;
-              pat(userId, message, bot);
-            });
+            if (!patMessage && isDiscordCommand(message)) {
+              message.fetchReply().then((patMessage) => {
+                setReplayButton(patMessage, (reaction) => {
+                  const reactionUser = reaction.users.cache.last();
+                  message.user = reactionUser;
+                  pat(userId, message, bot);
+                });
+              });
+            } else {
+              setReplayButton(patMessage, (reaction) => {
+                const reactionUser = reaction.users.cache.last();
+                message.author = reactionUser;
+                pat(userId, message, bot);
+              });
+            }
           });
         },
       });
@@ -67,14 +80,14 @@ const printPats = (message) => {
     path: DATA_PATH,
     key: `patData.${message.author.id}.pats`,
     cb: (pats) => {
-      const userDisplay = message.guild.member(message.author.id).displayName;
+      const userDisplay = message.guild.members.cache.get(message.author.id).displayName;
       message.channel.send(
         makeEmbed({
           message: `${userDisplay} has been pat ${pats.length} ` +
           ` time${pats.length === 1 ? '' : 's'}!`,
           user: message.author,
-          member: message.guild.member(message.author.id).displayName,
-          color: message.guild.member(message.author.id).displayColor,
+          member: message.guild.members.cache.get(message.author.id).displayName,
+          color: message.guild.members.cache.get(message.author.id).displayColor,
         })
       );
     },
@@ -101,18 +114,33 @@ const handleDiscordMessage = (message, bot) => {
   }
 };
 
-const handleDiscordCommand = () => {
-
+const handleDiscordCommand = (interaction, bot) => {
+  if (interaction.commandName === 'pat') {
+    const person = interaction.options[0].value;
+    pat(person, interaction, bot);
+  }
 };
 
 const onText = (discordTrigger, bot) => {
   if (isDiscordCommand(discordTrigger)) {
-    handleDiscordCommand(discordTrigger);
+    handleDiscordCommand(discordTrigger, bot);
   } else {
     handleDiscordMessage(discordTrigger, bot);
   }
 };
 
+const commandData = [{
+  name: 'pat',
+  description: 'Gives another member a pat!',
+  options: [{
+    name: 'user',
+    type: 'USER',
+    description: 'The member you want to pat',
+    required: true,
+  }],
+}];
+
 module.exports = {
   onText,
+  commandData,
 };

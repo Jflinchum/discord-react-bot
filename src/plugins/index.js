@@ -23,7 +23,8 @@ const onTextHooks = [
 ];
 
 const commandData = [
-  require('./help').commandData,
+  ...require('./help').commandData,
+  ...require('./pat').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };

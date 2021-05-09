@@ -33,7 +33,7 @@ const mapMemberNamesToData = ({ userIds, dataset, valueFunc, guild, cb }) => {
   for (let i = 0; i < userIds.length; i++) {
     promiseArray.push(new Promise((resolve) => {
       const userId = userIds[i];
-      guild.members.fetch(userId).then((member) => {
+      guild.members.cache.gets.fetch(userId).then((member) => {
         if (member) {
           return resolve({
             key: member.displayName,
@@ -254,9 +254,9 @@ const handleDiscordMessage = (message) => {
               thumbnail: {
                 url: `${message.author.displayAvatarURL({ dynamic: true })}`,
               },
-              color: message.guild.member(message.author.id).displayColor || COLOR,
+              color: message.guild.members.cache.get(message.author.id).displayColor || COLOR,
               author: {
-                name: message.guild.member(message.author.id).displayName,
+                name: message.guild.members.cache.get(message.author.id).displayName,
               },
               footer: {
                 text: message.cleanContent,

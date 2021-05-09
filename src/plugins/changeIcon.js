@@ -6,7 +6,7 @@ const USAGE = '`usage: !changeIcon [url/attachment]`';
 const reasonMessage = (message) => {
   const guild = message.guild;
   const author = message.author;
-  const displayName = guild.member(author.id).displayName;
+  const displayName = guild.members.cache.get(author.id).displayName;
   return `${displayName} changed the guild icon with bot.`;
 };
 

@@ -101,8 +101,8 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
       makeEmbed({
         message: `Added ${name} to the queue!`,
         user: author,
-        member: message.guild.member(author.id).displayName,
-        color: message.guild.member(message.author.id).displayColor,
+        member: message.guild.members.cache.get(author.id).displayName,
+        color: message.guild.members.cache.get(message.author.id).displayColor,
       })
     );
   }
@@ -124,9 +124,9 @@ const playSong = ({ connection, song, message }) => {
     makeEmbed({
       message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
       user: song.author,
-      member: message.guild.member(song.author.id).displayName,
+      member: message.guild.members.cache.get(song.author.id).displayName,
       footerText: message.content,
-      color: message.guild.member(message.author.id).displayColor,
+      color: message.guild.members.cache.get(message.author.id).displayColor,
     })
   ).then((playMessage) => {
     setReplayButton(playMessage, (reaction) => {
@@ -264,8 +264,8 @@ const skip = ({ number, guild, author, channel }) => {
       makeEmbed({
         message: `Skipped: ${cutSongName}`,
         user: author,
-        member: guild.member(author.id).displayName,
-        color: guild.member(author.id).displayColor,
+        member: guild.members.cache.get(author.id).displayName,
+        color: guild.members.cache.get(author.id).displayColor,
       })
     );
   }

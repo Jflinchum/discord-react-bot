@@ -5,6 +5,7 @@ const ytdl = require('ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const validUrl = require('valid-url');
+const { MessageEmbed } = require('discord.js');
 
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
@@ -37,24 +38,12 @@ const config = require('./../../config.json');
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon }) => {
-  let returnMessage = {
-    embed: {
-      thumbnail: {
-        url: `${user.displayAvatarURL({ dynamic: true })}`,
-      },
-      color: color || COLOR,
-      description: message,
-      author: {
-        name: title || member || user.username,
-      },
-      footer: {
-        text: footerText,
-      },
-    },
-  };
-  if (authorIcon) {
-    returnMessage.embed.author.icon_url = authorIcon;
-  }
+  let returnMessage = new MessageEmbed()
+  returnMessage.setThumbnail(user.displayAvatarURL({ dynamic: true }));
+  returnMessage.setColor(color || COLOR);
+  returnMessage.setDescription(message);
+  returnMessage.setAuthor(title || member || user.username, authorIcon);
+  returnMessage.setFooter(footerText);
   return returnMessage;
 };
 
@@ -426,13 +415,7 @@ const getPaginatedText = ({ text, page }) => {
  * @param {Integer} page - The page for the text
  */
 const sendTextBlock = ({text, message, page = 1}) => {
-  let replyFunction = () => {};
-  if (isDiscordCommand(message)) {
-    replyFunction = (...args) => message.reply(...args);
-  } else {
-    replyFunction = (...args) => message.channel.send(...args);
-  }
-
+  let replyFunction = getReplyFunction(message);
 
   page -= 1;
   const paginatedObject = getPaginatedText({ text, page });
@@ -690,6 +673,18 @@ const isDiscordCommand = (discordTrigger) => {
   }
 };
 
+const getReplyFunction = (message) => {
+  let replyFunction = () => {};
+  if (isDiscordCommand(message) && !message.replied) {
+    replyFunction = (...args) => message.reply(...args);
+  } else if (isDiscordCommand(message) && message.replied) {
+    replyFunction = (...args) => message.channel.send(...args);
+  } else {
+    replyFunction = (...args) => message.channel.send(...args);
+  }
+  return replyFunction;
+}
+
 module.exports = {
   PATH,
   EMOJI_PATH,
@@ -725,4 +720,5 @@ module.exports = {
   createReactionCallback,
   getNestedProperty,
   isDiscordCommand,
+  getReplyFunction,
 };

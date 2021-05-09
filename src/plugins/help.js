@@ -31,8 +31,8 @@ const handleDiscordMessage = (message) => {
 };
 
 const handleDiscordCommand = (interaction) => {
-  console.log(interaction);
-  help(interaction, interaction?.options[0]?.value);
+  if (interaction.commandName === 'help')
+    help(interaction, interaction?.options[0]?.value);
 };
 
 const onText = (discordTrigger) => {
@@ -43,7 +43,7 @@ const onText = (discordTrigger) => {
   }
 };
 
-const commandData = {
+const commandData = [{
   name: 'help',
   description: 'Lists out all possible commands.',
   options: [{
@@ -52,7 +52,7 @@ const commandData = {
     description: 'The page of the help list',
     required: false,
   }],
-};
+}];
 
 module.exports = {
   help,

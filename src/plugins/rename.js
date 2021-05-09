@@ -49,8 +49,8 @@ const rename = (oldName, newName, message) => {
         makeEmbed({
           message: `Renamed ${oldName} to ${newName}`,
           user: message.author,
-          member: message.guild.member(message.author.id).displayName,
-          color: message.guild.member(message.author.id).displayColor,
+          member: message.guild.members.cache.get(message.author.id).displayName,
+          color: message.guild.members.cache.get(message.author.id).displayColor,
         })
       );
     });
