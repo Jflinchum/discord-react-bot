@@ -471,6 +471,8 @@ const handleDiscordCommand = (interaction) => {
     const media = interaction.options[0]?.value;
     const channel = interaction.options[1]?.value;
     play({ channel, media, interaction, author: interaction.user, message: interaction });
+  } else if (interaction.commandName === 'queue') {
+    queue(interaction);
   } else if (interaction.commandName === 'skip') {
     const index = interaction.options[0]?.value;
     skip({
@@ -520,6 +522,10 @@ const commandData = [
         required: false,
       },
     ],
+  },
+  {
+    name: 'queue',
+    description: 'Shows the current playing queue of sound clips.',
   }
 ];
 
