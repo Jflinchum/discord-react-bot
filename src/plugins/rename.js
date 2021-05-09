@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { PATH, makeEmbed } = require('./util');
+const { PATH, makeEmbed, isDiscordCommand } = require('./util');
 const USAGE = '`usage: [!rename/!rn] <oldName> <newName>`';
 
 /**
@@ -57,7 +57,7 @@ const rename = (oldName, newName, message) => {
   }
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -65,6 +65,18 @@ const onText = (message) => {
     const oldFile = cmd[1];
     const newFile = cmd[2];
     rename(oldFile, newFile, message);
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

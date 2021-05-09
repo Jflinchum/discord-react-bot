@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { PATH, hasFile, makeEmbed } = require('./util');
+const { PATH, hasFile, makeEmbed, isDiscordCommand } = require('./util');
 const USAGE = '`usage: !append <name> <"Example Text">`';
 
 /**
@@ -33,7 +33,7 @@ const append = ({fileName, text, message}) => {
   });
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -50,6 +50,18 @@ const onText = (message) => {
     }
     text = text.slice(1, text.length - 1);
     append({fileName, text, message});
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

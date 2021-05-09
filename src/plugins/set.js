@@ -5,6 +5,7 @@ const {
   addJson,
   getJson,
   removeJson,
+  isDiscordCommand,
 } = require('./util');
 const AVAILABLE_PROPERTIES = ['email', 'emojiReacts'];
 const USAGE = '`usage: !set <property> <value>\nAvailable config settings are: ' +
@@ -96,7 +97,7 @@ const printConfig = (message) => {
   });
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -110,6 +111,18 @@ const onText = (message) => {
     set(property, value, message);
   } else if (botCommand === '!config') {
     printConfig(message);
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

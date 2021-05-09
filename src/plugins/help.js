@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const { sendTextBlock } = require('./util');
+const { sendTextBlock, isDiscordCommand } = require('./util');
 
 /**
  * Posts the contents of the help file to the channel
@@ -11,7 +11,7 @@ const { sendTextBlock } = require('./util');
  * @param {Integer} page - The page number
  */
 const help = (message, page) => {
-  if (message.channel.type !== 'dm') {
+  if (message.channel.type !== 'dm' && !isDiscordCommand(message)) {
     message.delete();
   }
   const helpText = fs.readFileSync(
@@ -20,7 +20,7 @@ const help = (message, page) => {
   sendTextBlock({text: helpText, message, page});
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!help' || botCommand === '!h') {
@@ -30,7 +30,32 @@ const onText = (message) => {
   }
 };
 
+const handleDiscordCommand = (interaction) => {
+  console.log(interaction);
+  help(interaction, interaction?.options[0]?.value);
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
+  }
+};
+
+const commandData = {
+  name: 'help',
+  description: 'Lists out all possible commands.',
+  options: [{
+    name: 'page',
+    type: 'INTEGER',
+    description: 'The page of the help list',
+    required: false,
+  }],
+};
+
 module.exports = {
   help,
   onText,
+  commandData,
 };

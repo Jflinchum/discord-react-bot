@@ -1,6 +1,6 @@
 'use strict';
 const MarkovChain = require('markovchain');
-const { makeEmbed, makeEmbedNoUser, setReplayButton } = require('./util');
+const { makeEmbed, makeEmbedNoUser, setReplayButton, isDiscordCommand } = require('./util');
 const USAGE = '`usage: !markov <@user/#textChannel/all> ["messageStart"]`';
 
 
@@ -214,7 +214,7 @@ const postMarkovChannel = (user, channel, origChannel, phrase, message) => {
   });
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -249,6 +249,18 @@ const onText = (message) => {
       return;
     }
     message.channel.send(USAGE);
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

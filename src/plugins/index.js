@@ -22,4 +22,8 @@ const onTextHooks = [
   require('./chart').onText,
 ];
 
-module.exports = { onTextHooks };
+const commandData = [
+  require('./help').commandData,
+];
+
+module.exports = { onTextHooks, commandData };

@@ -8,6 +8,7 @@ const {
   ytdownload,
   makeEmbed,
   hasFile,
+  isDiscordCommand,
 } = require('./util');
 const USAGE = '`usage: [!add/!a] [<url>/"Example String Here"] <name>' +
   ' [<startTimeStamp>] [<stopTimeStamp>]`';
@@ -147,7 +148,7 @@ const addText = (fileName, text, message) => {
   });
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   // Get any attachments associated with message
@@ -200,6 +201,18 @@ const onText = (message) => {
 
       add(fileName, url, exten, message, timeStart, timeStop);
     }
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

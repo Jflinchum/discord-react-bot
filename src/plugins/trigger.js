@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { EMOJI_PATH, addJson, EMOJI_REGEX } = require('./util');
+const { EMOJI_PATH, addJson, EMOJI_REGEX, isDiscordCommand } = require('./util');
 const USAGE = '`usage: !trigger <emoji> <decimalChance> <"Example Text">`';
 
 /**
@@ -12,7 +12,7 @@ const USAGE = '`usage: !trigger <emoji> <decimalChance> <"Example Text">`';
  * @param {Object} message - The message that triggered this function
  * @param {Function} cb - Callback function
  */
-const trigger = ({text, reaction, chance, message, cb}) => {
+const trigger = ({text, reaction, chance, cb}) => {
   let json = {
     emoji: reaction,
     chance,
@@ -20,7 +20,7 @@ const trigger = ({text, reaction, chance, message, cb}) => {
   addJson({ path: EMOJI_PATH, key: text, value: json, cb });
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -69,6 +69,18 @@ const onText = (message, bot) => {
       console.log('Could not react with emoji: ', err);
       message.channel.send('Could not find emoji');
     });
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
   }
 };
 

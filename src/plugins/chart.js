@@ -1,11 +1,12 @@
 'use strict';
-const { CanvasRenderService } = require('chartjs-node-canvas');
+const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const {
   COLOR,
   COLOR_FORMATTED,
   getJson,
   DATA_PATH,
   splitArgsWithQuotes,
+  isDiscordCommand,
 } = require('./util');
 const achievements = require('./../../achievements') || {};
 const { getRarityColor } = require('./../titles');
@@ -25,12 +26,12 @@ const chartCallback = (ChartJS) => {
   ChartJS.defaults.global.defaultFontColor = fontColor;
   ChartJS.defaults.global.defaultFontFamily = fontFamily;
 };
-const canvasRenderService = new CanvasRenderService(width, height, chartCallback);
+const canvasRenderService = new ChartJSNodeCanvas({ width, height, chartCallback });
 
 const mapMemberNamesToData = ({ userIds, dataset, valueFunc, guild, cb }) => {
   let promiseArray = [];
   for (let i = 0; i < userIds.length; i++) {
-    promiseArray.push(new Promise((resolve, reject) => {
+    promiseArray.push(new Promise((resolve) => {
       const userId = userIds[i];
       guild.members.fetch(userId).then((member) => {
         if (member) {
@@ -108,7 +109,7 @@ const getAchievementData = ({ guild, achievement, cb = () => {} }) => {
   });
 };
 
-const getRarityData = ({ guild, userId, cb = () => {} }) => {
+const getRarityData = ({ userId, cb = () => {} }) => {
   getJson({
     path: DATA_PATH,
     key: 'achievementData',
@@ -223,7 +224,7 @@ const generateChart = ({ chartTitle, chartData, cb = () => {} }) => {
     });
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
 
@@ -233,7 +234,7 @@ const onText = (message, bot) => {
       return;
     }
     let extraParams = cmd.length > 2 ? cmd[2] : '';
-    extraParams = extraParams.replace(/\"/g, '');
+    extraParams = extraParams.replace(/"/g, '');
     getChartData({
       type: cmd[1],
       message,
@@ -269,6 +270,18 @@ const onText = (message, bot) => {
         }});
       },
     });
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

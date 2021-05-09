@@ -7,6 +7,7 @@ const {
   makeEmbed,
   setReplayButton,
   createReactionCallback,
+  isDiscordCommand,
 } = require('./util');
 const USAGEPLAY = '`usage: [!play/!pl] [<name>] [<voiceChannel>/.]`';
 const USAGESKIP = '`usage: [!skip/!s] [<index>]`';
@@ -165,7 +166,7 @@ const playSong = ({ connection, song, message }) => {
       });
     });
   });
-  dispatch.on('finish', (reason) => {
+  dispatch.on('finish', () => {
     const nextSong = dequeue();
     if (nextSong && currentChannel
     && nextSong.channel.id === currentChannel.id) {
@@ -277,7 +278,7 @@ const skip = ({ number, guild, author, channel }) => {
  * the command
  */
 const queue = (message) => {
-  let response = '\`\`\`\n';
+  let response = '```\n';
   if (currentSong && currentChannel) {
     response += `Currently playing ${currentSong} to ${currentChannel.name}.\n`;
   }
@@ -285,7 +286,7 @@ const queue = (message) => {
     let song = playingQueue[i];
     response += `${i}. ${song.name} to ${song.channel.name}\n`;
   }
-  response += '\`\`\`';
+  response += '```';
   message.channel.send(response);
 };
 
@@ -395,7 +396,7 @@ const play = ({ channel, media, message, author }) => {
   }
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!play' || botCommand === '!pl') {
@@ -430,6 +431,18 @@ const onText = (message) => {
       channel: message.channel,
       author: message.author,
     });
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

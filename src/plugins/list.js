@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const cronstrue = require('cronstrue/i18n');
-const { PATH, EMOJI_REGEX, sendTextBlock } = require('./util');
+const { PATH, EMOJI_REGEX, sendTextBlock, isDiscordCommand } = require('./util');
 const USAGE = '`usage: [!list/!l] [image/music/text/emoji]`';
 
 /**
@@ -130,7 +130,7 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
   sendTextBlock({text: response, message, page});
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -151,6 +151,18 @@ const onText = (message, bot) => {
       page,
       bot,
     });
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
   }
 };
 

@@ -1,6 +1,13 @@
 'use strict';
 const fs = require('fs');
-const { PATH, EMOJI_PATH, removeJson, makeEmbed, splitArgsWithQuotes } = require('./util');
+const {
+  PATH,
+  EMOJI_PATH,
+  removeJson,
+  makeEmbed,
+  splitArgsWithQuotes,
+  isDiscordCommand,
+} = require('./util');
 const USAGE = '`usage: [!remove/!r] "<name>"`';
 
 /**
@@ -61,16 +68,28 @@ const remove = ({ fileName, message, emojis, cb }) => {
   }
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
 
   if (botCommand === '!remove' || botCommand === '!r') {
     // Delete any stored reactions
-    const fileName = (cmd[1] || '').replace(/\"/g, '');
+    const fileName = (cmd[1] || '').replace(/"/g, '');
     remove({ fileName, message, emojis: bot.emojiTriggers, cb: () => {
       bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
     }});
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
   }
 };
 

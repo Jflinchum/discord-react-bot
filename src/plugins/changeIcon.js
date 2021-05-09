@@ -1,6 +1,6 @@
 'use strict';
 const validUrl = require('valid-url');
-const { isAdmin } = require('./util');
+const { isAdmin, isDiscordCommand } = require('./util');
 const USAGE = '`usage: !changeIcon [url/attachment]`';
 
 const reasonMessage = (message) => {
@@ -10,7 +10,7 @@ const reasonMessage = (message) => {
   return `${displayName} changed the guild icon with bot.`;
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!changeIcon') {
@@ -32,6 +32,18 @@ const onText = (message) => {
     } else {
       message.channel.send('`!changeIcon requires admin rights`');
     }
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

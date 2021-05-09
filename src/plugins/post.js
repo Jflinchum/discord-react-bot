@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
 const { MessageAttachment } = require('discord.js');
-const { PATH, COLOR, makeEmbed } = require('./util');
+const { PATH, COLOR, makeEmbed, isDiscordCommand } = require('./util');
 const USAGE = '`usage: [!post/!p] <name>`';
 
 /**
@@ -14,7 +14,7 @@ const USAGE = '`usage: [!post/!p] <name>`';
  * the command
  * @param {Object} bot - The Discord Client object that represents the bot
  */
-const post = (fileName, message, bot) => {
+const post = (fileName, message) => {
   // Posting files
   message.delete();
   const files = fs.readdirSync(PATH);
@@ -110,7 +110,7 @@ const post = (fileName, message, bot) => {
   }
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!post' || botCommand === '!p') {
@@ -122,6 +122,18 @@ const onText = (message, bot) => {
     }
 
     post(fileName, message, bot);
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
   }
 };
 

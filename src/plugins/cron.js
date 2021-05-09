@@ -10,6 +10,7 @@ const {
   formatEscapedDates,
   getDiscordId,
   splitArgsWithQuotes,
+  isDiscordCommand,
 } = require('./util');
 const ADDUSAGE = '`usage: !addCron <name> <#channel> <"message"> <cronSyntax>`';
 // Cron Time Params
@@ -209,7 +210,7 @@ const formatCmd = (cmd) => {
   return { name, channel, content, cron };
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
 
@@ -232,6 +233,18 @@ const onText = (message, bot) => {
   } else if (botCommand === '!removeCron') {
     // i.e !removeCron [name]
     removeCron({ name: cmd[1], bot, message });
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
   }
 };
 

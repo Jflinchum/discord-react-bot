@@ -1,7 +1,7 @@
 'use strict';
 const ROLL_USAGE = '`usage: !roll <amount> d<sides>`';
 const MAX_DICE = 20;
-const { setReplayButton } = require('./util');
+const { setReplayButton, isDiscordCommand } = require('./util');
 
 const parseSides = (sides) => {
   if (sides[0] === 'd') {
@@ -48,8 +48,7 @@ const roll = (amount, sides, message) => {
   });
 };
 
-
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!roll') {
@@ -60,6 +59,18 @@ const onText = (message) => {
     const amount = cmd[1];
     const sides = cmd[2];
     roll(parseInt(amount, 10), parseSides(sides), message);
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

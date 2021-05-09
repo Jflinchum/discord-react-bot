@@ -6,6 +6,7 @@ const {
   getJson,
   getDiscordId,
   setReplayButton,
+  isDiscordCommand,
 } = require('./util');
 const USAGE = '`usage: !pat <@person>`';
 
@@ -60,7 +61,7 @@ const pat = (userId, message, bot) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-const printPats = (message, bot) => {
+const printPats = (message) => {
   message.delete();
   getJson({
     path: DATA_PATH,
@@ -80,7 +81,7 @@ const printPats = (message, bot) => {
   });
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -97,6 +98,18 @@ const onText = (message, bot) => {
     pat(person, message, bot);
   } else if (botCommand === '!myPats') {
     printPats(message, bot);
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
   }
 };
 

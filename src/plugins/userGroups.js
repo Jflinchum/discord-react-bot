@@ -5,6 +5,7 @@ const {
   getJson,
   splitArgsWithQuotes,
   sendTextBlock,
+  isDiscordCommand,
 } = require('./util');
 const fs = require('fs');
 
@@ -229,7 +230,7 @@ const renameUserGroup = (oldGroup, newGroup, message) => {
   });
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
 
@@ -245,25 +246,25 @@ const onText = (message, bot) => {
         message.channel.send(ADD_USAGE);
         return;
       }
-      addUserGroup(cmd[2].replace(/\"/g, ''), cmd[3], message);
+      addUserGroup(cmd[2].replace(/"/g, ''), cmd[3], message);
     } else if (userGroupCommand === 'remove') {
       if (cmd.length < 3) {
         message.channel.send(REMOVE_USAGE);
         return;
       }
-      removeUserGroup(cmd[2].replace(/\"/g, ''), message);
+      removeUserGroup(cmd[2].replace(/"/g, ''), message);
     } else if (userGroupCommand === 'sub') {
       if (cmd.length < 3) {
         message.channel.send(SUBSCRIBE_USAGE);
         return;
       }
-      subscribeUserGroup(cmd[2].replace(/\"/g, ''), message);
+      subscribeUserGroup(cmd[2].replace(/"/g, ''), message);
     } else if (userGroupCommand === 'unsub') {
       if (cmd.length < 3) {
         message.channel.send(UNSUBSCRIBE_USAGE);
         return;
       }
-      unsubscribeUserGroup(cmd[2].replace(/\"/g, ''), message);
+      unsubscribeUserGroup(cmd[2].replace(/"/g, ''), message);
     } else if (userGroupCommand === 'list') {
       const page = cmd[2];
       listUserGroups(message, page);
@@ -272,8 +273,20 @@ const onText = (message, bot) => {
         message.channel.send(RENAME_USAGE);
         return;
       }
-      renameUserGroup(cmd[2].replace(/\"/g, ''), cmd[3].replace(/\"/g, ''), message);
+      renameUserGroup(cmd[2].replace(/"/g, ''), cmd[3].replace(/"/g, ''), message);
     }
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
   }
 };
 

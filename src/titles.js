@@ -53,7 +53,7 @@ const checkProgressAndAward = ({
           progress++;
         }
         // Check if the user has the role assigned to them
-        const hasRole = guild.member(user.id).roles.cache.filter(
+        const hasRole = guild?.member?.(user.id)?.roles?.cache?.filter(
           role => role.name === achievementLabel
         ).first();
 
