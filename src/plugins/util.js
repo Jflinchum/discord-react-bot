@@ -38,7 +38,7 @@ const config = require('./../../config.json');
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon }) => {
-  let returnMessage = new MessageEmbed()
+  let returnMessage = new MessageEmbed();
   returnMessage.setThumbnail(user.displayAvatarURL({ dynamic: true }));
   returnMessage.setColor(color || COLOR);
   returnMessage.setDescription(message);
@@ -57,24 +57,14 @@ const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbedNoUser = ({ message, title, thumbnail, footerText }) => {
-  let embed = {
-    color: COLOR,
-    description: message,
-    author: {
-      name: title,
-    },
-    footer: {
-      text: footerText,
-    },
-  };
-  if (thumbnail && validUrl.isUri(thumbnail)) {
-    embed.thumbnail = {
-      url: `${thumbnail}`,
-    };
-  }
-  return {
-    embed,
-  };
+  let returnMessage = new MessageEmbed();
+  returnMessage.setColor(COLOR);
+  returnMessage.setDescription(message);
+  returnMessage.setAuthor(title);
+  returnMessage.setFooter(footerText || '');
+  if (thumbnail && validUrl.isUri(thumbnail))
+    returnMessage.setThumbnail(thumbnail);
+  return returnMessage;
 };
 
 /**

@@ -30,6 +30,7 @@ const commandData = [
   ...require('./play').commandData,
   ...require('./rename').commandData,
   ...require('./list').commandData,
+  ...require('./markov').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
