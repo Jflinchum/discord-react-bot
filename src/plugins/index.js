@@ -31,6 +31,7 @@ const commandData = [
   ...require('./rename').commandData,
   ...require('./list').commandData,
   ...require('./markov').commandData,
+  ...require('./remove').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };

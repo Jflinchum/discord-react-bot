@@ -194,7 +194,7 @@ const commandData = [
             value: 'image'
           },
           {
-            name: 'Sound Clips',
+            name: 'Music/Sound Clips',
             value: 'music'
           },
           {
