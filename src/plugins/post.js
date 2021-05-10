@@ -70,7 +70,7 @@ const post = (fileName, message) => {
       Send the embeded message style. This work around is because text to
       speech does not work on embeded messages.
     */
-    replyFunction(text, {
+    message.channel.send(text, {
       tts: true,
     })
       .then(msg => {

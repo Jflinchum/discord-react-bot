@@ -19,7 +19,7 @@ const USAGE = '`usage: !pat <@person>`';
  * the command
  */
 const pat = (userId, message, bot) => {
-  const author = message?.author || message?.user
+  const author = message?.author || message?.user;
   const patJson = {
     date: new Date(),
     patronId: author.id,

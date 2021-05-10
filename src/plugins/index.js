@@ -33,6 +33,7 @@ const commandData = [
   ...require('./markov').commandData,
   ...require('./remove').commandData,
   ...require('./changeIcon').commandData,
+  ...require('./append').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
