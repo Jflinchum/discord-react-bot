@@ -368,7 +368,7 @@ const commandData = [
       },
     ],
   },
-]
+];
 
 module.exports = {
   markovUser,

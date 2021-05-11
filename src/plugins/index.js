@@ -35,6 +35,7 @@ const commandData = [
   ...require('./changeIcon').commandData,
   ...require('./append').commandData,
   ...require('./set').commandData,
+  ...require('./cron').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
