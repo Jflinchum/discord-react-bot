@@ -62,7 +62,7 @@ const dequeue = () => {
  */
 const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
   let replyFunction = getReplyFunction(message);
-  if (!message.deleted && !message?.isCommand())
+  if (!message.deleted && !isDiscordCommand(message) && !message.interaction)
     message.delete();
   if (!currentSong) {
     currentSong = name;
@@ -120,7 +120,6 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
  * the command
  */
 const playSong = ({ connection, song, message }) => {
-  const author = message?.author || message?.user
   let replyFunction = getReplyFunction(message);
   // On connecting to a voice channel, play the youtube stream
   const dispatch = connection.play(song.media, { volume: 0.3 });
@@ -129,14 +128,13 @@ const playSong = ({ connection, song, message }) => {
       message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
       user: song.author,
       member: message.guild.members.cache.get(song.author.id).displayName,
-      footerText: message.content,
-      color: message.guild.members.cache.get(author.id).displayColor,
+      footerText: message.content || `!play ${song.name} ${song.channel.name}`,
+      color: message.guild.members.cache.get(song.author.id).displayColor,
     })
   ).then((playMessage) => {
     if (!playMessage && isDiscordCommand(message)) {
       message.fetchReply().then((playMessage) => {
         setReplayButton(playMessage, (reaction) => {
-          console.log(message);
           // Set the author to whoever just reacted with the emoji
           const newAuthor = reaction.users.cache.last();
           play({
@@ -158,29 +156,37 @@ const playSong = ({ connection, song, message }) => {
       });
     } else {
       setReplayButton(playMessage, (reaction) => {
-        const cmd = playMessage.content.split(' ');
+        let cmd;
         let media;
         let channel;
-        if (cmd.length <= 2) {
-          // For attachments
-          const attach = playMessage.attachments.array();
-          if (attach.length > 0) {
-            media = attach[0];
-            channel = cmd[1];
+        if (message?.content) {
+          cmd = message.content.split(' ');
+          media;
+          channel;
+          if (cmd.length <= 2) {
+            // For attachments
+            const attach = message.attachments.array();
+            if (attach.length > 0) {
+              media = attach[0];
+              channel = cmd[1];
+            } else {
+              media = cmd[1];
+              cmd.splice(2, cmd.length).join(' ');
+            }
           } else {
             media = cmd[1];
-            cmd.splice(2, cmd.length).join(' ');
+            channel = cmd.splice(2, cmd.length).join(' ');
           }
         } else {
-          media = cmd[1];
-          channel = cmd.splice(2, cmd.length).join(' ');
+          media = message.options[0].value;
+          channel = message.options[1]?.value;
         }
         // Set the author to whoever just reacted with the emoji
         const newAuthor = reaction.users.cache.last();
         play({
           channel,
           media,
-          playMessage,
+          message,
           author: newAuthor,
         });
       });
@@ -470,7 +476,7 @@ const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'play') {
     const media = interaction.options[0]?.value;
     const channel = interaction.options[1]?.value;
-    play({ channel, media, interaction, author: interaction.user, message: interaction });
+    play({ channel, media, author: interaction.user, message: interaction });
   } else if (interaction.commandName === 'queue') {
     queue(interaction);
   } else if (interaction.commandName === 'skip') {

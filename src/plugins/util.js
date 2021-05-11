@@ -653,11 +653,11 @@ const getNestedProperty = (object, string) => {
 };
 
 const isDiscordCommand = (discordTrigger) => {
-  if (discordTrigger.content) { // Regular discord message (e.x. !help)
+  if (discordTrigger?.content) { // Regular discord message (e.x. !help)
     return false;
   } else if ( // Discord interaction system (e.x. /help)
-    discordTrigger.isCommand
-      && discordTrigger.isCommand()
+    discordTrigger?.isCommand
+      && discordTrigger?.isCommand()
   ) {
     return true;
   }
