@@ -14,12 +14,10 @@ const awardAchievement = ({ user, achievement, rarity, guild, achievementChannel
   // Find the existing role. If it doesn't exist, make it
   if (!achievementRole) {
     guild.roles.create({
-      data: {
-        name: achievement,
-        permissions: [],
-        mentionable: false,
-        color: getRarityColor(rarity),
-      },
+      name: achievement,
+      permissions: [],
+      mentionable: false,
+      color: getRarityColor(rarity),
       reason: `Created by ${user.username}.`,
     }).then((role) => {
       guild.members.cache.get(user.id).roles.add(role);
