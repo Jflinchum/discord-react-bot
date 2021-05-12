@@ -55,8 +55,7 @@ bot.on('ready', () => {
   console.log('Logged in');
   mkdirp.sync(PATH);
 
-  // bot.application.commands.set(commandData);
-  bot.guilds.cache.get('510486742336536589').commands.set(commandData);
+  bot.application.commands.set(commandData);
 
   Object.keys(bot.emojiTriggers).map((triggerWord) => {
     for (let index in bot.emojiTriggers[triggerWord]) {
