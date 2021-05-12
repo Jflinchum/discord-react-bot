@@ -11,6 +11,7 @@ const {
   addJson,
   removeJson,
   DATA_PATH,
+  isDiscordCommand,
 } = require('./../util');
 
 // If modifying these scopes, delete token.json.
@@ -276,7 +277,7 @@ const createUpdateInterval = (bot) => {
                 path: DATA_PATH,
                 key: 'events.discordTriggered',
                 cb: (triggeredEvents) => {
-                  storedEvents.map((storedEvent, i) => {
+                  storedEvents.map((storedEvent) => {
                     let eventTriggered;
                     if (triggeredEvents) {
                       eventTriggered = triggeredEvents.find(
@@ -640,18 +641,30 @@ const getCredsAndAuth = (cb) => {
   }
 };
 
-const onText = (message, bot) => {
+const handleDiscordCommand = (interaction) => {
+
+};
+
+const handleDiscordMessage = (message, bot) => {
+  if (message.content.split(' ')[0] === '!events') {
+    getCredsAndAuth((auth) => listEvents(auth, message));
+  } else if (message.content.split(' ')[0] === '!remindMe') {
+    getCredsAndAuth((auth) => addReminder(auth, message));
+  } else if (message.content.split(' ')[0] === '!reminders') {
+    getCredsAndAuth((auth) => getReminder(auth, message));
+  } else if (message.content.split(' ')[0] === '!clearReminders') {
+    getCredsAndAuth((auth) => clearReminder(auth, message));
+  } else if (message.content.split(' ')[0] === '!attendance') {
+    getCredsAndAuth((auth) => getAttendance(auth, message, bot));
+  }
+}
+
+const onText = (discordTrigger, bot) => {
   if (config.googleAPIEnabled) {
-    if (message.content.split(' ')[0] === '!events') {
-      getCredsAndAuth((auth) => listEvents(auth, message));
-    } else if (message.content.split(' ')[0] === '!remindMe') {
-      getCredsAndAuth((auth) => addReminder(auth, message));
-    } else if (message.content.split(' ')[0] === '!reminders') {
-      getCredsAndAuth((auth) => getReminder(auth, message));
-    } else if (message.content.split(' ')[0] === '!clearReminders') {
-      getCredsAndAuth((auth) => clearReminder(auth, message));
-    } else if (message.content.split(' ')[0] === '!attendance') {
-      getCredsAndAuth((auth) => getAttendance(auth, message, bot));
+    if (isDiscordCommand(discordTrigger)) {
+      handleDiscordCommand(discordTrigger, bot);
+    } else {
+      handleDiscordMessage(discordTrigger, bot);
     }
   }
 };
