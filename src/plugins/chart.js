@@ -1,5 +1,6 @@
 'use strict';
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
+const { MessageEmbed } = require('discord.js');
 const {
   COLOR,
   COLOR_FORMATTED,
@@ -7,6 +8,7 @@ const {
   DATA_PATH,
   splitArgsWithQuotes,
   isDiscordCommand,
+  getReplyFunction,
 } = require('./util');
 const achievements = require('./../../achievements') || {};
 const { getRarityColor } = require('./../titles');
@@ -33,7 +35,7 @@ const mapMemberNamesToData = ({ userIds, dataset, valueFunc, guild, cb }) => {
   for (let i = 0; i < userIds.length; i++) {
     promiseArray.push(new Promise((resolve) => {
       const userId = userIds[i];
-      guild.members.cache.gets.fetch(userId).then((member) => {
+      guild.members.fetch(userId).then((member) => {
         if (member) {
           return resolve({
             key: member.displayName,
@@ -120,7 +122,7 @@ const getRarityData = ({ userId, cb = () => {} }) => {
         epic: 0,
         rare: 0,
       };
-      const userAchievementData = achievementData[userId];
+      const userAchievementData = achievementData[userId] || {};
       // AchievementData is an object with userIds mapped to achievements gained
       Object.keys(userAchievementData).forEach((achievement) => {
         const achievementObject = achievements[achievement];
@@ -171,18 +173,29 @@ const getPatronData = ({ guild, userId, cb }) => {
 };
 
 const getChartData = ({ type, message, param, guild, cb = () => {} }) => {
+  const author = message?.author || message?.user
   switch (type) {
     case 'pats':
       return getPatData(guild, cb);
     case 'achievements':
       return getAchievementData({ guild, achievement: param, cb });
     case 'rarities':
-      const rarityFirstMention = message.mentions.members.first();
-      const rarityUserId = rarityFirstMention && rarityFirstMention.id || message.author.id;
+      let rarityMention;
+      if (isDiscordCommand(message)) {
+        rarityMention = message.guild.members.cache.get(param);
+      } else {
+        rarityMention = message.mentions.members.first();
+      }
+      const rarityUserId = rarityMention && rarityMention.id || author.id;
       return getRarityData({ guild, userId: rarityUserId, cb });
     case 'patrons':
-      const patronFirstMention = message.mentions.members.first();
-      const patronUserId = patronFirstMention && patronFirstMention.id || message.author.id;
+      let patronMention;
+      if (isDiscordCommand(message)) {
+        patronMention = message.guild.members.cache.get(param);
+      } else {
+        patronMention = message.mentions.members.first();
+      }
+      const patronUserId = patronMention && patronMention.id || author.id;
       return getPatronData({ guild, userId: patronUserId, cb });
   }
   return cb();
@@ -224,6 +237,39 @@ const generateChart = ({ chartTitle, chartData, cb = () => {} }) => {
     });
 };
 
+const generateChartAndReply = (type, param, message) => {
+  const author = message?.author || message?.user
+  let replyFunction = getReplyFunction(message);
+  getChartData({
+    type,
+    message,
+    param,
+    guild: message.guild,
+    cb: (chartData) => {
+      if (!chartData) {
+        replyFunction(USAGE);
+        return;
+      }
+      const chartTitle = type.charAt(0).toUpperCase() + type.slice(1);
+      generateChart({ chartTitle, chartData, cb: (chartImage) => {
+        if (!isDiscordCommand(message))
+          message.delete();
+        let embedMessage = new MessageEmbed();
+        embedMessage.setThumbnail(author.displayAvatarURL({ dynamic: true }));
+        embedMessage.setColor(message.guild.members.cache.get(author.id).displayColor || COLOR);
+        embedMessage.setAuthor(message.guild.members.cache.get(author.id).displayName);
+        embedMessage.setFooter(message?.cleanContent || `!chart ${type} ${param}`);
+        embedMessage.attachFiles([{
+          attachment: chartImage,
+          name: `${type}.png`,
+        }]);
+        // Send the attachment
+        replyFunction(embedMessage);
+      }});
+    },
+  });
+}
+
 const handleDiscordMessage = (message) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
@@ -235,46 +281,17 @@ const handleDiscordMessage = (message) => {
     }
     let extraParams = cmd.length > 2 ? cmd[2] : '';
     extraParams = extraParams.replace(/"/g, '');
-    getChartData({
-      type: cmd[1],
-      message,
-      param: extraParams,
-      guild: message.guild,
-      cb: (chartData) => {
-        if (!chartData) {
-          message.channel.send(USAGE);
-          return;
-        }
-        const chartTitle = cmd[1].charAt(0).toUpperCase() + cmd[1].slice(1);
-        generateChart({ chartTitle, chartData, cb: (chartImage) => {
-          message.delete();
-          // Send the attachment
-          message.channel.send({
-            embed: {
-              thumbnail: {
-                url: `${message.author.displayAvatarURL({ dynamic: true })}`,
-              },
-              color: message.guild.members.cache.get(message.author.id).displayColor || COLOR,
-              author: {
-                name: message.guild.members.cache.get(message.author.id).displayName,
-              },
-              footer: {
-                text: message.cleanContent,
-              },
-            },
-            files: [{
-              attachment: chartImage,
-              name: `${cmd[1]}.png`,
-            }],
-          });
-        }});
-      },
-    });
+    generateChartAndReply(cmd[1], extraParams, message);
   }
 };
 
-const handleDiscordCommand = () => {
-
+const handleDiscordCommand = (interaction) => {
+  interaction.defer();
+  if (interaction.commandName === 'chart') {
+    const subCommandName = interaction.options[0]?.name;
+    const subCommandOptions = interaction.options[0]?.options;
+    generateChartAndReply(subCommandName, subCommandOptions?.[0]?.value || '', interaction)
+  }
 };
 
 const onText = (discordTrigger) => {
@@ -285,6 +302,60 @@ const onText = (discordTrigger) => {
   }
 };
 
+const commandData = [
+  {
+    name: 'chart',
+    description: 'Displays charts and graphs of stored data.',
+    options: [
+      {
+        name: 'pats',
+        type: 'SUB_COMMAND',
+        description: 'Charts out all member\'s and how many pats they have.',
+      },
+      {
+        name: 'patrons',
+        type: 'SUB_COMMAND',
+        description: 'Charts out all member\'s who have patted you or a member you specify.',
+        options: [
+          {
+            name: 'user',
+            description: 'The user you want to specify for the chart.',
+            type: 'USER',
+            required: false,
+          }
+        ]
+      },
+      {
+        name: 'achievements',
+        type: 'SUB_COMMAND',
+        description: 'Charts out members who have earned progress towards an achievement.',
+        options: [
+          {
+            name: 'achievement',
+            description: 'The name of the achievement you want to chart.',
+            type: 'STRING',
+            required: true,
+          }
+        ]
+      },
+      {
+        name: 'rarities',
+        type: 'SUB_COMMAND',
+        description: 'Charts out the different kind of achievement rarities that you or another member has earned.',
+        options: [
+          {
+            name: 'user',
+            description: 'The user you want to specify for the chart.',
+            type: 'USER',
+            required: false,
+          }
+        ]
+      },
+    ],
+  },
+];
+
 module.exports = {
   onText,
+  commandData,
 };

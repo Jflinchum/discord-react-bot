@@ -664,14 +664,15 @@ const isDiscordCommand = (discordTrigger) => {
 };
 
 const getReplyFunction = (message) => {
-  let replyFunction = () => {};
-  if (isDiscordCommand(message) && !message.replied && !message.deferred) {
-    replyFunction = (...args) => message.reply(...args);
-  } else if (isDiscordCommand(message) && message.deferred) {
-    replyFunction = (...args) => message.editReply(...args);
-  } else {
-    replyFunction = (...args) => message.channel.send(...args);
-  }
+  let replyFunction = (...args) => {
+    if (isDiscordCommand(message) && !message.replied && !message.deferred) {
+      return message.reply(...args);
+    } else if (isDiscordCommand(message) && message.deferred) {
+      return message.editReply(...args);
+    } else {
+      return message.channel.send(...args);
+    }
+  };
   return replyFunction;
 }
 

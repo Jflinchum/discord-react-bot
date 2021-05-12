@@ -37,6 +37,7 @@ const commandData = [
   ...require('./set').commandData,
   ...require('./cron').commandData,
   ...require('./userGroups').commandData,
+  ...require('./chart').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
