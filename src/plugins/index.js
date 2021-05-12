@@ -22,4 +22,24 @@ const onTextHooks = [
   require('./chart').onText,
 ];
 
-module.exports = { onTextHooks };
+const commandData = [
+  ...require('./help').commandData,
+  ...require('./pat').commandData,
+  ...require('./roll').commandData,
+  ...require('./post').commandData,
+  ...require('./play').commandData,
+  ...require('./rename').commandData,
+  ...require('./list').commandData,
+  ...require('./markov').commandData,
+  ...require('./remove').commandData,
+  ...require('./changeIcon').commandData,
+  ...require('./append').commandData,
+  ...require('./set').commandData,
+  ...require('./cron').commandData,
+  ...require('./userGroups').commandData,
+  ...require('./chart').commandData,
+  ...require('./trigger').commandData,
+  ...require('./add').commandData,
+];
+
+module.exports = { onTextHooks, commandData };

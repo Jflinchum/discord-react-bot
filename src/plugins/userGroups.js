@@ -5,6 +5,8 @@ const {
   getJson,
   splitArgsWithQuotes,
   sendTextBlock,
+  isDiscordCommand,
+  getReplyFunction,
 } = require('./util');
 const fs = require('fs');
 
@@ -23,23 +25,24 @@ const RENAME_USAGE = '`usage: !userGroup rename "Old Role Name" "New Role Name"`
  * the command
  */
 const addUserGroup = (userGroup, color, message) => {
+  const author = message?.author || message?.user;
+  let replyFunction = getReplyFunction(message);
+  console.log(userGroup);
   getJson({
     path: DATA_PATH,
     key: `userGroupsConfig.${message.guild.id}.userGroups`,
     cb: (userGroups) => {
-      const role = userGroups.filter(e => e.name === userGroup.name);
+      const role = userGroups.filter(e => e.name === userGroup);
       if (role.length > 0) {
-        message.channel.send('User group already created!');
+        replyFunction('User group already created.');
         return;
       }
       message.guild.roles.create({
-        data: {
-          name: userGroup,
-          permissions: [],
-          mentionable: true,
-          color,
-        },
-        reason: `Created by ${message.author.username}.`,
+        name: userGroup,
+        permissions: [],
+        mentionable: true,
+        color,
+        reason: `Created by ${author.username}.`,
       }).then((role) => {
         addJson(({
           path: DATA_PATH,
@@ -49,11 +52,11 @@ const addUserGroup = (userGroup, color, message) => {
             name: role.name,
           },
           cb: () => {
-            message.channel.send(`${userGroup} successfully created!`);
+            replyFunction(`${userGroup} successfully created.`);
           },
         }));
       }).catch((err) => {
-        message.channel.send('Could not create role: ' + err);
+        replyFunction('Could not create role: ' + err);
         console.log(err);
       });
     },
@@ -68,19 +71,21 @@ const addUserGroup = (userGroup, color, message) => {
  * the command
  */
 const removeUserGroup = (userGroup, message) => {
+  const author = message?.author || message?.user;
+  let replyFunction = getReplyFunction(message);
   getJson({
     path: DATA_PATH,
     key: `userGroupsConfig.${message.guild.id}.userGroups`,
     cb: (userGroups) => {
       const roles = userGroups.filter(e => e.name === userGroup);
       if (roles.length === 0) {
-        message.channel.send(`Could not find ${userGroup} in user groups.`);
+        replyFunction(`Could not find ${userGroup} in user groups.`);
         return;
       }
       const role = roles[0];
       const groupsWithoutRole = userGroups.filter(e => e.id !== role.id);
       const discordRole = message.guild.roles.cache.find(e => e.id === role.id);
-      discordRole.delete(`Deleted by ${message.author.username}.`)
+      discordRole.delete(`Deleted by ${author.username}.`)
         .then(() => {
           fs.readFile(DATA_PATH, (err, data) => {
             if (err) {
@@ -91,10 +96,10 @@ const removeUserGroup = (userGroup, message) => {
             data.userGroupsConfig[`${message.guild.id}`].userGroups =
               groupsWithoutRole;
             fs.writeFileSync(DATA_PATH, JSON.stringify(data));
-            message.channel.send(`${discordRole.name} successfully deleted!`);
+            replyFunction(`${discordRole.name} successfully deleted!`);
           });
         }).catch((err) => {
-          message.channel.send('Could not delete the role:' + err);
+          replyFunction('Could not delete the role:' + err);
           console.log(err);
         });
     },
@@ -109,25 +114,26 @@ const removeUserGroup = (userGroup, message) => {
  * the command
  */
 const subscribeUserGroup = (userGroup, message) => {
+  let replyFunction = getReplyFunction(message);
   getJson({
     path: DATA_PATH,
     key: `userGroupsConfig.${message.guild.id}.userGroups`,
     cb: (userGroups) => {
       const role = userGroups.filter(e => e.name === userGroup);
       if (role.length === 0) {
-        message.channel.send('Could not find user group.');
+        replyFunction('Could not find user group.');
         return;
       }
       message.guild.roles.fetch(role[0].id).then((discordRole) => {
         message.member.roles.add(discordRole).then(() => {
-          message.channel.send(`Successfully subscribed to ${role[0].name}!`);
+          replyFunction(`Successfully subscribed to ${role[0].name}!`);
         }).catch((err) => {
-          message.channel.send(`Unable to subscribe to ${role[0].name}`);
+          replyFunction(`Unable to subscribe to ${role[0].name}`);
           console.log(err);
         });
       }).catch((err) => {
         console.log(err);
-        message.channel.send('Could not find discord role.');
+        replyFunction('Could not find discord role.');
       });
     },
   });
@@ -141,25 +147,26 @@ const subscribeUserGroup = (userGroup, message) => {
  * the command
  */
 const unsubscribeUserGroup = (userGroup, message) => {
+  let replyFunction = getReplyFunction(message);
   getJson({
     path: DATA_PATH,
     key: `userGroupsConfig.${message.guild.id}.userGroups`,
     cb: (userGroups) => {
       const role = userGroups.filter(e => e.name === userGroup);
       if (role.length === 0) {
-        message.channel.send('Could not find user group.');
+        replyFunction('Could not find user group.');
         return;
       }
       message.guild.roles.fetch(role[0].id).then((discordRole) => {
         message.member.roles.remove(discordRole).then(() => {
-          message.channel.send(`Successfully unsubscribed to ${role[0].name}!`);
+          replyFunction(`Successfully unsubscribed to ${role[0].name}!`);
         }).catch((err) => {
-          message.channel.send(`Unable to unsubscribe to ${role[0].name}`);
+          replyFunction(`Unable to unsubscribe to ${role[0].name}`);
           console.log(err);
         });
       }).catch((err) => {
         console.log(err);
-        message.channel.send('Could not find discord role.');
+        replyFunction('Could not find discord role.');
       });
     },
   });
@@ -185,19 +192,20 @@ const listUserGroups = (message, page) => {
       } else {
         userGroupList = 'No user groups configured!';
       }
-      sendTextBlock({text: userGroupList, message, page});
+      sendTextBlock({ text: userGroupList, message, page });
     },
   });
 };
 
 const renameUserGroup = (oldGroup, newGroup, message) => {
+  let replyFunction = getReplyFunction(message);
   getJson({
     path: DATA_PATH,
     key: `userGroupsConfig.${message.guild.id}.userGroups`,
     cb: (userGroups) => {
       const role = userGroups.filter(e => e.name === oldGroup);
       if (role.length === 0) {
-        message.channel.send('Could not find user group to rename.');
+        replyFunction('Could not find user group to rename.');
         return;
       }
       message.guild.roles.fetch(role[0].id).then((discordRole) => {
@@ -215,21 +223,21 @@ const renameUserGroup = (oldGroup, newGroup, message) => {
               }
             });
             fs.writeFileSync(DATA_PATH, JSON.stringify(data));
-            message.channel.send(`Successfully renamed ${oldGroup} to ${newGroup}!`);
+            replyFunction(`Successfully renamed ${oldGroup} to ${newGroup}!`);
           });
         }).catch((err) => {
-          message.channel.send(`Unable to rename ${oldGroup}`);
+          replyFunction(`Unable to rename ${oldGroup}`);
           console.log(err);
         });
       }).catch((err) => {
         console.log(err);
-        message.channel.send('Could not find discord role.');
+        replyFunction('Could not find discord role.');
       });
     },
   });
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
 
@@ -245,25 +253,25 @@ const onText = (message, bot) => {
         message.channel.send(ADD_USAGE);
         return;
       }
-      addUserGroup(cmd[2].replace(/\"/g, ''), cmd[3], message);
+      addUserGroup(cmd[2].replace(/"/g, ''), cmd[3], message);
     } else if (userGroupCommand === 'remove') {
       if (cmd.length < 3) {
         message.channel.send(REMOVE_USAGE);
         return;
       }
-      removeUserGroup(cmd[2].replace(/\"/g, ''), message);
+      removeUserGroup(cmd[2].replace(/"/g, ''), message);
     } else if (userGroupCommand === 'sub') {
       if (cmd.length < 3) {
         message.channel.send(SUBSCRIBE_USAGE);
         return;
       }
-      subscribeUserGroup(cmd[2].replace(/\"/g, ''), message);
+      subscribeUserGroup(cmd[2].replace(/"/g, ''), message);
     } else if (userGroupCommand === 'unsub') {
       if (cmd.length < 3) {
         message.channel.send(UNSUBSCRIBE_USAGE);
         return;
       }
-      unsubscribeUserGroup(cmd[2].replace(/\"/g, ''), message);
+      unsubscribeUserGroup(cmd[2].replace(/"/g, ''), message);
     } else if (userGroupCommand === 'list') {
       const page = cmd[2];
       listUserGroups(message, page);
@@ -272,11 +280,147 @@ const onText = (message, bot) => {
         message.channel.send(RENAME_USAGE);
         return;
       }
-      renameUserGroup(cmd[2].replace(/\"/g, ''), cmd[3].replace(/\"/g, ''), message);
+      renameUserGroup(cmd[2].replace(/"/g, ''), cmd[3].replace(/"/g, ''), message);
     }
   }
 };
 
+const handleDiscordCommand = (interaction) => {
+  if (interaction.commandName === 'user_group') {
+    const subCommandName = interaction.options[0]?.name;
+    const subCommandOptions = interaction.options[0]?.options;
+    if (subCommandName === 'list') {
+      const page = subCommandOptions?.[0]?.value;
+      listUserGroups(interaction, page);
+    } else if (subCommandName === 'add') {
+      const name = subCommandOptions?.[0]?.value;
+      const colorCode = subCommandOptions?.[1]?.value;
+      addUserGroup(name, colorCode, interaction);
+    } else if (subCommandName === 'remove') {
+      const name = subCommandOptions?.[0]?.value;
+      removeUserGroup(name, interaction);
+    } else if (subCommandName === 'sub') {
+      const name = subCommandOptions?.[0]?.value;
+      subscribeUserGroup(name, interaction);
+    } else if (subCommandName === 'unsub') {
+      const name = subCommandOptions?.[0]?.value;
+      unsubscribeUserGroup(name, interaction);
+    } else if (subCommandName === 'rename') {
+      const oldName = subCommandOptions?.[0]?.value;
+      const newName = subCommandOptions?.[1]?.value;
+      renameUserGroup(oldName, newName, interaction);
+    }
+  }
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
+  }
+};
+
+const commandData = [
+  {
+    name: 'user_group',
+    description: 'Manages user groups for the guild.',
+    options: [
+      {
+        name: 'list',
+        type: 'SUB_COMMAND',
+        description: 'Lists out all user groups for the guild.',
+        options: [
+          {
+            name: 'page',
+            description: 'The page of the user group list.',
+            type: 'INTEGER',
+            required: false,
+          },
+        ],
+      },
+      {
+        name: 'add',
+        type: 'SUB_COMMAND',
+        description: 'Add a user group to the guild.',
+        options: [
+          {
+            name: 'name',
+            description: 'The name of the user group. Creates a role under this name.',
+            type: 'STRING',
+            required: true,
+          },
+          {
+            name: 'color_code',
+            type: 'STRING',
+            description: 'The color of the user group. (i.e. FFFFFF)',
+            required: false,
+          }
+        ]
+      },
+      {
+        name: 'remove',
+        type: 'SUB_COMMAND',
+        description: 'Removes a user group from the guild.',
+        options: [
+          {
+            name: 'name',
+            description: 'The name of the user group you want to remove.',
+            type: 'STRING',
+            required: true,
+          }
+        ]
+      },
+      {
+        name: 'sub',
+        type: 'SUB_COMMAND',
+        description: 'Subscibes yourself to a user group.',
+        options: [
+          {
+            name: 'name',
+            description: 'The name of the user group you want to subscribe to.',
+            type: 'STRING',
+            required: true,
+          }
+        ]
+      },
+      {
+        name: 'unsub',
+        type: 'SUB_COMMAND',
+        description: 'Unsubscribes you from a user group.',
+        options: [
+          {
+            name: 'name',
+            description: 'The name of the user group you want to unsubscribe to.',
+            type: 'STRING',
+            required: true,
+          }
+        ]
+      },
+      {
+        name: 'rename',
+        type: 'SUB_COMMAND',
+        description: 'Renames a user group.',
+        options: [
+          {
+            name: 'old_name',
+            description: 'The current name of the user group that you want to rename.',
+            type: 'STRING',
+            required: true,
+          },
+          {
+            name: 'new_name',
+            type: 'STRING',
+            description: 'The new name of the user group.',
+            required: true,
+          }
+        ]
+      },
+    ],
+  },
+];
+
 module.exports = {
   onText,
+  commandData,
 };

@@ -10,6 +10,8 @@ const {
   formatEscapedDates,
   getDiscordId,
   splitArgsWithQuotes,
+  isDiscordCommand,
+  getReplyFunction,
 } = require('./util');
 const ADDUSAGE = '`usage: !addCron <name> <#channel> <"message"> <cronSyntax>`';
 // Cron Time Params
@@ -89,14 +91,17 @@ const addCron = ({
   guildId,
   bot,
   message,
+  messageId,
 }) => {
+  const author = message?.author || message?.user;
+  let replyFunction = getReplyFunction(message);
   if (!cron.validate(cronTime)) {
-    message.channel.send('`Invalid cron syntax`');
+    replyFunction('`Invalid cron syntax`');
     return;
   }
   const guild = bot.guilds.cache.get(guildId);
   const messageRef = {
-    messageId: message.id,
+    messageId,
     channelId: message.channel.id,
   };
   if (guild.channels.cache.get(channel)) {
@@ -105,7 +110,7 @@ const addCron = ({
       key: name,
       cb: (value) => {
         if (value) {
-          message.channel.send('Cron name already exists.');
+          replyFunction('Cron name already exists.');
           return;
         } else {
           addJson({
@@ -155,12 +160,12 @@ const addCron = ({
               } else {
                 bot.cronJobs[name] = [newJob];
               }
-              message.channel.send(
+              replyFunction(
                 makeEmbed({
                   message: `Added cron job: ${name}`,
-                  user: message.author,
-                  member: message.guild.member(message.author.id).displayName,
-                  color: message.guild.member(message.author.id).displayColor,
+                  user: author,
+                  member: message.guild.members.cache.get(author.id).displayName,
+                  color: message.guild.members.cache.get(author.id).displayColor,
                 })
               );
             },
@@ -169,11 +174,13 @@ const addCron = ({
       },
     });
   } else {
-    message.channel.send('Could not find channel');
+    replyFunction('Could not find channel');
   }
 };
 
 const removeCron = ({ name, bot, message }) => {
+  const author = message?.author || message?.user;
+  let replyFunction = getReplyFunction(message);
   removeJson({ path: CRON_PATH, key: name, cb: () => {
     const foundJob = bot.cronJobs[name];
     if (foundJob) {
@@ -182,18 +189,20 @@ const removeCron = ({ name, bot, message }) => {
         currJob.cronJob.destroy();
       }
       delete bot.cronJobs[name];
-      message.delete();
-      message.channel.send(
+      if (!isDiscordCommand(message))
+        message.delete();
+      replyFunction(
         makeEmbed({
           message: `Removed cron job: ${name}`,
-          user: message.author,
-          member: message.guild.member(message.author.id).displayName,
-          color: message.guild.member(message.author.id).displayColor,
+          user: author,
+          member: message.guild.members.cache.get(author.id).displayName,
+          color: message.guild.members.cache.get(author.id).displayColor,
         })
       );
     } else {
-      message.delete();
-      message.channel.send('Could not find cron job');
+      if (!isDiscordCommand(message))
+        message.delete();
+      replyFunction('Could not find cron job');
     }
   }});
 };
@@ -209,7 +218,7 @@ const formatCmd = (cmd) => {
   return { name, channel, content, cron };
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
 
@@ -228,6 +237,7 @@ const onText = (message, bot) => {
       guildId: message.guild.id,
       bot,
       message,
+      messageId: message.id,
     });
   } else if (botCommand === '!removeCron') {
     // i.e !removeCron [name]
@@ -235,7 +245,98 @@ const onText = (message, bot) => {
   }
 };
 
+const handleDiscordCommand = (interaction, bot) => {
+  if (interaction.commandName === 'cron') {
+    const subCommandName = interaction.options[0]?.name;
+    const subCommandOptions = interaction.options[0]?.options;
+    if (subCommandName === 'add') {
+      const name = subCommandOptions[0]?.value;
+      const channel = subCommandOptions[1]?.value;
+      const content = subCommandOptions[2]?.value;
+      const cronTime = subCommandOptions[3]?.value;
+      interaction.defer();
+      interaction.fetchReply().then((replyMessage) => {
+        addCron({
+          name,
+          channel,
+          content,
+          cronTime,
+          guildId: interaction.guild.id,
+          bot,
+          message: interaction,
+          messageId: replyMessage.id,
+        });
+      });
+    } else if (subCommandName === 'remove') {
+      const name = subCommandOptions[0]?.value;
+      removeCron({ name, bot, message: interaction });
+    }
+  }
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger, bot);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
+  }
+};
+
+const commandData = [
+  {
+    name: 'cron',
+    description: 'Manages cron jobs run by the bot.',
+    options: [
+      {
+        name: 'add',
+        type: 'SUB_COMMAND',
+        description: 'Adds a cron job and runs it based on the time specified.',
+        options: [
+          {
+            name: 'name',
+            description: 'The name of the cron job for reference.',
+            type: 'STRING',
+            required: true,
+          },
+          {
+            name: 'channel',
+            type: 'CHANNEL',
+            description: 'The channel to post to for the cron job.',
+            required: true,
+          },
+          {
+            name: 'message',
+            type: 'STRING',
+            description: 'The message you want the cron job to post.',
+            required: true,
+          },
+          {
+            name: 'cron_syntax',
+            type: 'STRING',
+            description: 'Space separated cron syntax (i.e. 0 5 * * 2).',
+            required: true,
+          },
+        ]
+      },
+      {
+        name: 'remove',
+        type: 'SUB_COMMAND',
+        description: 'Deletes a cron job.',
+        options: [
+          {
+            name: 'name',
+            description: 'The name of the cron that you want to remove.',
+            type: 'STRING',
+            required: true,
+          },
+        ]
+      },
+    ],
+  },
+];
+
 module.exports = {
   onText,
   setUpCronJobs,
+  commandData,
 };

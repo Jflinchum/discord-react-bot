@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { PATH, makeEmbed } = require('./util');
+const { PATH, makeEmbed, isDiscordCommand, getReplyFunction } = require('./util');
 const USAGE = '`usage: [!rename/!rn] <oldName> <newName>`';
 
 /**
@@ -12,7 +12,10 @@ const USAGE = '`usage: [!rename/!rn] <oldName> <newName>`';
  * the command
  */
 const rename = (oldName, newName, message) => {
-  message.delete();
+  const author = message?.author || message?.user
+  let replyFunction = getReplyFunction(message);
+  if (!isDiscordCommand(message))
+    message.delete();
   const files = fs.readdirSync(PATH);
   if (!oldName) {
     message.channel.send(USAGE);
@@ -31,33 +34,33 @@ const rename = (oldName, newName, message) => {
   }
   // If the file does not exist
   if (!oldFile) {
-    message.channel.send(`Could not find ${oldName}.`);
+    replyFunction(`Could not find ${oldName}.`);
     return;
   } else if (newFile) {
     // All files should have unique names
-    message.channel.send('New file name already exists');
+    replyFunction('New file name already exists');
   } else {
     const exten = oldFile.substr(oldFile.lastIndexOf('.') + 1);
     const oldPath = `${PATH}/${oldFile}`;
     const newPath = `${PATH}/${newName}.${exten}`;
     fs.rename(oldPath, newPath, (err) => {
       if (err) {
-        message.channel.send('Could not rename file.');
+        replyFunction('Could not rename file.');
         return;
       }
-      message.channel.send(
+      replyFunction(
         makeEmbed({
           message: `Renamed ${oldName} to ${newName}`,
-          user: message.author,
-          member: message.guild.member(message.author.id).displayName,
-          color: message.guild.member(message.author.id).displayColor,
+          user: author,
+          member: message.guild.members.cache.get(author.id).displayName,
+          color: message.guild.members.cache.get(author.id).displayColor,
         })
       );
     });
   }
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -68,7 +71,45 @@ const onText = (message) => {
   }
 };
 
+const handleDiscordCommand = (interaction) => {
+  if (interaction.commandName === 'rename') {
+    const oldFile = interaction.options[0].value;
+    const newFile = interaction.options[1].value;
+    rename(oldFile, newFile, interaction);
+  }
+};
+
+const commandData = [
+  {
+    name: 'rename',
+    description: 'Renames a stored file.',
+    options: [
+      {
+        name: 'old_name',
+        type: 'STRING',
+        description: 'The current file\'s name.',
+        required: true
+      },
+      {
+        name: 'new_name',
+        type: 'STRING',
+        description: 'What you want to name the file.',
+        required: true
+      }
+    ],
+  }
+];
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
+  }
+};
+
 module.exports = {
   rename,
   onText,
+  commandData,
 };

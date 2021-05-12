@@ -4,7 +4,7 @@
   "description": "A react bot for discord that stores images/audio clips and posts them based off of given trigger words.",
   "main": "index.js",
   "scripts": {
-    "start": "node ./src/index.js",
+    "start": "node ./src/index.js --harmony",
     "lint": "eslint --ignore-path .gitignore .",
     "lint-fix": "eslint --ignore-path .gitignore --fix .",
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,16 +20,16 @@
   },
   "homepage": "https://github.com/Jflinchum/discord-react-bot#readme",
   "devDependencies": {
-    "eslint": "^5.16.0",
+    "eslint": "^7.26.0",
     "eslint-config-strongloop": "^2.1.0"
   },
   "dependencies": {
     "@discordjs/opus": "^0.3.3",
     "chart.js": "^2.9.4",
-    "chartjs-node-canvas": "3.0.6",
+    "chartjs-node-canvas": "^3.1.0",
     "cronstrue": "^1.108.0",
     "discord.io": "^2.5.3",
-    "discord.js": "^12.5.1",
+    "discord.js": "github:discordjs/discord.js#master",
     "fluent-ffmpeg": "^2.1.2",
     "googleapis": "^39.2.0",
     "markovchain": "^1.0.2",

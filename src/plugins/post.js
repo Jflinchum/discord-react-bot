@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs');
-const { MessageAttachment } = require('discord.js');
-const { PATH, COLOR, makeEmbed } = require('./util');
+const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { PATH, COLOR, makeEmbed, isDiscordCommand, getReplyFunction } = require('./util');
 const USAGE = '`usage: [!post/!p] <name>`';
 
 /**
@@ -14,12 +14,16 @@ const USAGE = '`usage: [!post/!p] <name>`';
  * the command
  * @param {Object} bot - The Discord Client object that represents the bot
  */
-const post = (fileName, message, bot) => {
+const post = (fileName, message) => {
+  const author = message?.author || message?.user
+  let replyFunction = getReplyFunction(message);
   // Posting files
-  message.delete();
+  if (!isDiscordCommand(message)) {
+    message.delete();
+  }
   const files = fs.readdirSync(PATH);
   if (!fileName) {
-    message.channel.send(USAGE);
+    replyFunction(USAGE);
     return;
   }
   let file;
@@ -32,7 +36,7 @@ const post = (fileName, message, bot) => {
     }
   }
   if (!file) {
-    message.channel.send(`Could not find ${fileName}.`);
+    replyFunction(`Could not find ${fileName}.`);
     return;
   }
 
@@ -40,22 +44,22 @@ const post = (fileName, message, bot) => {
   // If we're not streaming to a voice channel, post the attachment
   const attach = new MessageAttachment(`${PATH}/${file}`);
   if (!attach) {
-    message.channel.send(`Could not find ${fileName}.`);
+    replyFunction(`Could not find ${fileName}.`);
     return;
   }
   if (exten === 'mp3' || exten === 'wav') {
     // Audio files don't work with embeded messages, so send the attachments
     // afterwards
-    message.channel.send(
+    replyFunction(
       makeEmbed({
         message: fileName,
-        user: message.author,
-        member: message.guild.member(message.author.id).displayName,
+        user: author,
+        member: message.guild.members.cache.get(author.id).displayName,
         footerText: message.content,
-        color: message.guild.member(message.author.id).displayColor,
+        color: message.guild.members.cache.get(author.id).displayColor,
       })
     ).catch(() => {
-      message.channel.send('Could not find user posting.');
+      replyFunction('Could not find user posting.');
     });
     message.channel.send(attach);
   } else if (exten === 'txt') {
@@ -70,47 +74,44 @@ const post = (fileName, message, bot) => {
       tts: true,
     })
       .then(msg => {
-        msg.delete();
-        message.channel.send(
+        if (msg) {
+          msg.delete();
+        }
+        replyFunction(
           makeEmbed({
             message: text.toString(),
-            user: message.author,
-            member: message.guild.member(message.author.id).displayName,
+            user: author,
+            member: message.guild.members.cache.get(author.id).displayName,
             footerText: message.content,
-            color: message.guild.member(message.author.id).displayColor,
+            color: message.guild.members.cache.get(author.id).displayColor,
           })
         );
       });
   } else {
-    // Send the attachment
-    message.channel.send({
-      embed: {
-        thumbnail: {
-          url: `${message.author.displayAvatarURL({ dynamic: true })}`,
-        },
-        image: {
-          url: `attachment://${file}`,
-        },
-        color: message.guild.member(message.author.id).displayColor || COLOR,
-        author: {
-          name: message.guild.member(message.author.id).displayName,
-        },
-        footer: {
-          text: message.cleanContent,
-        },
-      },
-      files: [{
-        attachment: `${PATH}/${file}`,
-        name: file,
-      }],
-    })
-      .catch(() => {
-        message.channel.send('Could not find user posting.');
-      });
+    let messageEmbed = new MessageEmbed();
+    messageEmbed.setThumbnail(author.displayAvatarURL({ dynamic: true }))
+    messageEmbed.setImage(`attachment://${file}`);
+    messageEmbed.setColor(message.guild.members.cache.get(author.id).displayColor || COLOR);
+    messageEmbed.setAuthor(message.guild.members.cache.get(author.id).displayName);
+    messageEmbed.setFooter(message.cleanContent || '');
+    messageEmbed.attachFiles([{
+      attachment: `${PATH}/${file}`,
+      name: file,
+    }]);
+    if (message?.isCommand?.()) {
+      message.defer();
+      message.editReply(messageEmbed);
+    } else {
+      // Send the attachment
+      replyFunction(messageEmbed)
+        .catch(() => {
+          replyFunction('Could not find user posting.');
+        });
+    }
   }
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!post' || botCommand === '!p') {
@@ -125,7 +126,38 @@ const onText = (message, bot) => {
   }
 };
 
+const handleDiscordCommand = (interaction, bot) => {
+  if (interaction.commandName === 'post') {
+    const fileName = interaction.options[0].value;
+    post(fileName, interaction, bot);
+  }
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger, bot);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
+  }
+};
+
+const commandData = [
+  {
+    name: 'post',
+    description: 'Post a file to the current channel',
+    options: [
+      {
+        name: 'file_name',
+        type: 'STRING',
+        description: 'The name of the file you want to post',
+        required: true,
+      }
+    ],
+  }
+];
+
 module.exports = {
   post,
   onText,
+  commandData,
 };

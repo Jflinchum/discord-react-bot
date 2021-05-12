@@ -5,6 +5,7 @@ const ytdl = require('ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const validUrl = require('valid-url');
+const { MessageEmbed } = require('discord.js');
 
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
@@ -37,24 +38,12 @@ const config = require('./../../config.json');
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon }) => {
-  let returnMessage = {
-    embed: {
-      thumbnail: {
-        url: `${user.displayAvatarURL({ dynamic: true })}`,
-      },
-      color: color || COLOR,
-      description: message,
-      author: {
-        name: title || member || user.username,
-      },
-      footer: {
-        text: footerText,
-      },
-    },
-  };
-  if (authorIcon) {
-    returnMessage.embed.author.icon_url = authorIcon;
-  }
+  let returnMessage = new MessageEmbed();
+  returnMessage.setThumbnail(user.displayAvatarURL({ dynamic: true }));
+  returnMessage.setColor(color || COLOR);
+  returnMessage.setDescription(message);
+  returnMessage.setAuthor(title || member || user.username, authorIcon);
+  returnMessage.setFooter(footerText || '');
   return returnMessage;
 };
 
@@ -68,24 +57,14 @@ const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbedNoUser = ({ message, title, thumbnail, footerText }) => {
-  let embed = {
-    color: COLOR,
-    description: message,
-    author: {
-      name: title,
-    },
-    footer: {
-      text: footerText,
-    },
-  };
-  if (thumbnail && validUrl.isUri(thumbnail)) {
-    embed.thumbnail = {
-      url: `${thumbnail}`,
-    };
-  }
-  return {
-    embed,
-  };
+  let returnMessage = new MessageEmbed();
+  returnMessage.setColor(COLOR);
+  returnMessage.setDescription(message);
+  returnMessage.setAuthor(title);
+  returnMessage.setFooter(footerText || '');
+  if (thumbnail && validUrl.isUri(thumbnail))
+    returnMessage.setThumbnail(thumbnail);
+  return returnMessage;
 };
 
 /**
@@ -108,7 +87,7 @@ const download = ({url, fileName, extension, timeStart, timeStop, cb}) => {
   if (hasFile({fileName})) {
     return cb('File name already exists');
   }
-  request.head(url, (err, res, body) => {
+  request.head(url, (err) => {
     if (err) {
       return cb(err);
     }
@@ -342,7 +321,7 @@ const addText = ({ path, text }) => {
   fs.exists(path, (exists) => {
     if (exists) {
       // Read the file and parse the data
-      fs.readFile(path, (err, data) => {
+      fs.readFile(path, (err) => {
         if (err) console.log('Could not read file: ', err);
         else {
           fs.writeFileSync(path, text);
@@ -426,37 +405,49 @@ const getPaginatedText = ({ text, page }) => {
  * @param {Integer} page - The page for the text
  */
 const sendTextBlock = ({text, message, page = 1}) => {
+  let replyFunction = getReplyFunction(message);
+
   page -= 1;
   const paginatedObject = getPaginatedText({ text, page });
   if (!paginatedObject) {
-    message.channel.send('Could not find page!');
+    replyFunction('Could not find page!');
   } else {
-    message.channel.send('```\n' + paginatedObject.text + '\n```')
+    replyFunction('```\n' + paginatedObject.text + '\n```')
       .then((discordMessage) => {
-        // Left button to see previous page
-        createReactionCallback('⬅️', discordMessage, () => {
-          const newPaginatedObject = getPaginatedText({ text, page: page - 1 });
-          if (newPaginatedObject) {
-            // Update page state
-            page = page - 1;
-            const editedText = '```\n'
-            + newPaginatedObject.text
-            + '\n```';
-            discordMessage.edit(editedText);
-          }
-        });
-        // Right button to see next page
-        createReactionCallback('➡️', discordMessage, () => {
-          const newPaginatedObject = getPaginatedText({ text, page: page + 1 });
-          if (newPaginatedObject) {
-            // Update page state
-            page = page + 1;
-            const editedText = '```\n'
-            + newPaginatedObject.text
-            + '\n```';
-            discordMessage.edit(editedText);
-          }
-        });
+        const createPaginationReactions = (paginationMessage) => {
+          // Left button to see previous page
+          createReactionCallback('⬅️', paginationMessage, () => {
+            const newPaginatedObject = getPaginatedText({ text, page: page - 1 });
+            if (newPaginatedObject) {
+              // Update page state
+              page = page - 1;
+              const editedText = '```\n'
+              + newPaginatedObject.text
+              + '\n```';
+              paginationMessage.edit(editedText);
+            }
+          });
+          // Right button to see next page
+          createReactionCallback('➡️', paginationMessage, () => {
+            const newPaginatedObject = getPaginatedText({ text, page: page + 1 });
+            if (newPaginatedObject) {
+              // Update page state
+              page = page + 1;
+              const editedText = '```\n'
+              + newPaginatedObject.text
+              + '\n```';
+              paginationMessage.edit(editedText);
+            }
+          });
+        };
+
+        if (!discordMessage && isDiscordCommand(message)) {
+          message.fetchReply().then((discordMessage) => {
+            createPaginationReactions(discordMessage);
+          });
+        } else {
+          createPaginationReactions(discordMessage);
+        }
       });
   }
 };
@@ -646,7 +637,7 @@ const createReactionCallback = (emojiName, message, func = () => {}) => {
   };
   const collector = message.createReactionCollector(filter);
   collector.on('collect', func);
-  collector.on('end', collected => console.log('Stopped Collecting'));
+  collector.on('end', () => console.log('Stopped Collecting'));
   return collector;
 };
 
@@ -660,6 +651,30 @@ const setReplayButton = (message, func = () => {}) => {
 const getNestedProperty = (object, string) => {
   return string.split('.').reduce((p, prop) => p[prop], object);
 };
+
+const isDiscordCommand = (discordTrigger) => {
+  if (discordTrigger?.content) { // Regular discord message (e.x. !help)
+    return false;
+  } else if ( // Discord interaction system (e.x. /help)
+    discordTrigger?.isCommand
+      && discordTrigger?.isCommand()
+  ) {
+    return true;
+  }
+};
+
+const getReplyFunction = (message) => {
+  let replyFunction = (...args) => {
+    if (isDiscordCommand(message) && !message.replied && !message.deferred) {
+      return message.reply(...args);
+    } else if (isDiscordCommand(message) && message.deferred) {
+      return message.editReply(...args);
+    } else {
+      return message.channel.send(...args);
+    }
+  };
+  return replyFunction;
+}
 
 module.exports = {
   PATH,
@@ -695,4 +710,6 @@ module.exports = {
   setReplayButton,
   createReactionCallback,
   getNestedProperty,
+  isDiscordCommand,
+  getReplyFunction,
 };

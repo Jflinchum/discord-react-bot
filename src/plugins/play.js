@@ -7,6 +7,8 @@ const {
   makeEmbed,
   setReplayButton,
   createReactionCallback,
+  isDiscordCommand,
+  getReplyFunction,
 } = require('./util');
 const USAGEPLAY = '`usage: [!play/!pl] [<name>] [<voiceChannel>/.]`';
 const USAGESKIP = '`usage: [!skip/!s] [<index>]`';
@@ -59,7 +61,8 @@ const dequeue = () => {
  * @param {Object} author - The author of the person trying to play the media
  */
 const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
-  if (!message.deleted)
+  let replyFunction = getReplyFunction(message);
+  if (!message.deleted && !isDiscordCommand(message) && !message.interaction)
     message.delete();
   if (!currentSong) {
     currentSong = name;
@@ -89,19 +92,19 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
         })
         .catch((err) => {
           const nextSong = dequeue();
-          message.channel.send('Could not join channel.');
+          replyFunction('Could not join channel.');
           playNext(nextSong);
           console.log('Could not join channel: ', err);
         });
     }
   } else {
     enqueue(vc, media, name, message, author);
-    message.channel.send(
+    replyFunction(
       makeEmbed({
         message: `Added ${name} to the queue!`,
         user: author,
-        member: message.guild.member(author.id).displayName,
-        color: message.guild.member(message.author.id).displayColor,
+        member: message.guild.members.cache.get(author.id).displayName,
+        color: message.guild.members.cache.get(author.id).displayColor,
       })
     );
   }
@@ -117,55 +120,88 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
  * the command
  */
 const playSong = ({ connection, song, message }) => {
+  let replyFunction = getReplyFunction(message);
   // On connecting to a voice channel, play the youtube stream
   const dispatch = connection.play(song.media, { volume: 0.3 });
-  message.channel.send(
+  replyFunction(
     makeEmbed({
       message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
       user: song.author,
-      member: message.guild.member(song.author.id).displayName,
-      footerText: message.content,
-      color: message.guild.member(message.author.id).displayColor,
+      member: message.guild.members.cache.get(song.author.id).displayName,
+      footerText: message.content || `!play ${song.name} ${song.channel.name}`,
+      color: message.guild.members.cache.get(song.author.id).displayColor,
     })
   ).then((playMessage) => {
-    setReplayButton(playMessage, (reaction) => {
-      const cmd = message.content.split(' ');
-      let media;
-      let channel;
-      if (cmd.length <= 2) {
-        // For attachments
-        const attach = message.attachments.array();
-        if (attach.length > 0) {
-          media = attach[0];
-          channel = cmd[1];
+    if (!playMessage && isDiscordCommand(message)) {
+      message.fetchReply().then((playMessage) => {
+        setReplayButton(playMessage, (reaction) => {
+          // Set the author to whoever just reacted with the emoji
+          const newAuthor = reaction.users.cache.last();
+          play({
+            channel: message.options[1]?.value,
+            media: message.options[0].value,
+            message,
+            author: newAuthor,
+          });
+        });
+        createReactionCallback('🛑', playMessage, (reaction) => {
+          // Set the author to whoever just reacted with the emoji
+          const newAuthor = reaction.users.cache.last();
+          skip({
+            author: newAuthor,
+            guild: message.guild,
+            message,
+          });
+        });
+      });
+    } else {
+      setReplayButton(playMessage, (reaction) => {
+        let cmd;
+        let media;
+        let channel;
+        if (message?.content) {
+          cmd = message.content.split(' ');
+          media;
+          channel;
+          if (cmd.length <= 2) {
+            // For attachments
+            const attach = message.attachments.array();
+            if (attach.length > 0) {
+              media = attach[0];
+              channel = cmd[1];
+            } else {
+              media = cmd[1];
+              cmd.splice(2, cmd.length).join(' ');
+            }
+          } else {
+            media = cmd[1];
+            channel = cmd.splice(2, cmd.length).join(' ');
+          }
         } else {
-          media = cmd[1];
-          cmd.splice(2, cmd.length).join(' ');
+          media = message.options[0].value;
+          channel = message.options[1]?.value;
         }
-      } else {
-        media = cmd[1];
-        channel = cmd.splice(2, cmd.length).join(' ');
-      }
-      // Set the author to whoever just reacted with the emoji
-      const newAuthor = reaction.users.cache.last();
-      play({
-        channel,
-        media,
-        message,
-        author: newAuthor,
+        // Set the author to whoever just reacted with the emoji
+        const newAuthor = reaction.users.cache.last();
+        play({
+          channel,
+          media,
+          message,
+          author: newAuthor,
+        });
       });
-    });
-    createReactionCallback('🛑', playMessage, (reaction) => {
-      // Set the author to whoever just reacted with the emoji
-      const newAuthor = reaction.users.cache.last();
-      skip({
-        author: newAuthor,
-        guild: message.guild,
-        channel: message.channel,
+      createReactionCallback('🛑', playMessage, (reaction) => {
+        // Set the author to whoever just reacted with the emoji
+        const newAuthor = reaction.users.cache.last();
+        skip({
+          author: newAuthor,
+          guild: message.guild,
+          message,
+        });
       });
-    });
+    }
   });
-  dispatch.on('finish', (reason) => {
+  dispatch.on('finish', () => {
     const nextSong = dequeue();
     if (nextSong && currentChannel
     && nextSong.channel.id === currentChannel.id) {
@@ -214,7 +250,8 @@ const playNext = (song, connection) => {
  * @param {Object} message - The Discord Message Object that initiated
  * the command
  */
-const skip = ({ number, guild, author, channel }) => {
+const skip = ({ number, guild, author, message }) => {
+  let replyFunction = getReplyFunction(message);
   let cutSongName;
   if (!number) {
     if (currentSong) {
@@ -241,10 +278,10 @@ const skip = ({ number, guild, author, channel }) => {
         currentChannel.leave();
       } else {
         // Check if the bot is in any channels in the guild and leave it
-        if (channel.guild.me.voice.channel) {
-          channel.guild.me.voice.channel.leave();
+        if (message.channel.guild.me.voice.channel) {
+          message.channel.guild.me.voice.channel.leave();
         } else {
-          channel.send('Nothing to skip!');
+          replyFunction('Nothing to skip!');
         }
       }
       return;
@@ -255,16 +292,16 @@ const skip = ({ number, guild, author, channel }) => {
       cutSongName = playingQueue[number].name;
       playingQueue.splice(number, 1);
     } else {
-      channel.send(USAGESKIP);
+      replyFunction(USAGESKIP);
     }
   }
   if (cutSongName) {
-    channel.send(
+    replyFunction(
       makeEmbed({
         message: `Skipped: ${cutSongName}`,
         user: author,
-        member: guild.member(author.id).displayName,
-        color: guild.member(author.id).displayColor,
+        member: guild.members.cache.get(author.id).displayName,
+        color: guild.members.cache.get(author.id).displayColor,
       })
     );
   }
@@ -277,7 +314,8 @@ const skip = ({ number, guild, author, channel }) => {
  * the command
  */
 const queue = (message) => {
-  let response = '\`\`\`\n';
+  let replyFunction = getReplyFunction(message);
+  let response = '```\n';
   if (currentSong && currentChannel) {
     response += `Currently playing ${currentSong} to ${currentChannel.name}.\n`;
   }
@@ -285,8 +323,8 @@ const queue = (message) => {
     let song = playingQueue[i];
     response += `${i}. ${song.name} to ${song.channel.name}\n`;
   }
-  response += '\`\`\`';
-  message.channel.send(response);
+  response += '```';
+  replyFunction(response);
 };
 
 /**
@@ -302,6 +340,7 @@ const queue = (message) => {
  * media
  */
 const play = ({ channel, media, message, author }) => {
+  let replyFunction = getReplyFunction(message);
   const channelList = message.guild.channels.cache.array();
   let vc;
   for (let i = 0; i < channelList.length; i++) {
@@ -315,7 +354,7 @@ const play = ({ channel, media, message, author }) => {
   }
   // Check if the voice channel exists
   if (!vc) {
-    message.channel.send('Could not find voice channel.');
+    replyFunction('Could not find voice channel.');
     return;
   }
 
@@ -333,7 +372,7 @@ const play = ({ channel, media, message, author }) => {
     // For youtube video streaming
     // Check if the url is valid
     if (!ytdl.validateURL(media)) {
-      message.channel.send('Could not find youtube video.');
+      replyFunction('Could not find youtube video.');
       return;
     }
     ytdl.getBasicInfo(media).then((info) => {
@@ -353,7 +392,7 @@ const play = ({ channel, media, message, author }) => {
       });
     }).catch((err) => {
       console.log('Could not get youtube info: ', err);
-      message.channel.send('Error getting youtube video.');
+      replyFunction('Error getting youtube video.');
       return;
     });
   } else {
@@ -381,7 +420,7 @@ const play = ({ channel, media, message, author }) => {
       }
     }
     if (!fileToPlay) {
-      message.channel.send(`Could not find ${media}.`);
+      replyFunction(`Could not find ${media}.`);
       return;
     }
     const filePath = `${PATH}/${fileToPlay}`;
@@ -395,7 +434,7 @@ const play = ({ channel, media, message, author }) => {
   }
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!play' || botCommand === '!pl') {
@@ -427,15 +466,79 @@ const onText = (message) => {
     skip({
       number,
       guild: message.guild,
-      channel: message.channel,
+      message,
       author: message.author,
     });
   }
 };
+
+const handleDiscordCommand = (interaction) => {
+  if (interaction.commandName === 'play') {
+    const media = interaction.options[0]?.value;
+    const channel = interaction.options[1]?.value;
+    play({ channel, media, author: interaction.user, message: interaction });
+  } else if (interaction.commandName === 'queue') {
+    queue(interaction);
+  } else if (interaction.commandName === 'skip') {
+    const index = interaction.options[0]?.value;
+    skip({
+      number: index,
+      guild: interaction.guild,
+      message: interaction,
+      author: interaction.user,
+    });
+  }
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
+  }
+};
+
+const commandData = [
+  {
+    name: 'play',
+    description: 'Plays a sound clip or youtube video to a voice channel!',
+    options: [
+      {
+        name: 'sound_clip',
+        type: 'STRING',
+        description: 'The sound clip name or youtube link you want to play. Accepts wildcards.',
+        required: true,
+      },
+      {
+        name: 'channel_name',
+        type: 'STRING',
+        description: 'The channel you want to play the sound clip to. Defaults to the first channel with users.',
+        required: false,
+      }
+    ],
+  },
+  {
+    name: 'skip',
+    description: 'Skips sound clips playing or in the queue.',
+    options: [
+      {
+        name: 'index',
+        type: 'INTEGER',
+        description: 'The index of the song in queue that you want to skip.',
+        required: false,
+      },
+    ],
+  },
+  {
+    name: 'queue',
+    description: 'Shows the current playing queue of sound clips.',
+  }
+];
 
 module.exports = {
   skip,
   queue,
   play,
   onText,
+  commandData,
 };

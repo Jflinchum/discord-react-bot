@@ -1,5 +1,5 @@
 'use strict';
-const { makeEmbed, makeEmbedNoUser, config } = require('./util');
+const { makeEmbed, makeEmbedNoUser, config, isDiscordCommand } = require('./util');
 const { spawn } = require('child_process');
 
 const MAX_LENGTH = 2000;
@@ -111,7 +111,7 @@ const promptRelevanceGpt2 = (originMessage, channel, n = 10) => {
     });
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -130,6 +130,18 @@ const onText = (message) => {
     } else {
       promptGpt2(string, message);
     }
+  }
+};
+
+const handleDiscordCommand = () => {
+
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
   }
 };
 

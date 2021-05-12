@@ -1,6 +1,14 @@
 'use strict';
 const fs = require('fs');
-const { PATH, EMOJI_PATH, removeJson, makeEmbed, splitArgsWithQuotes } = require('./util');
+const {
+  PATH,
+  EMOJI_PATH,
+  removeJson,
+  makeEmbed,
+  splitArgsWithQuotes,
+  isDiscordCommand,
+  getReplyFunction,
+} = require('./util');
 const USAGE = '`usage: [!remove/!r] "<name>"`';
 
 /**
@@ -13,22 +21,25 @@ const USAGE = '`usage: [!remove/!r] "<name>"`';
  * @param {Function} cb - Callback function
  */
 const remove = ({ fileName, message, emojis, cb }) => {
-  message.delete();
+  if (!isDiscordCommand(message))
+    message.delete();
+  const author = message?.author || message?.user
+  let replyFunction = getReplyFunction(message);
   const files = fs.readdirSync(PATH);
   let file;
   if (!fileName) {
-    message.channel.send(USAGE);
+    replyFunction(USAGE);
     return;
   }
   if (emojis[fileName]) {
     // If the file is an emoji reaction
     removeJson({ path: EMOJI_PATH, key: fileName, cb: () => {
-      message.channel.send(
+      replyFunction(
         makeEmbed({
           message: `Removed ${fileName}`,
-          user: message.author,
-          member: message.guild.member(message.author.id).displayName,
-          color: message.guild.member(message.author.id).displayColor,
+          user: author,
+          member: message.guild.members.cache.get(author.id).displayName,
+          color: message.guild.members.cache.get(author.id).displayColor,
         })
       );
       return cb();
@@ -48,12 +59,12 @@ const remove = ({ fileName, message, emojis, cb }) => {
       message.channel.send(`Could not find ${fileName}.`);
     } else {
       fs.unlink(`${PATH}/${file}`, () => {
-        message.channel.send(
+        replyFunction(
           makeEmbed({
             message: `Removed ${file}`,
-            user: message.author,
-            member: message.guild.member(message.author.id).displayName,
-            color: message.guild.member(message.author.id).displayColor,
+            user: author,
+            member: message.guild.members.cache.get(author.id).displayName,
+            color: message.guild.members.cache.get(author.id).displayColor,
           })
         );
       });
@@ -61,20 +72,53 @@ const remove = ({ fileName, message, emojis, cb }) => {
   }
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = splitArgsWithQuotes(message.content);
   const botCommand = cmd[0];
 
   if (botCommand === '!remove' || botCommand === '!r') {
     // Delete any stored reactions
-    const fileName = (cmd[1] || '').replace(/\"/g, '');
+    const fileName = (cmd[1] || '').replace(/"/g, '');
     remove({ fileName, message, emojis: bot.emojiTriggers, cb: () => {
       bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
     }});
   }
 };
 
+const handleDiscordCommand = (interaction, bot) => {
+  if (interaction.commandName === 'remove') {
+    const fileName = interaction.options[0]?.value;
+    remove({ fileName, message: interaction, emojis: bot.emojiTriggers, cb: () => {
+      bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+    }});
+  }
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger, bot);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
+  }
+};
+
+const commandData = [
+  {
+    name: 'remove',
+    description: 'Removes a stored file.',
+    options: [
+      {
+        name: 'file_name',
+        type: 'STRING',
+        description: 'The name of the file you want to remove',
+        required: true,
+      }
+    ],
+  }
+];
+
 module.exports = {
   remove,
   onText,
+  commandData,
 };

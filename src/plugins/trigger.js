@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { EMOJI_PATH, addJson, EMOJI_REGEX } = require('./util');
+const { EMOJI_PATH, addJson, EMOJI_REGEX, isDiscordCommand } = require('./util');
 const USAGE = '`usage: !trigger <emoji> <decimalChance> <"Example Text">`';
 
 /**
@@ -12,7 +12,7 @@ const USAGE = '`usage: !trigger <emoji> <decimalChance> <"Example Text">`';
  * @param {Object} message - The message that triggered this function
  * @param {Function} cb - Callback function
  */
-const trigger = ({text, reaction, chance, message, cb}) => {
+const trigger = ({text, reaction, chance, cb}) => {
   let json = {
     emoji: reaction,
     chance,
@@ -20,7 +20,7 @@ const trigger = ({text, reaction, chance, message, cb}) => {
   addJson({ path: EMOJI_PATH, key: text, value: json, cb });
 };
 
-const onText = (message, bot) => {
+const handleDiscordMessage = (message, bot) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -72,6 +72,68 @@ const onText = (message, bot) => {
   }
 };
 
+const handleDiscordCommand = (interaction, bot) => {
+  if (interaction.commandName === 'trigger') {
+    let emoji = interaction.options[0]?.value;
+    const chance = interaction.options[1]?.value / 100;
+    const text = interaction.options[2]?.value;
+    if (isNaN(chance)) {
+      interaction.reply(USAGE);
+      return;
+    }
+    if (!EMOJI_REGEX.test(emoji)) {
+      // If it is a custom emoji, parse the id of the string
+      emoji = emoji.slice(emoji.lastIndexOf(':') + 1, -1);
+    }
+    trigger({
+      text: text.toLowerCase(),
+      reaction: emoji,
+      chance,
+      message: interaction,
+      cb: () => {
+        interaction.reply(`Reacting to "${text}" with ${interaction.guild.emojis.cache.get(emoji)} on a ${parseInt(chance * 100, 10)}% chance`);
+        bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+      },
+    });
+  }
+};
+
+const onText = (discordTrigger, bot) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger, bot);
+  } else {
+    handleDiscordMessage(discordTrigger, bot);
+  }
+};
+
+const commandData = [
+  {
+    name: 'trigger',
+    description: 'Sets up an emoji trigger based on a specified string.',
+    options: [
+      {
+        name: 'emoji',
+        type: 'STRING',
+        description: 'The emoji you want the bot to react with.',
+        required: true,
+      },
+      {
+        name: 'percentage',
+        type: 'INTEGER',
+        description: 'The percentage chance to trigger a reaction (i.e. 55 for a 55% chance).',
+        required: true,
+      },
+      {
+        name: 'string',
+        type: 'STRING',
+        description: 'The string you want to trigger a reaction on.',
+        required: true,
+      },
+    ],
+  },
+];
+
 module.exports = {
   onText,
+  commandData,
 };

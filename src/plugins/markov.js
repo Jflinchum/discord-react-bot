@@ -1,6 +1,6 @@
 'use strict';
 const MarkovChain = require('markovchain');
-const { makeEmbed, makeEmbedNoUser, setReplayButton } = require('./util');
+const { makeEmbed, makeEmbedNoUser, setReplayButton, isDiscordCommand } = require('./util');
 const USAGE = '`usage: !markov <@user/#textChannel/all> ["messageStart"]`';
 
 
@@ -19,12 +19,14 @@ var intros = [
   ' says: ',
 ];
 
-const markovUser = (user, guild, origChannel, phrase, message) => {
+const markovUser = ({ user, guild, origChannel, phrase, message }) => {
   markovString = '';
   channelsDone = 0;
   channelLength = 0;
 
   markovCallback = postMarkovUser;
+  if (!phrase)
+    phrase = '';
 
   guild.channels.cache.each(channel => {
     if (channel.type === 'text') {
@@ -50,12 +52,14 @@ const markovUser = (user, guild, origChannel, phrase, message) => {
   });
 };
 
-const markovChannel = (channel, guild, origChannel, phrase, message) => {
+const markovChannel = ({ channel, origChannel, phrase = '', message }) => {
   markovString = '';
   channelsDone = 0;
   channelLength = 0;
 
   markovCallback = postMarkovChannel;
+  if (!phrase)
+    phrase = '';
 
   if (channel.type === 'text') {
     channelLength++;
@@ -132,14 +136,21 @@ const postMarkovUser = (user, channel, origChannel, phrase, message) => {
     }
   }
 
-  if (user === null) {
+  let replyFunction = () => {};
+  if (isDiscordCommand(message)) {
+    replyFunction = (...args) => message.editReply(...args);
+  } else {
+    replyFunction = (...args) => origChannel.send(...args);
+  }
+
+  if (!user) {
     let markovMessage = 'People ' +
     intros[Math.floor(Math.random() * intros.length)] +
     '"*' +
     phrase +
     markovGen.start(getAll).end().process() +
     '*"';
-    origChannel.send(
+    replyFunction(
       makeEmbedNoUser({
         message: markovMessage,
         title: 'Everyone',
@@ -148,7 +159,14 @@ const postMarkovUser = (user, channel, origChannel, phrase, message) => {
     ).then((markovResponse) => {
       origChannel.stopTyping(true);
       setReplayButton(markovResponse, () => {
-        postMarkovUser(user, channel, origChannel, originalPhrase, message);
+        if (isDiscordCommand(message)) {
+          message.fetchReply()
+            .then((replyMessage) => {
+              postMarkovUser(user, channel, origChannel, originalPhrase, replyMessage);
+            });
+        } else {
+          postMarkovUser(user, channel, origChannel, originalPhrase, message);
+        }
       });
     });
   } else {
@@ -158,12 +176,18 @@ const postMarkovUser = (user, channel, origChannel, phrase, message) => {
     phrase +
     markovGen.start(getAll).end().process() +
     '*"';
-    origChannel.send(
+    replyFunction(
       makeEmbed({ message: markovMessage, user, footerText: message.cleanContent })
     ).then((markovResponse) => {
       origChannel.stopTyping(true);
       setReplayButton(markovResponse, () => {
-        postMarkovUser(user, channel, origChannel, originalPhrase, message);
+        if (isDiscordCommand(message)) {
+          message.fetchReply().then((replyMessage) => {
+            postMarkovUser(user, channel, origChannel, originalPhrase, replyMessage);
+          });
+        } else {
+          postMarkovUser(user, channel, origChannel, originalPhrase, message);
+        }
       });
     });
   }
@@ -200,7 +224,13 @@ const postMarkovChannel = (user, channel, origChannel, phrase, message) => {
   phrase +
   markovGen.start(getAll).end().process() +
   '*"';
-  origChannel.send(
+  let replyFunction = () => {};
+  if (isDiscordCommand(message)) {
+    replyFunction = (...args) => message.editReply(...args);
+  } else {
+    replyFunction = (...args) => origChannel.send(...args);
+  }
+  replyFunction(
     makeEmbedNoUser({
       message: markovMessage,
       title: channel.name,
@@ -209,12 +239,19 @@ const postMarkovChannel = (user, channel, origChannel, phrase, message) => {
   ).then((markovResponse) => {
     origChannel.stopTyping(true);
     setReplayButton(markovResponse, () => {
-      postMarkovChannel(user, channel, origChannel, originalPhrase, message);
+      if (isDiscordCommand(message)) {
+        message.fetchReply()
+          .then((replyMessage) => {
+            postMarkovChannel(user, channel, origChannel, originalPhrase, replyMessage);
+          });
+      } else {
+        postMarkovChannel(user, channel, origChannel, originalPhrase, message);
+      }
     });
   });
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -232,19 +269,19 @@ const onText = (message) => {
       string = '';
     }
     if (cmd[1] === 'all') {
-      markovUser(null, message.guild, message.channel, string, message);
+      markovUser({ guild: message.guild, origChannel: message.channel, phrase: string, message });
       message.channel.startTyping();
       return;
     }
     const channel = message.mentions.channels.first();
     const user = message.mentions.users.first();
     if (user != null) {
-      markovUser(user, message.guild, message.channel, string, message);
+      markovUser({ user, guild: message.guild, origChannel: message.channel, phrase: string, message });
       message.channel.startTyping();
       return;
     }
     if (channel != null) {
-      markovChannel(channel, message.guild, message.channel, string, message);
+      markovChannel({ channel, guild: message.guild, origChannel: message.channel, phrase: string, message });
       message.channel.startTyping();
       return;
     }
@@ -252,8 +289,90 @@ const onText = (message) => {
   }
 };
 
+const handleDiscordCommand = (interaction) => {
+  if (interaction.commandName === 'markov') {
+    const subCommandName = interaction.options[0]?.name;
+    const subCommandOptions = interaction.options[0]?.options;
+    if (subCommandName === 'user') {
+      const user = subCommandOptions?.[0]?.value;
+      const messageStart = subCommandOptions?.[1]?.value;
+      const discordGuildMember = interaction.guild.members.cache.get(user);
+      interaction.defer();
+      interaction.channel.startTyping();
+      markovUser({ user: discordGuildMember?.user, guild: interaction.guild, origChannel: interaction.channel, phrase: messageStart, message: interaction });
+    } else if (subCommandName === 'channel') {
+      const channel = subCommandOptions?.[0]?.value;
+      const messageStart = subCommandOptions?.[1]?.value;
+      let discordGuildChannel;
+      if (channel)
+        discordGuildChannel = interaction.guild.channels.cache.get(channel);
+      else
+        discordGuildChannel = interaction.channel;
+      interaction.defer();
+      interaction.channel.startTyping();
+      markovChannel({ channel: discordGuildChannel, origChannel: interaction.channel, phrase: messageStart, message: interaction });
+    }
+  }
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
+  }
+};
+
+const commandData = [
+  {
+    name: 'markov',
+    description: 'Generates some text through markov',
+    options: [
+      {
+        name: 'user',
+        type: 'SUB_COMMAND',
+        description: 'Generates some text based off of a user.',
+        options: [
+          {
+            name: 'user',
+            description: 'The user that you want to base the text off of. Defaults to everyone.',
+            type: 'USER',
+            required: false,
+          },
+          {
+            name: 'message_start',
+            type: 'STRING',
+            description: 'The start of the text you\'re generating',
+            required: false,
+          }
+        ]
+      },
+      {
+        name: 'channel',
+        type: 'SUB_COMMAND',
+        description: 'Generates some text based off of a channel.',
+        options: [
+          {
+            name: 'channel',
+            description: 'The channel that you want to base the text off of. Defaults to the current channel.',
+            type: 'CHANNEL',
+            required: false,
+          },
+          {
+            name: 'message_start',
+            type: 'STRING',
+            description: 'The start of the text you\'re generating',
+            required: false,
+          }
+        ]
+      },
+    ],
+  },
+];
+
 module.exports = {
   markovUser,
   markovChannel,
   onText,
+  commandData,
 };

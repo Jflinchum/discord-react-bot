@@ -1,6 +1,6 @@
 'use strict';
 const fs = require('fs');
-const { PATH, hasFile, makeEmbed } = require('./util');
+const { PATH, hasFile, makeEmbed, isDiscordCommand, getReplyFunction } = require('./util');
 const USAGE = '`usage: !append <name> <"Example Text">`';
 
 /**
@@ -12,28 +12,30 @@ const USAGE = '`usage: !append <name> <"Example Text">`';
  * the command
  */
 const append = ({fileName, text, message}) => {
+  const author = message?.author || message?.user;
+  let replyFunction = getReplyFunction(message);
   const fullPath = `${PATH}/${fileName}.txt`;
   if (!hasFile({ fileName, caseSensitive: true })) {
-    message.channel.send('Could not find text file.');
+    replyFunction('Could not find text file.');
     return;
   }
   fs.appendFile(fullPath, text, (err) => {
     if (err) {
-      message.channel.send('Could not append to file.');
+      replyFunction('Could not append to file.');
       return;
     }
-    message.channel.send(
+    replyFunction(
       makeEmbed({
         message: `Added ${text} to ${fileName}`,
-        user: message.author,
-        member: message.guild.member(message.author.id).displayName,
-        color: message.guild.member(message.author.id).displayColor,
+        user: author,
+        member: message.guild.members.cache.get(author.id).displayName,
+        color: message.guild.members.cache.get(author.id).displayColor,
       })
     );
   });
 };
 
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
 
@@ -53,8 +55,45 @@ const onText = (message) => {
   }
 };
 
+const handleDiscordCommand = (interaction) => {
+  if (interaction.commandName === 'append') {
+    const fileName = interaction.options[0]?.value;
+    const text = interaction.options[1]?.value;
+    append({ fileName, text, message: interaction });
+  }
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
+  }
+};
+
+const commandData = [
+  {
+    name: 'append',
+    description: 'Appends text to a stored text file.',
+    options: [
+      {
+        name: 'file_name',
+        type: 'STRING',
+        description: 'The name of the file you want to append the text to.',
+        required: true,
+      },
+      {
+        name: 'text',
+        type: 'STRING',
+        description: 'The text you want to append.',
+        required: true,
+      }
+    ],
+  }
+];
 
 module.exports = {
   append,
   onText,
+  commandData,
 };

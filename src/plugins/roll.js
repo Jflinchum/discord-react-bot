@@ -1,7 +1,7 @@
 'use strict';
 const ROLL_USAGE = '`usage: !roll <amount> d<sides>`';
 const MAX_DICE = 20;
-const { setReplayButton } = require('./util');
+const { setReplayButton, isDiscordCommand, getReplyFunction } = require('./util');
 
 const parseSides = (sides) => {
   if (sides[0] === 'd') {
@@ -20,36 +20,48 @@ const rollDice = (amount, sides) => {
 };
 
 const roll = (amount, sides, message) => {
+  const author = message?.author || message?.user
+  let replyFunction = getReplyFunction(message);
+
   if (isNaN(amount) || amount < 0) {
-    message.channel.send(ROLL_USAGE);
+    replyFunction(ROLL_USAGE);
     return;
   }
   if (amount > MAX_DICE) {
-    message.channel.send(`Maximum number of dice is ${MAX_DICE}`);
+    replyFunction(`Maximum number of dice is ${MAX_DICE}`);
     return;
   }
   if (isNaN(sides) || sides < 0) {
-    message.chanenl.send(ROLL_USAGE);
+    replyFunction(ROLL_USAGE);
     return;
   }
   const diceArray = rollDice(amount, sides);
-  let finalMessage = `\`\`\`${message.author.username} rolled ${amount}`
+  let finalMessage = `\`\`\`${author.username} rolled ${amount}`
     + ` d${sides}${amount > 1 ? '\'s' : ''}:\n`;
   for (let i = 0; i < diceArray.length; i++) {
     finalMessage += `${diceArray[i]}\n`;
   }
   finalMessage += '```';
-  message.channel.send(finalMessage).then((rollMessage) => {
-    setReplayButton(rollMessage, (reaction) => {
-      const reactionUser = reaction.users.cache.last();
-      message.author = reactionUser;
-      roll(amount, sides, message);
-    });
+  replyFunction(finalMessage).then((rollMessage) => {
+    if (!rollMessage && isDiscordCommand(message)) {
+      message.fetchReply().then((rollMessage) => {
+        setReplayButton(rollMessage, (reaction) => {
+          const reactionUser = reaction.users.cache.last();
+          message.user = reactionUser;
+          roll(amount, sides, message);
+        });
+      });
+    } else {
+      setReplayButton(rollMessage, (reaction) => {
+        const reactionUser = reaction.users.cache.last();
+        message.author = reactionUser;
+        roll(amount, sides, message);
+      });
+    }
   });
 };
 
-
-const onText = (message) => {
+const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   if (botCommand === '!roll') {
@@ -63,6 +75,44 @@ const onText = (message) => {
   }
 };
 
+const handleDiscordCommand = (interaction) => {
+  if (interaction.commandName === 'roll') {
+    const amount = interaction.options[0].value;
+    const sides = interaction.options[1].value;
+    roll(parseInt(amount, 10), parseSides(sides), interaction);
+  }
+};
+
+const onText = (discordTrigger) => {
+  if (isDiscordCommand(discordTrigger)) {
+    handleDiscordCommand(discordTrigger);
+  } else {
+    handleDiscordMessage(discordTrigger);
+  }
+};
+
+const commandData = [
+  {
+    name: 'roll',
+    description: 'Roll some dice',
+    options: [
+      {
+        name: 'amount',
+        type: 'INTEGER',
+        description: 'The amount of dice you want to roll',
+        required: true,
+      },
+      {
+        name: 'sides',
+        type: 'INTEGER',
+        description: 'The amount of sides on the dice that you\'re rolling',
+        required: true,
+      }
+    ],
+  }
+];
+
 module.exports = {
   onText,
+  commandData,
 };

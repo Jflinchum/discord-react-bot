@@ -14,18 +14,16 @@ const awardAchievement = ({ user, achievement, rarity, guild, achievementChannel
   // Find the existing role. If it doesn't exist, make it
   if (!achievementRole) {
     guild.roles.create({
-      data: {
-        name: achievement,
-        permissions: [],
-        mentionable: false,
-        color: getRarityColor(rarity),
-      },
+      name: achievement,
+      permissions: [],
+      mentionable: false,
+      color: getRarityColor(rarity),
       reason: `Created by ${user.username}.`,
     }).then((role) => {
-      guild.member(user.id).roles.add(role);
+      guild.members.cache.get(user.id).roles.add(role);
     });
   } else {
-    guild.member(user.id).roles.add(achievementRole);
+    guild.members.cache.get(user.id).roles.add(achievementRole);
   }
 };
 
@@ -53,7 +51,7 @@ const checkProgressAndAward = ({
           progress++;
         }
         // Check if the user has the role assigned to them
-        const hasRole = guild.member(user.id).roles.cache.filter(
+        const hasRole = guild.members.cache.get(user.id)?.roles?.cache?.filter(
           role => role.name === achievementLabel
         ).first();
 
@@ -223,7 +221,7 @@ const sendCongratsMessage = ({ user, achievement, rarity, guild, achievementChan
       makeEmbed({
         message: getCongratsText(user, achievement, rarity, level),
         user,
-        title: guild.member(user.id).displayName,
+        title: guild.members.cache.get(user.id).displayName,
         color: getRarityColor(rarity),
       })
     );
