@@ -287,6 +287,13 @@ const handleDiscordMessage = (message) => {
 
 const handleDiscordCommand = (interaction) => {
   interaction.defer();
+  /**
+   * interaction.defer() doesn't seem to always set the interaction to deferred.
+   * It probably uses a cached object and updates it later. We need to set deferred
+   * here for our generic reply function.
+   * Try this out again when discord interactions get better
+   */
+  interaction.deferred = true;
   if (interaction.commandName === 'chart') {
     const subCommandName = interaction.options[0]?.name;
     const subCommandOptions = interaction.options[0]?.options;
