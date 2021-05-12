@@ -38,6 +38,7 @@ const commandData = [
   ...require('./cron').commandData,
   ...require('./userGroups').commandData,
   ...require('./chart').commandData,
+  ...require('./trigger').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
