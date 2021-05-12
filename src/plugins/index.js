@@ -39,6 +39,7 @@ const commandData = [
   ...require('./userGroups').commandData,
   ...require('./chart').commandData,
   ...require('./trigger').commandData,
+  ...require('./add').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
