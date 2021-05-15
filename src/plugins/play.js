@@ -128,7 +128,7 @@ const playSong = ({ connection, song, message }) => {
       message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
       user: song.author,
       member: message.guild.members.cache.get(song.author.id).displayName,
-      footerText: message.content || `/play ${song.name} ${song.channel.name}`,
+      footerText: message.content || `/play ${message.options?.[0]?.value} ${message.options?.[1]?.value}`,
       color: message.guild.members.cache.get(song.author.id).displayColor,
     })
   ).then((playMessage) => {
