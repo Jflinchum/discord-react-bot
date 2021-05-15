@@ -20,7 +20,7 @@ const rollDice = (amount, sides) => {
 };
 
 const roll = (amount, sides, message) => {
-  const author = message?.author || message?.user
+  const member = message?.member;
   let replyFunction = getReplyFunction(message);
 
   if (isNaN(amount) || amount < 0) {
@@ -36,7 +36,7 @@ const roll = (amount, sides, message) => {
     return;
   }
   const diceArray = rollDice(amount, sides);
-  let finalMessage = `\`\`\`${author.username} rolled ${amount}`
+  let finalMessage = `\`\`\`${member?.displayName} rolled ${amount}`
     + ` d${sides}${amount > 1 ? '\'s' : ''}:\n`;
   for (let i = 0; i < diceArray.length; i++) {
     finalMessage += `${diceArray[i]}\n`;
@@ -47,14 +47,16 @@ const roll = (amount, sides, message) => {
       message.fetchReply().then((rollMessage) => {
         setReplayButton(rollMessage, (reaction) => {
           const reactionUser = reaction.users.cache.last();
-          message.user = reactionUser;
+          const memberObject = message.guild.members.cache.get(reactionUser.id);
+          message.member = memberObject;
           roll(amount, sides, message);
         });
       });
     } else {
       setReplayButton(rollMessage, (reaction) => {
         const reactionUser = reaction.users.cache.last();
-        message.author = reactionUser;
+        const memberObject = message.guild.members.cache.get(reactionUser.id);
+        message.member = memberObject;
         roll(amount, sides, message);
       });
     }
