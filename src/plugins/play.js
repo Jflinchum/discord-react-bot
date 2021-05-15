@@ -132,7 +132,7 @@ const playSong = ({ connection, song, message }) => {
       color: message.guild.members.cache.get(song.author.id).displayColor,
     })
   ).then((playMessage) => {
-    if (!playMessage && isDiscordCommand(message)) {
+    if (!isDiscordCommand(message)) {
       message.fetchReply().then((playMessage) => {
         setReplayButton(playMessage, (reaction) => {
           // Set the author to whoever just reacted with the emoji
@@ -476,6 +476,7 @@ const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'play') {
     const media = interaction.options[0]?.value;
     const channel = interaction.options[1]?.value;
+    interaction.defer();
     play({ channel, media, author: interaction.user, message: interaction });
   } else if (interaction.commandName === 'queue') {
     queue(interaction);
