@@ -42,7 +42,7 @@ const pat = (userId, message, bot) => {
             user: userObject.user,
             member: message.guild.members.cache.get(userObject.user.id).displayName,
             title: message.guild.members.cache.get(author.id).displayName,
-            footerText: `!pat @${userObject.displayName}`,
+            footerText: `/pat @${userObject.displayName}`,
             color: userObject.displayColor,
             authorIcon: author.displayAvatarURL(),
           })).then((patMessage) => {

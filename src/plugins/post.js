@@ -55,7 +55,7 @@ const post = (fileName, message) => {
         message: fileName,
         user: author,
         member: message.guild.members.cache.get(author.id).displayName,
-        footerText: message.content,
+        footerText: message.content || `/post ${fileName}`,
         color: message.guild.members.cache.get(author.id).displayColor,
       })
     ).catch(() => {
@@ -82,7 +82,7 @@ const post = (fileName, message) => {
             message: text.toString(),
             user: author,
             member: message.guild.members.cache.get(author.id).displayName,
-            footerText: message.content,
+            footerText: message.content || `/post ${fileName}`,
             color: message.guild.members.cache.get(author.id).displayColor,
           })
         );
@@ -93,7 +93,7 @@ const post = (fileName, message) => {
     messageEmbed.setImage(`attachment://${file}`);
     messageEmbed.setColor(message.guild.members.cache.get(author.id).displayColor || COLOR);
     messageEmbed.setAuthor(message.guild.members.cache.get(author.id).displayName);
-    messageEmbed.setFooter(message.cleanContent || '');
+    messageEmbed.setFooter(message.cleanContent || `/post ${fileName}`);
     messageEmbed.attachFiles([{
       attachment: `${PATH}/${file}`,
       name: file,
