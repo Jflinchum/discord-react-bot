@@ -154,7 +154,7 @@ const postMarkovUser = (user, channel, origChannel, phrase, message) => {
       makeEmbedNoUser({
         message: markovMessage,
         title: 'Everyone',
-        footerText: message.cleanContent,
+        footerText: message.cleanContent || '/markov user',
       })
     ).then((markovResponse) => {
       origChannel.stopTyping(true);
@@ -177,7 +177,7 @@ const postMarkovUser = (user, channel, origChannel, phrase, message) => {
     markovGen.start(getAll).end().process() +
     '*"';
     replyFunction(
-      makeEmbed({ message: markovMessage, user, footerText: message.cleanContent })
+      makeEmbed({ message: markovMessage, user, footerText: message.cleanContent || `/markov user @${message.guild.members.cache.get(user.id).displayName}` })
     ).then((markovResponse) => {
       origChannel.stopTyping(true);
       setReplayButton(markovResponse, () => {
@@ -234,7 +234,7 @@ const postMarkovChannel = (user, channel, origChannel, phrase, message) => {
     makeEmbedNoUser({
       message: markovMessage,
       title: channel.name,
-      footerText: message.cleanContent,
+      footerText: message.cleanContent || `/markov channel #${channel.name}`,
     })
   ).then((markovResponse) => {
     origChannel.stopTyping(true);
