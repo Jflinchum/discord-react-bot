@@ -12,6 +12,7 @@ const {
   removeJson,
   DATA_PATH,
   isDiscordCommand,
+  getReplyFunction,
 } = require('./../util');
 
 // If modifying these scopes, delete token.json.
@@ -92,6 +93,36 @@ function getAccessToken(oAuth2Client, callback) {
   });
 }
 
+const parseEventParams = (trigger) => {
+  let timeMin = new Date();
+  let timeMax = new Date(timeMin.getTime() + 7 * 24 * 60 * 60 * 1000);
+  if (isDiscordCommand(trigger)) {
+    const timeMinParam = trigger.options[0]?.value;
+    const timeMaxParam = trigger.options[1]?.value;
+    if (!isNaN(new Date(timeMinParam))) {
+      timeMin = new Date(timeMinParam);
+    }
+    if (!isNaN(new Date(timeMaxParam))) {
+      timeMax = new Date(timeMaxParam);
+    }
+  } else {
+    const params = trigger.content.split(' ');
+    if (params.length > 1) {
+      if (!isNaN(new Date(params[1]))) {
+        timeMin = new Date(params[1]);
+      }
+    }
+
+    if (params.length > 2) {
+      if (!isNaN(new Date(params[2]))) {
+        timeMax = new Date(params[2]);
+      }
+    }
+  }
+
+  return { timeMin, timeMax };
+}
+
 /**
  * Get all of the upcoming events and post it to the channel
  * Message content will take two parameters, one for the starting date and
@@ -100,21 +131,9 @@ function getAccessToken(oAuth2Client, callback) {
  * @param {Discord Message Object} message The discord message that spawned cmd
  */
 function listEvents(auth, message) {
+  let replyFunction = getReplyFunction(message);
   const calendar = google.calendar({ version: 'v3', auth });
-  const params = message.content.split(' ');
-  let timeMin = new Date();
-  if (params.length > 1) {
-    if (!isNaN(new Date(params[1]))) {
-      timeMin = new Date(params[1]);
-    }
-  }
-  // Time max is set to one week out
-  let timeMax = new Date(timeMin.getTime() + 7 * 24 * 60 * 60 * 1000);
-  if (params.length > 2) {
-    if (!isNaN(new Date(params[2]))) {
-      timeMax = new Date(params[2]);
-    }
-  }
+  const { timeMin, timeMax } = parseEventParams(message);
   // Call the google api
   calendar.events.list({
     calendarId: 'primary',
@@ -148,7 +167,7 @@ function listEvents(auth, message) {
       // If no events
       finalMessage += 'No upcoming events found.';
     }
-    message.channel.send(
+    replyFunction(
       makeEmbedNoUser({
         message: finalMessage,
         title: `Upcoming Events: (${formatDateString(timeMin).split(',')[0]}) - ` +
@@ -642,7 +661,9 @@ const getCredsAndAuth = (cb) => {
 };
 
 const handleDiscordCommand = (interaction) => {
-
+  if (interaction.commandName === 'events') {
+    getCredsAndAuth((auth) => listEvents(auth, interaction));
+  }
 };
 
 const handleDiscordMessage = (message, bot) => {
@@ -669,7 +690,29 @@ const onText = (discordTrigger, bot) => {
   }
 };
 
+const commandData = [
+  {
+    name: 'events',
+    description: 'Shows the current events in for the bot\'s google calendar.',
+    options: [
+      {
+        name: 'start_date',
+        type: 'STRING',
+        description: 'The start date in "mm/dd/yyyy" format. Defaults to the current time.',
+        required: false,
+      },
+      {
+        name: 'end_date',
+        type: 'STRING',
+        description: 'The end date in "mm/dd/yyyy" format. Defaults to a week from the start date.',
+        required: false,
+      },
+    ],
+  },
+];
+
 module.exports = {
   onText,
   createUpdateInterval,
+  commandData,
 };

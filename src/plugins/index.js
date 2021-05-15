@@ -40,6 +40,7 @@ const commandData = [
   ...require('./chart').commandData,
   ...require('./trigger').commandData,
   ...require('./add').commandData,
+  ...require('./google/calendar').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
