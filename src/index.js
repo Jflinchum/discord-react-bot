@@ -17,7 +17,7 @@ const { onEvent } = require('./titles');
 const { onTextHooks, commandData } = require('./plugins');
 const { setUpCronJobs } = require('./plugins/cron');
 const { createUpdateInterval } = require('./plugins/google/calendar');
-const TOKEN = process.env.DISCORD_TOKEN;
+const TOKEN = process.env.DISCORD_TOKEN || config.discordToken;
 
 const bot = new Client({
   intents: [
