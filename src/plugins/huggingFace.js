@@ -23,8 +23,10 @@ const generateAndRespond = (message, content) => {
 };
 
 const respondToMentions = (message) => {
-  const content = message.cleanContent;
-  generateAndRespond(message, content);
+  if (config.huggingFaceToken) {
+    const content = message.cleanContent;
+    generateAndRespond(message, content);
+  }
 };
 
 module.exports = {
