@@ -6,6 +6,7 @@ const API_URL = 'https://api-inference.huggingface.co/models/Scoops/SandalBot';
 const headers = { Authorization: `Bearer ${config.huggingFaceToken}` };
 
 const generateAndRespond = (message, content) => {
+    message.channel.startTyping();
     const body = JSON.stringify({ inputs: { text: content } })
     fetch(
         API_URL,
@@ -17,6 +18,7 @@ const generateAndRespond = (message, content) => {
     )
     .then((response) => response.json())
     .then((response) => {
+      message.channel.stopTyping();
       if (!response.generated_text) {
         message.channel.send(`Error: ${JSON.stringify(response)}`);
         return;
