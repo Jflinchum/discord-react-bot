@@ -8,6 +8,7 @@ const headers = { Authorization: `Bearer ${config.huggingFaceToken}` };
 const generateAndRespond = (message, content) => {
     message.channel.startTyping();
     const body = JSON.stringify({ inputs: { text: content } })
+    console.log(`Responding with GPT2 to: ${body}`);
     fetch(
         API_URL,
         {
@@ -19,11 +20,11 @@ const generateAndRespond = (message, content) => {
     .then((response) => response.json())
     .then((response) => {
       message.channel.stopTyping();
-      if (!response.generated_text) {
-        message.channel.send(`Error: ${JSON.stringify(response)}`);
+      if (response.error) {
+        message.reply(`Error: ${JSON.stringify(response.error)}`);
         return;
       }
-      message.channel.send(response.generated_text);
+      message.reply(response.generated_text);
     });
 };
 
