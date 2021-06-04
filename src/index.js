@@ -17,6 +17,7 @@ const { onEvent } = require('./titles');
 const { onTextHooks, commandData } = require('./plugins');
 const { setUpCronJobs } = require('./plugins/cron');
 const { createUpdateInterval } = require('./plugins/google/calendar');
+const { respondToMentions } = require('./plugins/huggingFace');
 const TOKEN = process.env.DISCORD_TOKEN || config.discordToken;
 
 const bot = new Client({
@@ -119,6 +120,9 @@ bot.on('message', message => {
       }
     },
   });
+  if (message.mentions.has(bot.user) && message.content[0] !== '!') {
+    respondToMentions(message);
+  }
   // Check to make sure the message is a command
   if (message.content[0] !== '!') {
     return;
