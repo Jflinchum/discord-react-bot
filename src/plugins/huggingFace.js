@@ -17,7 +17,10 @@ const generateAndRespond = (message, content) => {
     )
     .then((response) => response.json())
     .then((response) => {
-      console.log(response);
+      if (!response.generated_text) {
+        message.channel.send(`Error: ${JSON.stringify(response)}`);
+        return;
+      }
       message.channel.send(response.generated_text);
     });
 };
