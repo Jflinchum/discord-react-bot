@@ -29,7 +29,7 @@
     "chartjs-node-canvas": "^3.1.0",
     "cronstrue": "^1.108.0",
     "discord.io": "^2.5.3",
-    "discord.js": "github:discordjs/discord.js#master",
+    "discord.js": "github:discordjs/discord.js#e300518597955abf4bf3c3d2634b47b9b3964274",
     "fluent-ffmpeg": "^2.1.2",
     "googleapis": "^39.2.0",
     "markovchain": "^1.0.2",
