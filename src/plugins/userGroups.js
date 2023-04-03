@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const {
   DATA_PATH,
   addJson,
@@ -325,34 +326,38 @@ const commandData = [
   {
     name: 'user_group',
     description: 'Manages user groups for the guild.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'list',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Lists out all user groups for the guild.',
         options: [
           {
             name: 'page',
             description: 'The page of the user group list.',
-            type: 'INTEGER',
+            type: ApplicationCommandOptionType.Integer,
+            autocomplete: true,
             required: false,
           },
         ],
       },
       {
         name: 'add',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Add a user group to the guild.',
         options: [
           {
             name: 'name',
             description: 'The name of the user group. Creates a role under this name.',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             required: true,
           },
           {
             name: 'color_code',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'The color of the user group. (i.e. FFFFFF)',
             required: false,
           }
@@ -360,57 +365,62 @@ const commandData = [
       },
       {
         name: 'remove',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Removes a user group from the guild.',
         options: [
           {
             name: 'name',
             description: 'The name of the user group you want to remove.',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             required: true,
           }
         ]
       },
       {
         name: 'sub',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Subscibes yourself to a user group.',
         options: [
           {
             name: 'name',
             description: 'The name of the user group you want to subscribe to.',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             required: true,
           }
         ]
       },
       {
         name: 'unsub',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Unsubscribes you from a user group.',
         options: [
           {
             name: 'name',
             description: 'The name of the user group you want to unsubscribe to.',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             required: true,
           }
         ]
       },
       {
         name: 'rename',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Renames a user group.',
         options: [
           {
             name: 'old_name',
             description: 'The current name of the user group that you want to rename.',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             required: true,
           },
           {
             name: 'new_name',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'The new name of the user group.',
             required: true,
           }

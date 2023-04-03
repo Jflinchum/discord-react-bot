@@ -5,7 +5,7 @@ const ytdl = require('ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const validUrl = require('valid-url');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
@@ -38,12 +38,14 @@ const config = require('./../../config.json');
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon }) => {
-  let returnMessage = new MessageEmbed();
+  let returnMessage = new EmbedBuilder();
   returnMessage.setThumbnail(user.displayAvatarURL({ dynamic: true }));
   returnMessage.setColor(color || COLOR);
   returnMessage.setDescription(message);
-  returnMessage.setAuthor(title || member || user.username, authorIcon);
-  returnMessage.setFooter(footerText || '');
+  returnMessage.setAuthor({ name: title || member || user.username, authorIcon });
+  if (footerText) {
+    returnMessage.setFooter({ text: footerText });
+  }
   return returnMessage;
 };
 
@@ -631,14 +633,16 @@ const isAdmin = (userId) => {
 };
 
 const createReactionCallback = (emojiName, message, func = () => {}) => {
-  message.react(emojiName);
-  const filter = (reaction, user) => {
-    return reaction.emoji.name === emojiName && !user.bot;
-  };
-  const collector = message.createReactionCollector(filter);
-  collector.on('collect', func);
-  collector.on('end', () => console.log('Stopped Collecting'));
-  return collector;
+  console.log('CREATING REPLAY REACTION -- ', message);
+  message.fetch().then((message) => {
+    message.react(emojiName);
+    const filter = (reaction, user) => {
+      return reaction.emoji.name === emojiName && !user.bot;
+    };
+    const collector = message.createReactionCollector(filter);
+    collector.on('collect', func);
+    collector.on('end', () => console.log('Stopped Collecting'));
+  });
 };
 
 const setReplayButton = (message, func = () => {}) => {
@@ -666,7 +670,7 @@ const isDiscordCommand = (discordTrigger) => {
 const getReplyFunction = (message) => {
   let replyFunction = (...args) => {
     if (isDiscordCommand(message) && !message.replied && !message.deferred) {
-      return message.reply(...args);
+      return message.reply({ embeds: args });
     } else if (isDiscordCommand(message) && message.deferred && !message.replied) {
       // Workaround for the fact that the Discord JS library doesn't set replied to true on editReply. Discord JS should do this, not sure why they don't
       message.replied = true;

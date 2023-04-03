@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const { MessageAttachment, MessageEmbed } = require('discord.js');
 const { PATH, COLOR, makeEmbed, isDiscordCommand, getReplyFunction } = require('./util');
@@ -145,10 +146,12 @@ const commandData = [
   {
     name: 'post',
     description: 'Post a file to the current channel',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'file_name',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The name of the file you want to post',
         required: true,
       }

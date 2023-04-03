@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const { ChartJSNodeCanvas } = require('chartjs-node-canvas');
 const { MessageEmbed } = require('discord.js');
 const {
@@ -313,47 +314,49 @@ const commandData = [
   {
     name: 'chart',
     description: 'Displays charts and graphs of stored data.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'pats',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Charts out all member\'s and how many pats they have.',
       },
       {
         name: 'patrons',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Charts out all member\'s who have patted you or a member you specify.',
         options: [
           {
             name: 'user',
             description: 'The user you want to specify for the chart.',
-            type: 'USER',
+            type: ApplicationCommandOptionType.User,
             required: false,
           }
         ]
       },
       {
         name: 'achievements',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Charts out members who have earned progress towards an achievement.',
         options: [
           {
             name: 'achievement',
             description: 'The name of the achievement you want to chart.',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             required: true,
           }
         ]
       },
       {
         name: 'rarities',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Charts out the different kind of achievement rarities that you or another member has earned.',
         options: [
           {
             name: 'user',
             description: 'The user you want to specify for the chart.',
-            type: 'USER',
+            type: ApplicationCommandOptionType.User,
             required: false,
           }
         ]

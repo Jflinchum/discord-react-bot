@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
 const { google } = require('googleapis');
@@ -694,16 +695,19 @@ const commandData = [
   {
     name: 'events',
     description: 'Shows the current events in for the bot\'s google calendar.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'start_date',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The start date in "mm/dd/yyyy" format. Defaults to the current time.',
         required: false,
       },
       {
         name: 'end_date',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The end date in "mm/dd/yyyy" format. Defaults to a week from the start date.',
         required: false,
       },

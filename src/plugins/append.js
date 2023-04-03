@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const { PATH, hasFile, makeEmbed, isDiscordCommand, getReplyFunction } = require('./util');
 const USAGE = '`usage: !append <name> <"Example Text">`';
@@ -75,16 +76,19 @@ const commandData = [
   {
     name: 'append',
     description: 'Appends text to a stored text file.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'file_name',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The name of the file you want to append the text to.',
         required: true,
       },
       {
         name: 'text',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The text you want to append.',
         required: true,
       }

@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const {
   makeEmbed,
   DATA_PATH,
@@ -120,7 +121,7 @@ const handleDiscordMessage = (message, bot) => {
 
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'pat') {
-    const person = interaction.options[0].value;
+    const person = interaction.options.get('user').value;
     pat(person, interaction, bot);
   } else if (interaction.commandName === 'my_pats') {
     printPats(interaction, bot);
@@ -139,9 +140,10 @@ const commandData = [
   {
     name: 'pat',
     description: 'Gives another member a pat!',
+    type: ApplicationCommandType.ChatInput,
     options: [{
       name: 'user',
-      type: 'USER',
+      type: ApplicationCommandOptionType.User,
       description: 'The member you want to pat',
       required: true,
     }],

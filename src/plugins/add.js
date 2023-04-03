@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const validUrl = require('valid-url');
@@ -273,28 +274,33 @@ const commandData = [
   {
     name: 'add',
     description: 'Stores a file to be used with either the play or post command.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'url_or_text',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The file you want to add. Can either be a url (such as a youtube or image link) or plain text.',
         required: true,
       },
       {
         name: 'name',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The name you want the file to be stored as.',
         required: true,
       },
       {
         name: 'time_start',
-        type: 'INTEGER',
+        type: ApplicationCommandOptionType.Integer,
+        autocomplete: true,
         description: 'If uploading a youtube video, this signifies the start time in seconds.',
         required: false,
       },
       {
         name: 'time_end',
-        type: 'INTEGER',
+        type: ApplicationCommandOptionType.Integer,
+        autocomplete: true,
         description: 'If uploading a youtube video, this signifies the end time in seconds.',
         required: false,
       }

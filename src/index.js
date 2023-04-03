@@ -1,5 +1,5 @@
 'use strict';
-const { Client, Intents } = require('discord.js');
+const { Client, GatewayIntentBits } = require('discord.js');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
 const {
@@ -22,12 +22,12 @@ const TOKEN = process.env.DISCORD_TOKEN || config.discordToken;
 
 const bot = new Client({
   intents: [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-    Intents.FLAGS.GUILD_PRESENCES,
-    Intents.FLAGS.GUILD_MEMBERS,
-    Intents.FLAGS.GUILD_VOICE_STATES,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
 
@@ -43,7 +43,7 @@ fs.exists(EMOJI_PATH, (exists) => {
 // Set up cron jobs
 setUpCronJobs(bot);
 
-bot.on('interaction', interaction => {
+bot.on('interactionCreate', interaction => {
   // If the interaction isn't a slash command, return
   if (!interaction.isCommand()) return;
 
@@ -75,7 +75,7 @@ bot.on('ready', () => {
 });
 
 
-bot.on('message', message => {
+bot.on('messageCreate', message => {
   onEvent({ event: 'text', data: message, user: message.author, guild: message.guild, bot });
   // Ignore commands coming from itself to prevent any recurssive nonsense
   if (message.author.id === bot.user.id) {
@@ -180,7 +180,7 @@ bot.on('presenceUpdate', (oldPresence, newPresence) => {
 
 bot.on('error', console.error);
 
-bot.on('debug', console.log);
+// bot.on('debug', console.log);
 
 const cleanUp = () => {
   bot.destroy();

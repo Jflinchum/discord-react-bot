@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const ROLL_USAGE = '`usage: !roll <amount> d<sides>`';
 const MAX_DICE = 20;
 const { setReplayButton, isDiscordCommand, getReplyFunction } = require('./util');
@@ -97,16 +98,19 @@ const commandData = [
   {
     name: 'roll',
     description: 'Roll some dice',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'amount',
-        type: 'INTEGER',
+        type: ApplicationCommandOptionType.Integer,
+        autocomplete: true,
         description: 'The amount of dice you want to roll',
         required: true,
       },
       {
         name: 'sides',
-        type: 'INTEGER',
+        type: ApplicationCommandOptionType.Integer,
+        autocomplete: true,
         description: 'The amount of sides on the dice that you\'re rolling',
         required: true,
       }

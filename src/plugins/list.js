@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const cronstrue = require('cronstrue/i18n');
 const { PATH, EMOJI_REGEX, sendTextBlock, isDiscordCommand, getReplyFunction } = require('./util');
@@ -182,10 +183,12 @@ const commandData = [
   {
     name: 'list',
     description: 'Displays all stored files.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'category',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The category of files that you want to list',
         required: false,
         choices: [
@@ -213,7 +216,8 @@ const commandData = [
       },
       {
         name: 'page',
-        type: 'INTEGER',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The page number for the list',
         required: false,
       },

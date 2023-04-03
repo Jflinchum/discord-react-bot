@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const https = require('https');
@@ -503,16 +504,19 @@ const commandData = [
   {
     name: 'play',
     description: 'Plays a sound clip or youtube video to a voice channel!',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'sound_clip',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The sound clip name or youtube link you want to play. Accepts wildcards.',
         required: true,
       },
       {
         name: 'channel_name',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The channel you want to play the sound clip to. Defaults to the first channel with users.',
         required: false,
       }
@@ -521,10 +525,12 @@ const commandData = [
   {
     name: 'skip',
     description: 'Skips sound clips playing or in the queue.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'index',
-        type: 'INTEGER',
+        type: ApplicationCommandOptionType.Integer,
+        autocomplete: true,
         description: 'The index of the song in queue that you want to skip.',
         required: false,
       },
@@ -532,6 +538,7 @@ const commandData = [
   },
   {
     name: 'queue',
+    type: ApplicationCommandType.ChatInput,
     description: 'Shows the current playing queue of sound clips.',
   }
 ];

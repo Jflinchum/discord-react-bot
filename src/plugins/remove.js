@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const {
   PATH,
@@ -106,10 +107,12 @@ const commandData = [
   {
     name: 'remove',
     description: 'Removes a stored file.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'file_name',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The name of the file you want to remove',
         required: true,
       }

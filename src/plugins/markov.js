@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const MarkovChain = require('markovchain');
 const { makeEmbed, makeEmbedNoUser, setReplayButton, isDiscordCommand } = require('./util');
 const USAGE = '`usage: !markov <@user/#textChannel/all> ["messageStart"]`';
@@ -327,21 +328,23 @@ const commandData = [
   {
     name: 'markov',
     description: 'Generates some text through markov',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'user',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Generates some text based off of a user.',
         options: [
           {
             name: 'user',
             description: 'The user that you want to base the text off of. Defaults to everyone.',
-            type: 'USER',
+            type: ApplicationCommandOptionType.User,
             required: false,
           },
           {
             name: 'message_start',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'The start of the text you\'re generating',
             required: false,
           }
@@ -349,18 +352,19 @@ const commandData = [
       },
       {
         name: 'channel',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Generates some text based off of a channel.',
         options: [
           {
             name: 'channel',
             description: 'The channel that you want to base the text off of. Defaults to the current channel.',
-            type: 'CHANNEL',
+            type: ApplicationCommandOptionType.Channel,
             required: false,
           },
           {
             name: 'message_start',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'The start of the text you\'re generating',
             required: false,
           }

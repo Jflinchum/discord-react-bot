@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const cron = require('node-cron');
 const fs = require('fs');
 const {
@@ -286,33 +287,37 @@ const commandData = [
   {
     name: 'cron',
     description: 'Manages cron jobs run by the bot.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'add',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Adds a cron job and runs it based on the time specified.',
         options: [
           {
             name: 'name',
             description: 'The name of the cron job for reference.',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             required: true,
           },
           {
             name: 'channel',
-            type: 'CHANNEL',
+            type: ApplicationCommandOptionType.Channel,
             description: 'The channel to post to for the cron job.',
             required: true,
           },
           {
             name: 'message',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'The message you want the cron job to post.',
             required: true,
           },
           {
             name: 'cron_syntax',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'Space separated cron syntax (i.e. 0 5 * * 2).',
             required: true,
           },
@@ -320,13 +325,14 @@ const commandData = [
       },
       {
         name: 'remove',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Deletes a cron job.',
         options: [
           {
             name: 'name',
             description: 'The name of the cron that you want to remove.',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             required: true,
           },
         ]
