@@ -668,7 +668,7 @@ const isDiscordCommand = (discordTrigger) => {
 };
 
 const getReplyFunction = (message) => {
-  let replyFunction = (...args) => {
+  let replyFunction = (args) => {
     if (isDiscordCommand(message) && !message.replied && !message.deferred) {
       if (typeof args === 'string') {
         return message.reply(args);
@@ -677,12 +677,15 @@ const getReplyFunction = (message) => {
     } else if (isDiscordCommand(message) && message.deferred && !message.replied) {
       // Workaround for the fact that the Discord JS library doesn't set replied to true on editReply. Discord JS should do this, not sure why they don't
       message.replied = true;
-      return message.editReply(...args);
+      if (typeof args === 'string') {
+        return message.editReply(args);
+      }
+      return message.editReply({ embeds: args })
     } else {
       if (typeof args === 'string') {
-        return message.send(args);
+        return message.channel.send(args);
       }
-      return message.send({ embeds: args });
+      return message.channel.send({ embeds: args });
     }
   };
   return replyFunction;

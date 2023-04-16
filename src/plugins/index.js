@@ -3,23 +3,24 @@
 const onTextHooks = [
 //require('./add').onText,
 //require('./post').onText,
-//require('./list').onText,
+  require('./list').onText,
 //require('./remove').onText,
 //require('./help').onText,
-//require('./markov').onText,
 //require('./rename').onText,
-//require('./play').onText,
-//require('./append').onText,
+  require('./play').onText,
 //require('./trigger').onText,
-//require('./gpt2').onText,
 //require('./cron').onText,
-//require('./google/calendar').onText,
-//require('./roll').onText,
 //require('./set').onText,
   require('./pat').onText,
-//require('./userGroups').onText,
-//require('./changeIcon').onText,
 //require('./chart').onText,
+//require('./roll').onText,
+//require('./changeIcon').onText,
+// DEPRECATE LIST
+//require('./userGroups').onText,
+//require('./markov').onText,
+//require('./gpt2').onText,
+//require('./google/calendar').onText,
+//require('./append').onText,
 ];
 
 const commandData = [

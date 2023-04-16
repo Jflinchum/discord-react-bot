@@ -158,8 +158,8 @@ const handleDiscordMessage = (message, bot) => {
 
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'list') {
-    const category = interaction.options[0]?.value;
-    const page = interaction.options[1]?.value
+    const category = interaction.options.get('category')?.value;
+    const page = interaction.options.get('page')?.value;
     list({
       type: category,
       message: interaction,
