@@ -192,7 +192,7 @@ const handleDiscordMessage = (message) => {
   const cmd = message.content.split(' ');
   const botCommand = cmd[0];
   // Get any attachments associated with message
-  const attach = message.attachments.array();
+  const attach = message.attachments.values();
 
   if (botCommand === '!add' || botCommand === '!a') {
     if (cmd.length < 2) {

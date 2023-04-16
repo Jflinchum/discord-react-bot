@@ -56,8 +56,8 @@ const pat = (userId, message, bot) => {
                 });
               });
             } else {
-              setReplayButton(patMessage, (reaction) => {
-                const reactionUser = reaction.users.cache.last();
+              setReplayButton(patMessage, (reaction, user) => {
+                const reactionUser = user;
                 message.author = reactionUser;
                 pat(userId, message, bot);
               });

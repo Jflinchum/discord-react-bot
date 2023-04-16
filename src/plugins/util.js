@@ -633,13 +633,13 @@ const isAdmin = (userId) => {
 };
 
 const createReactionCallback = (emojiName, message, func = () => {}) => {
-  console.log('CREATING REPLAY REACTION -- ', message);
   message.fetch().then((message) => {
     message.react(emojiName);
     const filter = (reaction, user) => {
+
       return reaction.emoji.name === emojiName && !user.bot;
     };
-    const collector = message.createReactionCollector(filter);
+    const collector = message.createReactionCollector({ filter });
     collector.on('collect', func);
     collector.on('end', () => console.log('Stopped Collecting'));
   });
@@ -670,13 +670,19 @@ const isDiscordCommand = (discordTrigger) => {
 const getReplyFunction = (message) => {
   let replyFunction = (...args) => {
     if (isDiscordCommand(message) && !message.replied && !message.deferred) {
+      if (typeof args === 'string') {
+        return message.reply(args);
+      }
       return message.reply({ embeds: args });
     } else if (isDiscordCommand(message) && message.deferred && !message.replied) {
       // Workaround for the fact that the Discord JS library doesn't set replied to true on editReply. Discord JS should do this, not sure why they don't
       message.replied = true;
       return message.editReply(...args);
     } else {
-      return message.channel.send(...args);
+      if (typeof args === 'string') {
+        return message.send(args);
+      }
+      return message.send({ embeds: args });
     }
   };
   return replyFunction;
