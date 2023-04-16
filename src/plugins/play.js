@@ -1,5 +1,6 @@
 'use strict';
-const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
+const { ApplicationCommandType, ApplicationCommandOptionType, ChannelType } = require('discord.js');
+const { joinVoiceChannel, createAudioResource, createAudioPlayer } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const https = require('https');
@@ -53,7 +54,7 @@ const dequeue = () => {
  * Joins the voice channel specified and streams the media into the channel.
  * Supports any arbitrary file (mp3, url, etc.)
  *
- * @param {Object} channel - The Discord VoiceChannel object to play the media
+ * @param {Object} vc - The Discord VoiceChannel object to play the media
  * @param {String} media - The url to the music to enqueue
  * @param {String} name - The title of the music to play
  * @param {Object} message - The Discord Message Object that initiated
@@ -79,24 +80,23 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
       };
       playSong({ connection, song, message });
     } else {
-      // If there isn't a connection, join the voice channel
-      vc.join()
-        .then((connection) => {
-          const song = {
-            channel: vc,
-            media,
-            name,
-            message,
-            author,
-          };
-          playSong({ connection, song, message });
-        })
-        .catch((err) => {
-          const nextSong = dequeue();
-          replyFunction('Could not join channel.');
-          playNext(nextSong);
-          console.log('Could not join channel: ', err);
-        });
+      try {
+        // If there isn't a connection, join the voice channel
+        connection = joinVoiceChannel({ channelId: vc.id, guildId: vc.guild.id, adapterCreator: vc.guild.voiceAdapterCreator }) 
+        const song = {
+          channel: vc,
+          media,
+          name,
+          message,
+          author,
+        };
+        playSong({ connection, song, message });
+      } catch (error) {
+        const nextSong = dequeue();
+        replyFunction('Could not join channel.');
+        playNext(nextSong);
+        console.log(`Could not join channel: ${error}`)
+      }
     }
   } else {
     enqueue(vc, media, name, message, author);
@@ -122,25 +122,31 @@ const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
  */
 const playSong = ({ connection, song, message }) => {
   let replyFunction = getReplyFunction(message);
+  const resource = createAudioResource(song.media)
+  const player = createAudioPlayer();
   // On connecting to a voice channel, play the youtube stream
-  const dispatch = connection.play(song.media, { volume: 0.3 });
+  const dispatch = connection.subscribe(player);
+  player.play(resource);
+  const media = message.options.get('sound_clip')?.value;
+  const channel = message.options.get('channel_name')?.value;
   replyFunction(
     makeEmbed({
       message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
       user: song.author,
       member: message.guild.members.cache.get(song.author.id).displayName,
-      footerText: message.content || `/play ${message.options?.[0]?.value} ${message.options?.[1]?.value}`,
+      footerText: message.content || `/play ${media} ${channel}`,
       color: message.guild.members.cache.get(song.author.id).displayColor,
     })
   ).then((playMessage) => {
     if (!isDiscordCommand(message)) {
+      /*
       message.fetchReply().then((playMessage) => {
         setReplayButton(playMessage, (reaction) => {
           // Set the author to whoever just reacted with the emoji
           const newAuthor = reaction.users.cache.last();
           play({
-            channel: message.options[1]?.value,
-            media: message.options[0].value,
+            channel,
+            media,
             message,
             author: newAuthor,
           });
@@ -155,18 +161,17 @@ const playSong = ({ connection, song, message }) => {
           });
         });
       });
+      */
     } else {
       setReplayButton(playMessage, (reaction) => {
         let cmd;
-        let media;
-        let channel;
         if (message?.content) {
           cmd = message.content.split(' ');
           media;
           channel;
           if (cmd.length <= 2) {
             // For attachments
-            const attach = message.attachments.array();
+            const attach = message.attachments.values();
             if (attach.length > 0) {
               media = attach[0];
               channel = cmd[1];
@@ -178,9 +183,6 @@ const playSong = ({ connection, song, message }) => {
             media = cmd[1];
             channel = cmd.splice(2, cmd.length).join(' ');
           }
-        } else {
-          media = message.options[0].value;
-          channel = message.options[1]?.value;
         }
         // Set the author to whoever just reacted with the emoji
         const newAuthor = reaction.users.cache.last();
@@ -202,21 +204,21 @@ const playSong = ({ connection, song, message }) => {
       });
     }
   });
-  dispatch.on('finish', () => {
-    const nextSong = dequeue();
-    if (nextSong && currentChannel
-    && nextSong.channel.id === currentChannel.id) {
-      // If the next song is on the same channel
-      playNext(nextSong, connection);
-    } else {
-      // Leave the voice channel after finishing the stream
-      song.channel.leave();
-      playNext(nextSong);
-    }
-  });
-  dispatch.on('error', (err) => {
-    console.log(`ERR: ${err}`);
-  });
+//dispatch.on('finish', () => {
+//  const nextSong = dequeue();
+//  if (nextSong && currentChannel
+//  && nextSong.channel.id === currentChannel.id) {
+//    // If the next song is on the same channel
+//    playNext(nextSong, connection);
+//  } else {
+//    // Leave the voice channel after finishing the stream
+//    song.channel.leave();
+//    playNext(nextSong);
+//  }
+//});
+//dispatch.on('error', (err) => {
+//  console.log(`ERR: ${err}`);
+//});
 };
 
 /**
@@ -342,14 +344,12 @@ const queue = (message) => {
  */
 const play = ({ channel, media, message, author }) => {
   let replyFunction = getReplyFunction(message);
-  const channelList = message.guild.channels.cache.array();
+  const channelList = Array.from(message.guild.channels.cache.values());
   let vc;
   for (let i = 0; i < channelList.length; i++) {
     // Check if the channel is what we are searching for.
-    // If the channel is a . or if no channel is provided, then join the vc with any users in it
-    if (channelList[i].type === 'voice'
-        && ((channel && channel.toLowerCase() === channelList[i].name.toLowerCase()) ||
-        ((channel === '.' || !channel) && channelList[i].members.array().length > 0))) {
+    // If no channel is provided, then join the vc with any users in it
+    if ((channel === channelList[i].id) || !channel && Array.from(channelList[i].members.values()).length > 0) {
       vc = channelList[i];
     }
   }
@@ -443,7 +443,7 @@ const handleDiscordMessage = (message) => {
     let channel;
     if (cmd.length <= 2) {
       // For attachments
-      const attach = message.attachments.array();
+      const attach = message.attachments.values();
       if (attach.length > 0) {
         media = attach[0];
         channel = cmd[1];
@@ -473,11 +473,11 @@ const handleDiscordMessage = (message) => {
   }
 };
 
-const handleDiscordCommand = (interaction) => {
+const handleDiscordCommand = async (interaction) => {
   if (interaction.commandName === 'play') {
-    const media = interaction.options[0]?.value;
-    const channel = interaction.options[1]?.value;
-    interaction.defer();
+    const media = interaction.options.get('sound_clip')?.value;
+    const channel = interaction.options.get('channel_name')?.value;
+    await interaction.deferReply();
     play({ channel, media, author: interaction.user, message: interaction });
   } else if (interaction.commandName === 'queue') {
     queue(interaction);
@@ -509,13 +509,14 @@ const commandData = [
       {
         name: 'sound_clip',
         type: ApplicationCommandOptionType.String,
-        autocomplete: true,
+        autocomplete: false,
         description: 'The sound clip name or youtube link you want to play. Accepts wildcards.',
         required: true,
       },
       {
         name: 'channel_name',
-        type: ApplicationCommandOptionType.String,
+        type: ApplicationCommandOptionType.Channel,
+        channelTypes: [ChannelType.GuildVoice],
         autocomplete: true,
         description: 'The channel you want to play the sound clip to. Defaults to the first channel with users.',
         required: false,

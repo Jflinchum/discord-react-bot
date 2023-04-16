@@ -657,14 +657,10 @@ const getNestedProperty = (object, string) => {
 };
 
 const isDiscordCommand = (discordTrigger) => {
-  if (discordTrigger?.content) { // Regular discord message (e.x. !help)
-    return false;
-  } else if ( // Discord interaction system (e.x. /help)
-    discordTrigger?.isCommand
-      && discordTrigger?.isCommand()
-  ) {
+  if (discordTrigger?.isCommand && discordTrigger?.isCommand()) {
     return true;
   }
+  return false;
 };
 
 const getReplyFunction = (message) => {
@@ -673,19 +669,19 @@ const getReplyFunction = (message) => {
       if (typeof args === 'string') {
         return message.reply(args);
       }
-      return message.reply({ embeds: args });
+      return message.reply({ embeds: [args] });
     } else if (isDiscordCommand(message) && message.deferred && !message.replied) {
       // Workaround for the fact that the Discord JS library doesn't set replied to true on editReply. Discord JS should do this, not sure why they don't
       message.replied = true;
       if (typeof args === 'string') {
         return message.editReply(args);
       }
-      return message.editReply({ embeds: args })
+      return message.editReply({ embeds: [args] })
     } else {
       if (typeof args === 'string') {
         return message.channel.send(args);
       }
-      return message.channel.send({ embeds: args });
+      return message.channel.send({ embeds: [args] });
     }
   };
   return replyFunction;
