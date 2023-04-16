@@ -31,17 +31,17 @@ const commandData = [
   ...require('./play').commandData,
   ...require('./rename').commandData,
   ...require('./list').commandData,
-  ...require('./markov').commandData,
   ...require('./remove').commandData,
   ...require('./changeIcon').commandData,
-  ...require('./append').commandData,
   ...require('./set').commandData,
   ...require('./cron').commandData,
-  ...require('./userGroups').commandData,
   ...require('./chart').commandData,
   ...require('./trigger').commandData,
   ...require('./add').commandData,
-  ...require('./google/calendar').commandData,
+//  ...require('./markov').commandData,
+//  ...require('./append').commandData,
+//  ...require('./userGroups').commandData,
+//  ...require('./google/calendar').commandData,
 ];
 
 module.exports = { onTextHooks, commandData };
