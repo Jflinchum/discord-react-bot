@@ -2,7 +2,7 @@
 
 const onTextHooks = [
 //require('./add').onText,
-//require('./post').onText,
+  require('./post').onText,
   require('./list').onText,
 //require('./remove').onText,
 //require('./help').onText,

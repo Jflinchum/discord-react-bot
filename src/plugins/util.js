@@ -59,11 +59,13 @@ const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbedNoUser = ({ message, title, thumbnail, footerText }) => {
-  let returnMessage = new MessageEmbed();
+  let returnMessage = new EmbedBuilder();
   returnMessage.setColor(COLOR);
   returnMessage.setDescription(message);
-  returnMessage.setAuthor(title);
-  returnMessage.setFooter(footerText || '');
+  returnMessage.setAuthor({ name: title });
+  if (footerText) {
+    returnMessage.setFooter({ text: footerText });
+  }
   if (thumbnail && validUrl.isUri(thumbnail))
     returnMessage.setThumbnail(thumbnail);
   return returnMessage;
@@ -664,19 +666,19 @@ const isDiscordCommand = (discordTrigger) => {
 };
 
 const getReplyFunction = (message) => {
-  let replyFunction = (args) => {
+  let replyFunction = (args, additionalOpts = {}) => {
     if (isDiscordCommand(message) && !message.replied && !message.deferred) {
       if (typeof args === 'string') {
-        return message.reply(args);
+        return message.reply({ content: args, ...additionalOpts });
       }
-      return message.reply({ embeds: [args] });
+      return message.reply({ embeds: [args], ...additionalOpts });
     } else if (isDiscordCommand(message) && message.deferred && !message.replied) {
       // Workaround for the fact that the Discord JS library doesn't set replied to true on editReply. Discord JS should do this, not sure why they don't
       message.replied = true;
       if (typeof args === 'string') {
-        return message.editReply(args);
+        return message.editReply({ content: args, ...additionalOpts });
       }
-      return message.editReply({ embeds: [args] })
+      return message.editReply({ embeds: [args], ...additionalOpts })
     } else {
       if (typeof args === 'string') {
         return message.channel.send(args);

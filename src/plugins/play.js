@@ -435,7 +435,7 @@ const handleDiscordCommand = async (interaction) => {
   } else if (interaction.commandName === 'queue') {
     queue(interaction);
   } else if (interaction.commandName === 'skip') {
-    const index = interaction.options[0]?.value;
+    const index = interaction.options.get('index')?.value;
     skip({
       number: index,
       guild: interaction.guild,
