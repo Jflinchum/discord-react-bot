@@ -14,7 +14,7 @@ const {
   getJson,
 } = require('./plugins/util');
 const { onEvent } = require('./titles');
-const { onTextHooks, commandData } = require('./plugins');
+const { onTextHooks, onUserCommandHooks, commandData } = require('./plugins');
 const { setUpCronJobs } = require('./plugins/cron');
 const TOKEN = process.env.DISCORD_TOKEN || config.discordToken;
 
@@ -45,9 +45,15 @@ bot.on('interactionCreate', interaction => {
   // If the interaction isn't a slash command, return
   if (!interaction.isCommand()) return;
 
-  onTextHooks.map((onTextFunc) => {
-    onTextFunc(interaction, bot);
-  });
+  if (interaction.isChatInputCommand()) {
+    onTextHooks.map((onTextFunc) => {
+      onTextFunc(interaction, bot);
+    });
+  } else if (interaction.isUserContextMenuCommand()) {
+    onUserCommandHooks.map((onUserCommandFunc) => {
+      onUserCommandFunc(interaction, bot);
+    });
+  }
 });
 
 bot.on('ready', () => {

@@ -136,6 +136,13 @@ const onText = (discordTrigger, bot) => {
   }
 };
 
+const onUserCommand = (interaction, bot) => {
+  if (interaction.commandName === 'pat') {
+    const person = interaction.targetUser.id;
+    pat(person, interaction, bot);
+  }
+};
+
 const commandData = [
   {
     name: 'pat',
@@ -151,10 +158,15 @@ const commandData = [
   {
     name: 'my_pats',
     description: 'Check how many pats you have received',
+  },
+  {
+    name: 'Pat',
+    type: ApplicationCommandType.User,
   }
 ];
 
 module.exports = {
   onText,
+  onUserCommand,
   commandData,
 };

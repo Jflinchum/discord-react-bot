@@ -23,6 +23,10 @@ const onTextHooks = [
 //require('./append').onText,
 ];
 
+const onUserCommandHooks = [
+  require('./pat').onUserCommand,
+];
+
 const commandData = [
   ...require('./help').commandData,
   ...require('./pat').commandData,
@@ -44,4 +48,4 @@ const commandData = [
 //  ...require('./google/calendar').commandData,
 ];
 
-module.exports = { onTextHooks, commandData };
+module.exports = { onTextHooks, onUserCommandHooks, commandData };
