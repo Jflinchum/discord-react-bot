@@ -122,16 +122,16 @@ const downloadAndAdd = ({ fileName, url, exten, stopTime, startTime, loadingMsg,
  * @param {Number|Optional} stopTime - The stop time to trim to for
  * music in seconds
  */
-const add = (fileName, url, exten, message, startTime, stopTime) => {
+const add = async (fileName, url, exten, message, startTime, stopTime) => {
   let replyFunction = getReplyFunction(message);
-  if (hasFile({fileName})) {
+  if (hasFile({ fileName })) {
     replyFunction('File name already exists.');
     return;
   }
   // Send a loading message that will get deleted later since
   // downloading can take a while
   if (isDiscordCommand(message)) {
-    message.defer();
+    await message.deferReply();
     downloadAndAdd({
       fileName,
       url,
@@ -246,16 +246,25 @@ const handleDiscordMessage = (message) => {
 
 const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'add') {
-    const file = interaction.options[0]?.value;
-    const fileName = interaction.options[1]?.value;
-    const timeStart = interaction.options[2]?.value;
-    const timeStop = interaction.options[3]?.value;
-    if (validUrl.isUri(file)) {
-      const exten = file.substr((file.lastIndexOf('.') + 1));
-      if (!exten) {
+    const file = interaction.options.get('url_or_text')?.value;
+    const attachment = interaction.options.getAttachment('attachment');
+    const fileName = interaction.options.get('name')?.value;
+    const timeStart = interaction.options.get('time_start')?.value;
+    const timeStop = interaction.options.get('time_end')?.value;
+    
+    if (!file && !attachment) {
+      interaction.reply({ content: 'Please specify either a url_or_text or attachment.', ephemeral: true });
+      return;
+    }
+
+    const potentialUri = file || attachment.url;
+    if (validUrl.isUri(potentialUri)) {
+      const exten = potentialUri.substr((potentialUri.lastIndexOf('.') + 1));
+      if (!exten || !exten.match(/^[a-z]+$/i)) {
         interaction.reply('Could not find file extension');
+        return;
       }
-      add(fileName, file, exten, interaction, timeStart, timeStop);
+      add(fileName, potentialUri, exten, interaction, timeStart, timeStop);
     } else {
       addText(fileName, file, interaction);
     }
@@ -277,30 +286,37 @@ const commandData = [
     type: ApplicationCommandType.ChatInput,
     options: [
       {
-        name: 'url_or_text',
-        type: ApplicationCommandOptionType.String,
-        autocomplete: true,
-        description: 'The file you want to add. Can either be a url (such as a youtube or image link) or plain text.',
-        required: true,
-      },
-      {
         name: 'name',
         type: ApplicationCommandOptionType.String,
-        autocomplete: true,
+        autocomplete: false,
         description: 'The name you want the file to be stored as.',
         required: true,
       },
       {
+        name: 'url_or_text',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: false,
+        description: 'The file you want to add. Can either be a url (such as a youtube or image link) or plain text.',
+        required: false,
+      },
+      {
+        name: 'attachment',
+        type: ApplicationCommandOptionType.Attachment,
+        autocomplete: false,
+        description: 'The file you want to add.',
+        required: 'false',
+      },
+      {
         name: 'time_start',
         type: ApplicationCommandOptionType.Integer,
-        autocomplete: true,
+        autocomplete: false,
         description: 'If uploading a youtube video, this signifies the start time in seconds.',
         required: false,
       },
       {
         name: 'time_end',
         type: ApplicationCommandOptionType.Integer,
-        autocomplete: true,
+        autocomplete: false,
         description: 'If uploading a youtube video, this signifies the end time in seconds.',
         required: false,
       }

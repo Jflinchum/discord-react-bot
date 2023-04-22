@@ -1,7 +1,7 @@
 'use strict';
 
 const onTextHooks = [
-//require('./add').onText,
+  require('./add').onText,
   require('./post').onText,
   require('./list').onText,
 //require('./remove').onText,

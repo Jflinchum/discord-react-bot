@@ -1,5 +1,5 @@
 'use strict';
-const request = require('request');
+const fetch = require('node-fetch');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
@@ -91,25 +91,30 @@ const download = ({url, fileName, extension, timeStart, timeStop, cb}) => {
   if (hasFile({fileName})) {
     return cb('File name already exists');
   }
-  request.head(url, (err) => {
-    if (err) {
-      return cb(err);
+  if (extension === 'mp3' || extension === 'wav') {
+    const cmd = ffmpeg({source: url});
+    if (timeStart) {
+      cmd.seekInput(timeStart);
     }
-    if (extension === 'mp3' || extension === 'wav') {
-      const cmd = ffmpeg({source: url});
-      if (timeStart) {
-        cmd.seekInput(timeStart);
-      }
-      if (timeStop) {
-        cmd.seekInput(timeStop - timeStart);
-      }
-      cmd.save(`${PATH}/${fileName}.${extension}`)
-        .on('end', cb);
-      return;
-    } else {
-      request(url).pipe(fs.createWriteStream(fullPath)).on('close', cb);
+    if (timeStop) {
+      cmd.seekInput(timeStop - timeStart);
     }
-  });
+    cmd.save(fullPath)
+      .on('end', cb);
+    return;
+  } else {
+    fetch(url)
+      .then((res) => {
+        try {
+          res.body.pipe(fs.createWriteStream(fullPath));
+          return cb();
+        } catch (err) {
+          cb(err);
+        }
+      }).catch((err) => {
+        cb(err);
+      });
+  }
 };
 
 /**
