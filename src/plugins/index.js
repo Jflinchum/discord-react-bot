@@ -15,12 +15,6 @@ const onTextHooks = [
 //require('./chart').onText,
 //require('./roll').onText,
 //require('./changeIcon').onText,
-// DEPRECATE LIST
-//require('./userGroups').onText,
-//require('./markov').onText,
-//require('./gpt2').onText,
-//require('./google/calendar').onText,
-//require('./append').onText,
 ];
 
 const onUserCommandHooks = [
@@ -42,10 +36,6 @@ const commandData = [
   ...require('./chart').commandData,
   ...require('./trigger').commandData,
   ...require('./add').commandData,
-//  ...require('./markov').commandData,
-//  ...require('./append').commandData,
-//  ...require('./userGroups').commandData,
-//  ...require('./google/calendar').commandData,
 ];
 
 module.exports = { onTextHooks, onUserCommandHooks, commandData };
