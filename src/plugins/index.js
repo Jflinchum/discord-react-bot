@@ -6,7 +6,7 @@ const onTextHooks = [
   require('./list').onText,
   require('./remove').onText,
 //require('./help').onText,
-//require('./rename').onText,
+  require('./rename').onText,
   require('./play').onText,
 //require('./trigger').onText,
 //require('./cron').onText,
