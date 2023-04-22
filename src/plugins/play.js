@@ -1,6 +1,6 @@
 'use strict';
 const { ApplicationCommandType, ApplicationCommandOptionType, ChannelType } = require('discord.js');
-const { joinVoiceChannel, createAudioResource, createAudioPlayer } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioResource, createAudioPlayer, getVoiceConnection, AudioPlayerStatus } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
 const fs = require('fs');
 const https = require('https');
@@ -64,8 +64,6 @@ const dequeue = () => {
  */
 const joinAndPlay = ({ vc, media, name, message, connection, author }) => {
   let replyFunction = getReplyFunction(message);
-  if (!message.deleted && !isDiscordCommand(message) && !message.interaction)
-    message.delete();
   if (!currentSong) {
     currentSong = name;
     currentChannel = vc;
@@ -134,91 +132,46 @@ const playSong = ({ connection, song, message }) => {
       message: `Playing: ${song.name}\nTo: ${song.channel.name}`,
       user: song.author,
       member: message.guild.members.cache.get(song.author.id).displayName,
-      footerText: message.content || `/play ${media} ${channel}`,
+      footerText: message.content || `/play ${media} ${song.channel.name}`,
       color: message.guild.members.cache.get(song.author.id).displayColor,
     })
   ).then((playMessage) => {
-    if (!isDiscordCommand(message)) {
-      /*
-      message.fetchReply().then((playMessage) => {
-        setReplayButton(playMessage, (reaction) => {
-          // Set the author to whoever just reacted with the emoji
-          const newAuthor = reaction.users.cache.last();
-          play({
-            channel,
-            media,
-            message,
-            author: newAuthor,
-          });
-        });
-        createReactionCallback('🛑', playMessage, (reaction) => {
-          // Set the author to whoever just reacted with the emoji
-          const newAuthor = reaction.users.cache.last();
-          skip({
-            author: newAuthor,
-            guild: message.guild,
-            message,
-          });
-        });
+    setReplayButton(playMessage, (reaction) => {
+      let cmd;
+      // Set the author to whoever just reacted with the emoji
+      const newAuthor = reaction.users.cache.last();
+      play({
+        channel,
+        media,
+        message,
+        author: newAuthor,
       });
-      */
+    });
+    createReactionCallback('🛑', playMessage, (reaction) => {
+      // Set the author to whoever just reacted with the emoji
+      const newAuthor = reaction.users.cache.last();
+      skip({
+        author: newAuthor,
+        guild: message.guild,
+        message,
+      });
+    });
+  });
+  player.on(AudioPlayerStatus.Idle, () => {
+    const nextSong = dequeue();
+    if (nextSong && currentChannel
+    && nextSong.channel.id === currentChannel.id) {
+      // If the next song is on the same channel
+      playNext(nextSong, connection);
     } else {
-      setReplayButton(playMessage, (reaction) => {
-        let cmd;
-        if (message?.content) {
-          cmd = message.content.split(' ');
-          media;
-          channel;
-          if (cmd.length <= 2) {
-            // For attachments
-            const attach = message.attachments.values();
-            if (attach.length > 0) {
-              media = attach[0];
-              channel = cmd[1];
-            } else {
-              media = cmd[1];
-              cmd.splice(2, cmd.length).join(' ');
-            }
-          } else {
-            media = cmd[1];
-            channel = cmd.splice(2, cmd.length).join(' ');
-          }
-        }
-        // Set the author to whoever just reacted with the emoji
-        const newAuthor = reaction.users.cache.last();
-        play({
-          channel,
-          media,
-          message,
-          author: newAuthor,
-        });
-      });
-      createReactionCallback('🛑', playMessage, (reaction) => {
-        // Set the author to whoever just reacted with the emoji
-        const newAuthor = reaction.users.cache.last();
-        skip({
-          author: newAuthor,
-          guild: message.guild,
-          message,
-        });
-      });
+      // Leave the voice channel after finishing the stream
+      connection.destroy();
+      playNext(nextSong);
     }
   });
-//dispatch.on('finish', () => {
-//  const nextSong = dequeue();
-//  if (nextSong && currentChannel
-//  && nextSong.channel.id === currentChannel.id) {
-//    // If the next song is on the same channel
-//    playNext(nextSong, connection);
-//  } else {
-//    // Leave the voice channel after finishing the stream
-//    song.channel.leave();
-//    playNext(nextSong);
-//  }
-//});
-//dispatch.on('error', (err) => {
-//  console.log(`ERR: ${err}`);
-//});
+  player.on('error', (err) => {
+    console.log(`ERR: ${err}`);
+  });
 };
 
 /**
@@ -265,7 +218,7 @@ const skip = ({ number, guild, author, message }) => {
       if (!nextSong) {
         currentChannel = null;
         currentSong = null;
-        oldChannel.leave();
+        getVoiceConnection(oldChannel.guild.id)?.destroy();
       }
       if (nextSong && currentChannel
       && nextSong.channel.id === currentChannel.id) {
@@ -273,16 +226,16 @@ const skip = ({ number, guild, author, message }) => {
         playNext(nextSong);
       } else {
         // Leave the voice channel after finishing the stream
-        oldChannel.leave();
+        getVoiceConnection(oldChannel.guild.id)?.destroy();
         playNext(nextSong);
       }
     } else {
       if (currentChannel) {
-        currentChannel.leave();
+        getVoiceConnection(currentChannel.guild.id)?.destroy();
       } else {
         // Check if the bot is in any channels in the guild and leave it
-        if (message.channel.guild.me.voice.channel) {
-          message.channel.guild.me.voice.channel.leave();
+        if (message.guild.id) {
+          getVoiceConnection(message.guild.id)?.destroy();
         } else {
           replyFunction('Nothing to skip!');
         }

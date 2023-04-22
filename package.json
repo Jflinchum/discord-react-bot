@@ -39,6 +39,6 @@
     "node-fetch": "^2.6.9",
     "request": "^2.88.2",
     "valid-url": "^1.0.9",
-    "ytdl-core": "^4.4.5"
+    "ytdl-core": "^4.11.4"
   }
 }
