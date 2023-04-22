@@ -57,7 +57,7 @@ const remove = ({ fileName, message, emojis, cb }) => {
       }
     }
     if (!file) {
-      message.channel.send(`Could not find ${fileName}.`);
+      replyFunction(`Could not find ${fileName}.`);
     } else {
       fs.unlink(`${PATH}/${file}`, () => {
         replyFunction(
@@ -88,7 +88,7 @@ const handleDiscordMessage = (message, bot) => {
 
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'remove') {
-    const fileName = interaction.options[0]?.value;
+    const fileName = interaction.options.get('file_name')?.value;
     remove({ fileName, message: interaction, emojis: bot.emojiTriggers, cb: () => {
       bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
     }});
@@ -112,7 +112,7 @@ const commandData = [
       {
         name: 'file_name',
         type: ApplicationCommandOptionType.String,
-        autocomplete: true,
+        autocomplete: false,
         description: 'The name of the file you want to remove',
         required: true,
       }
