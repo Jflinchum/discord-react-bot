@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const { PATH, makeEmbed, isDiscordCommand, getReplyFunction } = require('./util');
 const USAGE = '`usage: [!rename/!rn] <oldName> <newName>`';
@@ -73,8 +74,8 @@ const handleDiscordMessage = (message) => {
 
 const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'rename') {
-    const oldFile = interaction.options[0].value;
-    const newFile = interaction.options[1].value;
+    const oldFile = interaction.options.get('old_name')?.value;
+    const newFile = interaction.options.get('new_name')?.value;
     rename(oldFile, newFile, interaction);
   }
 };
@@ -83,16 +84,19 @@ const commandData = [
   {
     name: 'rename',
     description: 'Renames a stored file.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'old_name',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: false,
         description: 'The current file\'s name.',
         required: true
       },
       {
         name: 'new_name',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: false,
         description: 'What you want to name the file.',
         required: true
       }

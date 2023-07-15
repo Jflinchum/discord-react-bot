@@ -1,11 +1,11 @@
 'use strict';
-const request = require('request');
+const fetch = require('node-fetch');
 const fs = require('fs');
 const ytdl = require('ytdl-core');
 const ffmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const validUrl = require('valid-url');
-const { MessageEmbed } = require('discord.js');
+const { EmbedBuilder } = require('discord.js');
 
 const appDir = path.dirname(require.main.filename);
 const PATH = `${appDir}/../reactions`;
@@ -38,12 +38,14 @@ const config = require('./../../config.json');
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon }) => {
-  let returnMessage = new MessageEmbed();
+  let returnMessage = new EmbedBuilder();
   returnMessage.setThumbnail(user.displayAvatarURL({ dynamic: true }));
   returnMessage.setColor(color || COLOR);
   returnMessage.setDescription(message);
-  returnMessage.setAuthor(title || member || user.username, authorIcon);
-  returnMessage.setFooter(footerText || '');
+  returnMessage.setAuthor({ name: title || member || user.username, authorIcon });
+  if (footerText) {
+    returnMessage.setFooter({ text: footerText });
+  }
   return returnMessage;
 };
 
@@ -57,11 +59,13 @@ const makeEmbed = ({ message, member, user, title, footerText, color, authorIcon
  * @return {Object} - Returns the constructed embeded message
  */
 const makeEmbedNoUser = ({ message, title, thumbnail, footerText }) => {
-  let returnMessage = new MessageEmbed();
+  let returnMessage = new EmbedBuilder();
   returnMessage.setColor(COLOR);
   returnMessage.setDescription(message);
-  returnMessage.setAuthor(title);
-  returnMessage.setFooter(footerText || '');
+  returnMessage.setAuthor({ name: title });
+  if (footerText) {
+    returnMessage.setFooter({ text: footerText });
+  }
   if (thumbnail && validUrl.isUri(thumbnail))
     returnMessage.setThumbnail(thumbnail);
   return returnMessage;
@@ -87,25 +91,30 @@ const download = ({url, fileName, extension, timeStart, timeStop, cb}) => {
   if (hasFile({fileName})) {
     return cb('File name already exists');
   }
-  request.head(url, (err) => {
-    if (err) {
-      return cb(err);
+  if (extension === 'mp3' || extension === 'wav') {
+    const cmd = ffmpeg({source: url});
+    if (timeStart) {
+      cmd.seekInput(timeStart);
     }
-    if (extension === 'mp3' || extension === 'wav') {
-      const cmd = ffmpeg({source: url});
-      if (timeStart) {
-        cmd.seekInput(timeStart);
-      }
-      if (timeStop) {
-        cmd.seekInput(timeStop - timeStart);
-      }
-      cmd.save(`${PATH}/${fileName}.${extension}`)
-        .on('end', cb);
-      return;
-    } else {
-      request(url).pipe(fs.createWriteStream(fullPath)).on('close', cb);
+    if (timeStop) {
+      cmd.seekInput(timeStop - timeStart);
     }
-  });
+    cmd.save(fullPath)
+      .on('end', cb);
+    return;
+  } else {
+    fetch(url)
+      .then((res) => {
+        try {
+          res.body.pipe(fs.createWriteStream(fullPath));
+          return cb();
+        } catch (err) {
+          cb(err);
+        }
+      }).catch((err) => {
+        cb(err);
+      });
+  }
 };
 
 /**
@@ -631,14 +640,16 @@ const isAdmin = (userId) => {
 };
 
 const createReactionCallback = (emojiName, message, func = () => {}) => {
-  message.react(emojiName);
-  const filter = (reaction, user) => {
-    return reaction.emoji.name === emojiName && !user.bot;
-  };
-  const collector = message.createReactionCollector(filter);
-  collector.on('collect', func);
-  collector.on('end', () => console.log('Stopped Collecting'));
-  return collector;
+  message.fetch().then((message) => {
+    message.react(emojiName);
+    const filter = (reaction, user) => {
+
+      return reaction.emoji.name === emojiName && !user.bot;
+    };
+    const collector = message.createReactionCollector({ filter });
+    collector.on('collect', func);
+    collector.on('end', () => console.log('Stopped Collecting'));
+  });
 };
 
 const setReplayButton = (message, func = () => {}) => {
@@ -653,26 +664,31 @@ const getNestedProperty = (object, string) => {
 };
 
 const isDiscordCommand = (discordTrigger) => {
-  if (discordTrigger?.content) { // Regular discord message (e.x. !help)
-    return false;
-  } else if ( // Discord interaction system (e.x. /help)
-    discordTrigger?.isCommand
-      && discordTrigger?.isCommand()
-  ) {
+  if (discordTrigger?.isCommand && discordTrigger?.isCommand()) {
     return true;
   }
+  return false;
 };
 
 const getReplyFunction = (message) => {
-  let replyFunction = (...args) => {
+  let replyFunction = (args, additionalOpts = {}) => {
     if (isDiscordCommand(message) && !message.replied && !message.deferred) {
-      return message.reply(...args);
+      if (typeof args === 'string') {
+        return message.reply({ content: args, ...additionalOpts });
+      }
+      return message.reply({ embeds: [args], ...additionalOpts });
     } else if (isDiscordCommand(message) && message.deferred && !message.replied) {
       // Workaround for the fact that the Discord JS library doesn't set replied to true on editReply. Discord JS should do this, not sure why they don't
       message.replied = true;
-      return message.editReply(...args);
+      if (typeof args === 'string') {
+        return message.editReply({ content: args, ...additionalOpts });
+      }
+      return message.editReply({ embeds: [args], ...additionalOpts })
     } else {
-      return message.channel.send(...args);
+      if (typeof args === 'string') {
+        return message.channel.send(args);
+      }
+      return message.channel.send({ embeds: [args] });
     }
   };
   return replyFunction;

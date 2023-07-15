@@ -1,5 +1,5 @@
 'use strict';
-const { Client, Intents } = require('discord.js');
+const { Client, GatewayIntentBits } = require('discord.js');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
 const {
@@ -14,20 +14,18 @@ const {
   getJson,
 } = require('./plugins/util');
 const { onEvent } = require('./titles');
-const { onTextHooks, commandData } = require('./plugins');
+const { onTextHooks, onUserCommandHooks, commandData } = require('./plugins');
 const { setUpCronJobs } = require('./plugins/cron');
-const { createUpdateInterval } = require('./plugins/google/calendar');
-const { respondToMentions } = require('./plugins/huggingFace');
 const TOKEN = process.env.DISCORD_TOKEN || config.discordToken;
 
 const bot = new Client({
   intents: [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
-    Intents.FLAGS.GUILD_PRESENCES,
-    Intents.FLAGS.GUILD_MEMBERS,
-    Intents.FLAGS.GUILD_VOICE_STATES,
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.GuildMessageReactions,
+    GatewayIntentBits.GuildPresences,
+    GatewayIntentBits.GuildMembers,
+    GatewayIntentBits.GuildVoiceStates,
   ],
 });
 
@@ -43,13 +41,19 @@ fs.exists(EMOJI_PATH, (exists) => {
 // Set up cron jobs
 setUpCronJobs(bot);
 
-bot.on('interaction', interaction => {
+bot.on('interactionCreate', interaction => {
   // If the interaction isn't a slash command, return
   if (!interaction.isCommand()) return;
 
-  onTextHooks.map((onTextFunc) => {
-    onTextFunc(interaction, bot);
-  });
+  if (interaction.isChatInputCommand()) {
+    onTextHooks.map((onTextFunc) => {
+      onTextFunc(interaction, bot);
+    });
+  } else if (interaction.isUserContextMenuCommand()) {
+    onUserCommandHooks.map((onUserCommandFunc) => {
+      onUserCommandFunc(interaction, bot);
+    });
+  }
 });
 
 bot.on('ready', () => {
@@ -69,13 +73,10 @@ bot.on('ready', () => {
       }
     }
   });
-  if (config.googleAPIEnabled && config.calendar.updateChannelId) {
-    createUpdateInterval(bot);
-  }
 });
 
 
-bot.on('message', message => {
+bot.on('messageCreate', message => {
   onEvent({ event: 'text', data: message, user: message.author, guild: message.guild, bot });
   // Ignore commands coming from itself to prevent any recurssive nonsense
   if (message.author.id === bot.user.id) {
@@ -120,9 +121,6 @@ bot.on('message', message => {
       }
     },
   });
-  if (message.mentions.has(bot.user) && message.content[0] !== '!') {
-    respondToMentions(message);
-  }
   // Check to make sure the message is a command
   if (message.content[0] !== '!') {
     return;
@@ -180,7 +178,7 @@ bot.on('presenceUpdate', (oldPresence, newPresence) => {
 
 bot.on('error', console.error);
 
-bot.on('debug', console.log);
+// bot.on('debug', console.log);
 
 const cleanUp = () => {
   bot.destroy();

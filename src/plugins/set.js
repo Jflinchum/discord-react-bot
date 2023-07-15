@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const {
   makeEmbed,
   DATA_PATH,
@@ -154,27 +155,30 @@ const commandData = [
   {
     name: 'config',
     description: 'Manages personalized config options for yourself.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'print',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         description: 'Displays all personalized configs that you\'ve set.',
       },
       {
         name: 'set',
         description: 'Sets a config for yourself under a key-value pair.',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
           {
             name: 'key',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'The key of the config you want to set.',
             required: true,
             choices: AVAILABLE_PROPERTIES.map((prop) => ({ name: camelToSentenceCase(prop), value: prop }))
           },
           {
             name: 'value',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'The value of the config you want to set.',
             required: true,
           },
@@ -183,11 +187,12 @@ const commandData = [
       {
         name: 'remove',
         description: 'Removes a config for yourself.',
-        type: 'SUB_COMMAND',
+        type: ApplicationCommandOptionType.Subcommand,
         options: [
           {
             name: 'key',
-            type: 'STRING',
+            type: ApplicationCommandOptionType.String,
+            autocomplete: true,
             description: 'The key of the config you want to remove.',
             required: true,
             choices: AVAILABLE_PROPERTIES.map((prop) => ({ name: camelToSentenceCase(prop), value: prop }))

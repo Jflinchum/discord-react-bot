@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 const { sendTextBlock, isDiscordCommand } = require('./util');
@@ -46,9 +47,11 @@ const onText = (discordTrigger) => {
 const commandData = [{
   name: 'help',
   description: 'Lists out all possible commands.',
+  type: ApplicationCommandType.ChatInput,
   options: [{
     name: 'page',
-    type: 'INTEGER',
+    type: ApplicationCommandOptionType.Integer,
+    autocomplete: true,
     description: 'The page of the help list',
     required: false,
   }],

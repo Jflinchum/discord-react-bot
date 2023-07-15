@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const {
   makeEmbed,
   DATA_PATH,
@@ -55,8 +56,8 @@ const pat = (userId, message, bot) => {
                 });
               });
             } else {
-              setReplayButton(patMessage, (reaction) => {
-                const reactionUser = reaction.users.cache.last();
+              setReplayButton(patMessage, (reaction, user) => {
+                const reactionUser = user;
                 message.author = reactionUser;
                 pat(userId, message, bot);
               });
@@ -120,7 +121,7 @@ const handleDiscordMessage = (message, bot) => {
 
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'pat') {
-    const person = interaction.options[0].value;
+    const person = interaction.options.get('user').value;
     pat(person, interaction, bot);
   } else if (interaction.commandName === 'my_pats') {
     printPats(interaction, bot);
@@ -135,13 +136,21 @@ const onText = (discordTrigger, bot) => {
   }
 };
 
+const onUserCommand = (interaction, bot) => {
+  if (interaction.commandName === 'pat') {
+    const person = interaction.targetUser.id;
+    pat(person, interaction, bot);
+  }
+};
+
 const commandData = [
   {
     name: 'pat',
     description: 'Gives another member a pat!',
+    type: ApplicationCommandType.ChatInput,
     options: [{
       name: 'user',
-      type: 'USER',
+      type: ApplicationCommandOptionType.User,
       description: 'The member you want to pat',
       required: true,
     }],
@@ -149,10 +158,15 @@ const commandData = [
   {
     name: 'my_pats',
     description: 'Check how many pats you have received',
+  },
+  {
+    name: 'Pat',
+    type: ApplicationCommandType.User,
   }
 ];
 
 module.exports = {
   onText,
+  onUserCommand,
   commandData,
 };

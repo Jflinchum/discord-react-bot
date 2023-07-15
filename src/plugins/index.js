@@ -5,21 +5,20 @@ const onTextHooks = [
   require('./post').onText,
   require('./list').onText,
   require('./remove').onText,
-  require('./help').onText,
-  require('./markov').onText,
+//require('./help').onText,
   require('./rename').onText,
   require('./play').onText,
-  require('./append').onText,
-  require('./trigger').onText,
-  require('./gpt2').onText,
-  require('./cron').onText,
-  require('./google/calendar').onText,
-  require('./roll').onText,
-  require('./set').onText,
+//require('./trigger').onText,
+//require('./cron').onText,
+//require('./set').onText,
   require('./pat').onText,
-  require('./userGroups').onText,
-  require('./changeIcon').onText,
-  require('./chart').onText,
+//require('./chart').onText,
+//require('./roll').onText,
+//require('./changeIcon').onText,
+];
+
+const onUserCommandHooks = [
+  require('./pat').onUserCommand,
 ];
 
 const commandData = [
@@ -30,17 +29,13 @@ const commandData = [
   ...require('./play').commandData,
   ...require('./rename').commandData,
   ...require('./list').commandData,
-  ...require('./markov').commandData,
   ...require('./remove').commandData,
   ...require('./changeIcon').commandData,
-  ...require('./append').commandData,
   ...require('./set').commandData,
   ...require('./cron').commandData,
-  ...require('./userGroups').commandData,
   ...require('./chart').commandData,
   ...require('./trigger').commandData,
   ...require('./add').commandData,
-  ...require('./google/calendar').commandData,
 ];
 
-module.exports = { onTextHooks, commandData };
+module.exports = { onTextHooks, onUserCommandHooks, commandData };

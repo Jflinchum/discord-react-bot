@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const validUrl = require('valid-url');
 const { isAdmin, isDiscordCommand, getReplyFunction } = require('./util');
 const USAGE = '`usage: !changeIcon [url/attachment]`';
@@ -65,10 +66,12 @@ const commandData = [
   {
     name: 'change_icon',
     description: 'Changes the icon of the server. Restricted to admins only.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'image_url',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'A link to the file you want to change the icon to.',
         required: true,
       }

@@ -1,6 +1,7 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
-const { MessageAttachment, MessageEmbed } = require('discord.js');
+const { AttachmentBuilder, EmbedBuilder } = require('discord.js');
 const { PATH, COLOR, makeEmbed, isDiscordCommand, getReplyFunction } = require('./util');
 const USAGE = '`usage: [!post/!p] <name>`';
 
@@ -14,7 +15,7 @@ const USAGE = '`usage: [!post/!p] <name>`';
  * the command
  * @param {Object} bot - The Discord Client object that represents the bot
  */
-const post = (fileName, message) => {
+const post = async (fileName, message) => {
   const author = message?.author || message?.user
   let replyFunction = getReplyFunction(message);
   // Posting files
@@ -42,72 +43,42 @@ const post = (fileName, message) => {
 
   const exten = file.substr((file.lastIndexOf('.') + 1));
   // If we're not streaming to a voice channel, post the attachment
-  const attach = new MessageAttachment(`${PATH}/${file}`);
+  const attach = new AttachmentBuilder(`${PATH}/${file}`);
   if (!attach) {
     replyFunction(`Could not find ${fileName}.`);
     return;
   }
-  if (exten === 'mp3' || exten === 'wav') {
-    // Audio files don't work with embeded messages, so send the attachments
-    // afterwards
-    replyFunction(
-      makeEmbed({
-        message: fileName,
-        user: author,
-        member: message.guild.members.cache.get(author.id).displayName,
-        footerText: message.content || `/post ${fileName}`,
-        color: message.guild.members.cache.get(author.id).displayColor,
-      })
-    ).catch(() => {
-      replyFunction('Could not find user posting.');
-    });
-    message.channel.send(attach);
-  } else if (exten === 'txt') {
-    // If the file is a text file, post the contents with text to speech
-    const text = fs.readFileSync(`${PATH}/${file}`);
+  if (exten === 'txt') {
+    await message.deferReply({ ephemeral: true });
+    // If the file is a text file, post the contents
+    const text = fs.readFileSync(`${PATH}/${file}`).toString();
     /*
       First send the message with text to speech enabled, then delete it and
       Send the embeded message style. This work around is because text to
       speech does not work on embeded messages.
     */
-    message.channel.send(text, {
-      tts: true,
-    })
-      .then(msg => {
-        if (msg) {
-          msg.delete();
-        }
+    message.channel.send(text)
+      .then(() => {
         replyFunction(
           makeEmbed({
-            message: text.toString(),
+            message: text,
             user: author,
             member: message.guild.members.cache.get(author.id).displayName,
             footerText: message.content || `/post ${fileName}`,
             color: message.guild.members.cache.get(author.id).displayColor,
-          })
+          }),
+          { ephemeral: true }
         );
       });
   } else {
-    let messageEmbed = new MessageEmbed();
+    await message.deferReply();
+    let messageEmbed = new EmbedBuilder();
     messageEmbed.setThumbnail(author.displayAvatarURL({ dynamic: true }))
     messageEmbed.setImage(`attachment://${file}`);
     messageEmbed.setColor(message.guild.members.cache.get(author.id).displayColor || COLOR);
-    messageEmbed.setAuthor(message.guild.members.cache.get(author.id).displayName);
-    messageEmbed.setFooter(message.cleanContent || `/post ${fileName}`);
-    messageEmbed.attachFiles([{
-      attachment: `${PATH}/${file}`,
-      name: file,
-    }]);
-    if (message?.isCommand?.()) {
-      message.defer();
-      message.editReply(messageEmbed);
-    } else {
-      // Send the attachment
-      replyFunction(messageEmbed)
-        .catch(() => {
-          replyFunction('Could not find user posting.');
-        });
-    }
+    messageEmbed.setAuthor({ name: message.guild.members.cache.get(author.id).displayName });
+    messageEmbed.setFooter({ text: `/post ${fileName}` });
+    message.editReply({ embed: [messageEmbed], files: [{ attachment: `${PATH}/${file}`, name: file }]});
   }
 };
 
@@ -126,9 +97,9 @@ const handleDiscordMessage = (message, bot) => {
   }
 };
 
-const handleDiscordCommand = (interaction, bot) => {
+const handleDiscordCommand = async (interaction, bot) => {
   if (interaction.commandName === 'post') {
-    const fileName = interaction.options[0].value;
+    const fileName = interaction.options.get('file_name')?.value;
     post(fileName, interaction, bot);
   }
 };
@@ -145,10 +116,12 @@ const commandData = [
   {
     name: 'post',
     description: 'Post a file to the current channel',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'file_name',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The name of the file you want to post',
         required: true,
       }

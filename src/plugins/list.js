@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const cronstrue = require('cronstrue/i18n');
 const { PATH, EMOJI_REGEX, sendTextBlock, isDiscordCommand, getReplyFunction } = require('./util');
@@ -7,10 +8,10 @@ const USAGE = '`usage: [!list/!l] [image/music/text/emoji]`';
 /**
  * Finds all files using the regex and returns an array of them
  *
- * @param {String} regex - Regex to use for matching files
+ * @param {Func} matchFunc - Matching function use for filter files
  * @param {Array} files - The array of file names to search through
  */
-const findFiles = (regex, files) => {
+const findFiles = (matchFunc, files) => {
   let response = [];
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
@@ -18,7 +19,7 @@ const findFiles = (regex, files) => {
     if (file[0] === '.') {
       continue;
     }
-    if (regex.test(file)) {
+    if (matchFunc(file)) {
       response.push(file.substr(0, file.lastIndexOf('.')) + '\n');
     }
   }
@@ -52,37 +53,41 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
   let imageList = [];
   let musicList = [];
   let textList = [];
+  let otherList = [];
 
   const imageType = (!type || type === 'image');
   const musicType = (!type || type === 'music');
   const textType = (!type || type === 'text');
+  const otherType = (!type || type === 'other')
   const emojiType = (!type || type === 'emoji');
   const cronType = (!type || type === 'cron');
 
   if (imageType) {
-    imageList = findFiles(imageRegex, files);
+    imageList = findFiles((file) => (imageRegex.test(file)), files);
     if (imageList.length > 0) {
       response += 'Image:\n';
       response += '  ' + imageList.join('  ');
     }
   }
   if (musicType) {
-    musicList = findFiles(musicRegex, files);
+    musicList = findFiles((file) => (musicRegex.test(file)), files);
     if (musicList.length > 0) {
       response += 'Music:\n';
       response += '  ' + musicList.join('  ');
     }
   }
   if (textType) {
-    textList = findFiles(textRegex, files);
+    textList = findFiles((file) => (textRegex.test(file)), files);
     if (textList.length > 0) {
       response += 'Text:\n';
       response += '  ' + textList.join('  ');
     }
   }
   if (emojiType) {
-    response += 'Emojis:\n';
     const words = Object.keys(emojis);
+    if (words.length > 0) {
+      response += 'Emojis:\n';
+    }
     for (let index in words) {
       let emojiList = emojis[words[index]];
       response += `  ${words[index]}: `;
@@ -109,8 +114,10 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
     }
   }
   if (cronType) {
-    response += 'Cron Jobs: \n';
     const jobNames = Object.keys(cronJobs);
+    if (jobNames.length > 0) {
+      response += 'Cron Jobs: \n';
+    }
     for (let index in jobNames) {
       let jobList = cronJobs[jobNames[index]];
       response += `  ${jobNames[index]}:`;
@@ -121,6 +128,13 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
           + `${cronstrue.toString(jobList[job].cronTime)}),`;
       }
       response += '\n';
+    }
+  }
+  if (otherType) {
+    otherList = findFiles((file) => (!imageRegex.test(file) && !musicRegex.test(file) && !textRegex.test(file)), files);
+    if (otherList.length > 0) {
+      response += 'Other:\n';
+      response += '  ' + otherList.join('  ');
     }
   }
 
@@ -157,8 +171,8 @@ const handleDiscordMessage = (message, bot) => {
 
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'list') {
-    const category = interaction.options[0]?.value;
-    const page = interaction.options[1]?.value
+    const category = interaction.options.get('category')?.value;
+    const page = interaction.options.get('page')?.value;
     list({
       type: category,
       message: interaction,
@@ -182,10 +196,12 @@ const commandData = [
   {
     name: 'list',
     description: 'Displays all stored files.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'category',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The category of files that you want to list',
         required: false,
         choices: [
@@ -209,11 +225,16 @@ const commandData = [
             name: 'Cron Jobs',
             value: 'cron'
           },
+          {
+            name: 'Other',
+            value: 'other'
+          },
         ],
       },
       {
         name: 'page',
-        type: 'INTEGER',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The page number for the list',
         required: false,
       },

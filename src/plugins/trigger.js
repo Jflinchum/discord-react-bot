@@ -1,4 +1,5 @@
 'use strict';
+const { ApplicationCommandType, ApplicationCommandOptionType } = require('discord.js');
 const fs = require('fs');
 const { EMOJI_PATH, addJson, EMOJI_REGEX, isDiscordCommand } = require('./util');
 const USAGE = '`usage: !trigger <emoji> <decimalChance> <"Example Text">`';
@@ -110,22 +111,26 @@ const commandData = [
   {
     name: 'trigger',
     description: 'Sets up an emoji trigger based on a specified string.',
+    type: ApplicationCommandType.ChatInput,
     options: [
       {
         name: 'emoji',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The emoji you want the bot to react with.',
         required: true,
       },
       {
         name: 'percentage',
-        type: 'INTEGER',
+        type: ApplicationCommandOptionType.Integer,
+        autocomplete: true,
         description: 'The percentage chance to trigger a reaction (i.e. 55 for a 55% chance).',
         required: true,
       },
       {
         name: 'string',
-        type: 'STRING',
+        type: ApplicationCommandOptionType.String,
+        autocomplete: true,
         description: 'The string you want to trigger a reaction on.',
         required: true,
       },
