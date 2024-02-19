@@ -2,19 +2,19 @@
 
 const onTextHooks = [
   require('./add').onText,
-  require('./post').onText,
   require('./list').onText,
-  require('./remove').onText,
-//require('./help').onText,
-  require('./rename').onText,
-  require('./play').onText,
-//require('./trigger').onText,
-//require('./cron').onText,
-//require('./set').onText,
   require('./pat').onText,
-//require('./chart').onText,
-//require('./roll').onText,
+  require('./play').onText,
+  require('./post').onText,
+  require('./remove').onText,
+  require('./rename').onText,
 //require('./changeIcon').onText,
+//require('./chart').onText,
+//require('./cron').onText,
+//require('./help').onText,
+//require('./roll').onText,
+//require('./set').onText,
+//require('./trigger').onText,
 ];
 
 const onUserCommandHooks = [
@@ -22,20 +22,20 @@ const onUserCommandHooks = [
 ];
 
 const commandData = [
-  ...require('./help').commandData,
-  ...require('./pat').commandData,
-  ...require('./roll').commandData,
-  ...require('./post').commandData,
-  ...require('./play').commandData,
-  ...require('./rename').commandData,
-  ...require('./list').commandData,
-  ...require('./remove').commandData,
-  ...require('./changeIcon').commandData,
-  ...require('./set').commandData,
-  ...require('./cron').commandData,
-  ...require('./chart').commandData,
-  ...require('./trigger').commandData,
   ...require('./add').commandData,
+  ...require('./list').commandData,
+  ...require('./pat').commandData,
+  ...require('./play').commandData,
+  ...require('./post').commandData,
+  ...require('./remove').commandData,
+  ...require('./rename').commandData,
+  //...require('./changeIcon').commandData,
+  //...require('./chart').commandData,
+  //...require('./cron').commandData,
+  //...require('./help').commandData,
+  //...require('./roll').commandData,
+  //...require('./set').commandData,
+  //...require('./trigger').commandData,
 ];
 
 module.exports = { onTextHooks, onUserCommandHooks, commandData };
