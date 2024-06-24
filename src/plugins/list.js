@@ -93,22 +93,7 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
       response += `  ${words[index]}: `;
       for (let emoji in emojiList) {
         let emojiString = emojiList[emoji].emoji;
-        if (EMOJI_REGEX.test(emojiString)) {
-          // Check to make sure it is not a custom emoji
-          response +=
-          `(${emojiString},`
-          + ` ${emojiList[emoji].chance}), `;
-        } else {
-          if (message.guild && message.guild.emojis.cache.get(emojiString)) {
-            response +=
-            `(:${message.guild.emojis.cache.get(emojiString).name}:,`
-            + ` ${emojiList[emoji].chance}), `;
-          } else if (!message.guild) {
-            response +=
-            `(:${emojiString}:,`
-            + ` ${emojiList[emoji].chance}), `;
-          }
-        }
+        response += `(${emojiString.split(':')[0]}, ${emojiList[emoji].chance}), `;
       }
       response += '\n';
     }
