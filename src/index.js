@@ -2,12 +2,12 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const mkdirp = require('mkdirp');
 const fs = require('fs');
+const emojiNameMap = require('emoji-name-map');
 const {
   PATH,
   DATA_PATH,
   EMOJI_PATH,
   EMOJI_REGEX,
-  removeJson,
   config,
   isDirectMessageEnabled,
   formatDateString,
@@ -26,6 +26,7 @@ const bot = new Client({
     GatewayIntentBits.GuildPresences,
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildVoiceStates,
+    GatewayIntentBits.MessageContent,
   ],
 });
 
@@ -61,18 +62,6 @@ bot.on('ready', () => {
   mkdirp.sync(PATH);
 
   bot.application.commands.set(commandData);
-
-  Object.keys(bot.emojiTriggers).map((triggerWord) => {
-    for (let index in bot.emojiTriggers[triggerWord]) {
-      // Removing any emojis that are not on the server anymore
-      let emojiObj = bot.emojiTriggers[triggerWord][index];
-      if (!EMOJI_REGEX.test(emojiObj.emoji) &&
-      !bot.guilds.cache.array()[0].emojis.cache.get(emojiObj.emoji)) {
-        removeJson({ path: EMOJI_PATH, key: triggerWord });
-        delete bot.emojiTriggers[triggerWord];
-      }
-    }
-  });
 });
 
 
@@ -111,9 +100,19 @@ bot.on('messageCreate', message => {
           if (emojiArray) {
             emojiArray.forEach((emojiChance) => {
               if (emojiChance.chance >= random && !message.deleted) {
-                message.react(emojiChance.emoji).catch((err) => {
-                  console.log('Could not react to message: ', err);
-                });
+                if (emojiChance.emoji.split(':')[1]) {
+                  message.react(emojiChance.emoji.split(':')[1]).catch((err) => {
+                    console.log('Could not react to message: ', err);
+                  });
+                } else if (EMOJI_REGEX.test(emojiChance.emoji.split(':')[0])) {
+                  message.react(emojiChance.emoji.split(':')[0]).catch((err) => {
+                    console.log('Could not react to message: ', err);
+                  });
+                } else {
+                  message.react(emojiNameMap.get(emojiChance.emoji.split(':')[0])).catch((err) => {
+                    console.log('Could not react to message: ', err);
+                  });
+                }
               }
             });
           }

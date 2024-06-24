@@ -8,13 +8,13 @@ const onTextHooks = [
   require('./post').onText,
   require('./remove').onText,
   require('./rename').onText,
+  require('./trigger').onText,
 //require('./changeIcon').onText,
 //require('./chart').onText,
 //require('./cron').onText,
 //require('./help').onText,
 //require('./roll').onText,
 //require('./set').onText,
-//require('./trigger').onText,
 ];
 
 const onUserCommandHooks = [
@@ -29,13 +29,13 @@ const commandData = [
   ...require('./post').commandData,
   ...require('./remove').commandData,
   ...require('./rename').commandData,
+  ...require('./trigger').commandData,
   //...require('./changeIcon').commandData,
   //...require('./chart').commandData,
   //...require('./cron').commandData,
   //...require('./help').commandData,
   //...require('./roll').commandData,
   //...require('./set').commandData,
-  //...require('./trigger').commandData,
 ];
 
 module.exports = { onTextHooks, onUserCommandHooks, commandData };

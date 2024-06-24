@@ -75,27 +75,46 @@ const handleDiscordMessage = (message, bot) => {
 
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'trigger') {
-    let emoji = interaction.options[0]?.value;
-    const chance = interaction.options[1]?.value / 100;
-    const text = interaction.options[2]?.value;
+    let emoji = interaction.options.get('emoji').value;
+    const chance = interaction.options.get('percentage').value / 100;
+    const text = interaction.options.get('string').value;
     if (isNaN(chance)) {
       interaction.reply(USAGE);
       return;
     }
-    if (!EMOJI_REGEX.test(emoji)) {
-      // If it is a custom emoji, parse the id of the string
-      emoji = emoji.slice(emoji.lastIndexOf(':') + 1, -1);
+    if (EMOJI_REGEX.test(emoji)) {
+      trigger({
+        text: text.toLowerCase(),
+        reaction: `${emoji}:`,
+        chance,
+        message: interaction,
+        cb: () => {
+          interaction.reply(`Reacting to "${text}" with ${emoji} on a ${parseInt(chance * 100, 10)}% chance`);
+          bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+        },
+      });
+    } else {
+      const emojiName = emoji.split(':')[1];
+      // Only exists for custom emojis
+      const emojiId = emoji.split(':')[2].replace('>', '');
+      const emojiExistsInBotsServers = !emojiId || bot.emojis.cache.find((emoji) => {
+        return emoji.id === emojiId;
+      });
+      if (!emojiExistsInBotsServers) {
+        interaction.reply('Could not find emoji in this server');
+        return;
+      }
+      trigger({
+        text: text.toLowerCase(),
+        reaction: `${emojiName}:${emojiId}`,
+        chance,
+        message: interaction,
+        cb: () => {
+          interaction.reply(`Reacting to "${text}" with ${emoji} on a ${parseInt(chance * 100, 10)}% chance`);
+          bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
+        },
+      });
     }
-    trigger({
-      text: text.toLowerCase(),
-      reaction: emoji,
-      chance,
-      message: interaction,
-      cb: () => {
-        interaction.reply(`Reacting to "${text}" with ${interaction.guild.emojis.cache.get(emoji)} on a ${parseInt(chance * 100, 10)}% chance`);
-        bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
-      },
-    });
   }
 };
 
