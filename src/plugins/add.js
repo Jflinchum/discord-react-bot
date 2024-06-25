@@ -256,11 +256,14 @@ const handleDiscordCommand = (interaction) => {
       interaction.reply({ content: 'Please specify either a url_or_text or attachment.', ephemeral: true });
       return;
     }
-
+    
     const potentialUri = file || attachment.url;
     if (validUrl.isUri(potentialUri)) {
       const exten = potentialUri.substr((potentialUri.lastIndexOf('.') + 1));
-      if (!exten || !exten.match(/^[a-z]+$/i)) {
+      if (
+        (!exten || !exten.match(/^[a-z]+$/i)) &&
+        !(potentialUri.includes('www.youtube.com') || potentialUri.includes('youtu.be'))
+      ) {
         interaction.reply('Could not find file extension');
         return;
       }
