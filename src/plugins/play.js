@@ -297,7 +297,7 @@ const queue = (message) => {
  */
 const play = ({ channel, media, message, author }) => {
   let replyFunction = getReplyFunction(message);
-  const channelList = Array.from(message.guild.channels.cache.values());
+  const channelList = Array.from(message.guild.channels.cache.values()).filter((channel) => channel.type === 2);
   let vc;
   for (let i = 0; i < channelList.length; i++) {
     // Check if the channel is what we are searching for.
