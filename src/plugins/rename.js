@@ -107,8 +107,6 @@ const commandData = [
 const onText = (discordTrigger) => {
   if (isDiscordCommand(discordTrigger)) {
     handleDiscordCommand(discordTrigger);
-  } else {
-    handleDiscordMessage(discordTrigger);
   }
 };
 

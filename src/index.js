@@ -43,17 +43,21 @@ fs.exists(EMOJI_PATH, (exists) => {
 setUpCronJobs(bot);
 
 bot.on('interactionCreate', interaction => {
-  // If the interaction isn't a slash command, return
-  if (!interaction.isCommand()) return;
+  try {
+    // If the interaction isn't a slash command, return
+    if (!interaction.isCommand()) return;
 
-  if (interaction.isChatInputCommand()) {
-    onTextHooks.map((onTextFunc) => {
-      onTextFunc(interaction, bot);
-    });
-  } else if (interaction.isUserContextMenuCommand()) {
-    onUserCommandHooks.map((onUserCommandFunc) => {
-      onUserCommandFunc(interaction, bot);
-    });
+    if (interaction.isChatInputCommand()) {
+      onTextHooks.map((onTextFunc) => {
+        onTextFunc(interaction, bot);
+      });
+    } else if (interaction.isUserContextMenuCommand()) {
+      onUserCommandHooks.map((onUserCommandFunc) => {
+        onUserCommandFunc(interaction, bot);
+      });
+    }
+  } catch (err) {
+    console.log(err);
   }
 });
 
@@ -66,113 +70,119 @@ bot.on('ready', () => {
 
 
 bot.on('messageCreate', message => {
-  onEvent({ event: 'text', data: message, user: message.author, guild: message.guild, bot });
-  // Ignore commands coming from itself to prevent any recurssive nonsense
-  if (message.author.id === bot.user.id) {
-    return;
-  }
-  if (!isDirectMessageEnabled(message)) {
-    let finalMessage = 'No DMs allowed';
-    if (config.dmWhiteList.length > 0) {
-      finalMessage = 'The current commands that are available '
-      + 'for direct messages are:\n```';
-      config.dmWhiteList.map((whiteListedCommand) => {
-        finalMessage += `- ${whiteListedCommand}\n`;
-      });
-      finalMessage += '```';
+  try {
+    onEvent({ event: 'text', data: message, user: message.author, guild: message.guild, bot });
+    // Ignore commands coming from itself to prevent any recurssive nonsense
+    if (message.author.id === bot.user.id) {
+      return;
     }
-    message.channel.send(finalMessage);
-    return;
-  }
-  // React with any emojis
-  const emojiKeys = Object.keys(bot.emojiTriggers);
-  getJson({
-    path: DATA_PATH,
-    key: 'userConfigs.' + message.author.id,
-    cb: (config) => {
-      if (config && config.emojiReacts && config.emojiReacts[0] === 'false') {
-        return;
+    if (!isDirectMessageEnabled(message)) {
+      let finalMessage = 'No DMs allowed';
+      if (config.dmWhiteList.length > 0) {
+        finalMessage = 'The current commands that are available '
+        + 'for direct messages are:\n```';
+        config.dmWhiteList.map((whiteListedCommand) => {
+          finalMessage += `- ${whiteListedCommand}\n`;
+        });
+        finalMessage += '```';
       }
-      for (let i = 0; i < emojiKeys.length; i++) {
-        if (message.content.toLowerCase().includes(emojiKeys[i])) {
-          const random = Math.random();
-          let emojiArray = bot.emojiTriggers[emojiKeys[i]];
-          if (emojiArray) {
-            emojiArray.forEach((emojiChance) => {
-              if (emojiChance.chance >= random && !message.deleted) {
-                if (emojiChance.emoji.split(':')[1]) {
-                  message.react(emojiChance.emoji.split(':')[1]).catch((err) => {
-                    console.log('Could not react to message: ', err);
-                  });
-                } else if (EMOJI_REGEX.test(emojiChance.emoji.split(':')[0])) {
-                  message.react(emojiChance.emoji.split(':')[0]).catch((err) => {
-                    console.log('Could not react to message: ', err);
-                  });
-                } else {
-                  message.react(emojiNameMap.get(emojiChance.emoji.split(':')[0])).catch((err) => {
-                    console.log('Could not react to message: ', err);
-                  });
+      message.channel.send(finalMessage);
+      return;
+    }
+    // React with any emojis
+    const emojiKeys = Object.keys(bot.emojiTriggers);
+    getJson({
+      path: DATA_PATH,
+      key: 'userConfigs.' + message.author.id,
+      cb: (config) => {
+        if (config && config.emojiReacts && config.emojiReacts[0] === 'false') {
+          return;
+        }
+        for (let i = 0; i < emojiKeys.length; i++) {
+          if (message.content.toLowerCase().includes(emojiKeys[i])) {
+            const random = Math.random();
+            let emojiArray = bot.emojiTriggers[emojiKeys[i]];
+            if (emojiArray) {
+              emojiArray.forEach((emojiChance) => {
+                if (emojiChance.chance >= random && !message.deleted) {
+                  if (emojiChance.emoji.split(':')[1]) {
+                    message.react(emojiChance.emoji.split(':')[1]).catch((err) => {
+                      console.log('Could not react to message: ', err);
+                    });
+                  } else if (EMOJI_REGEX.test(emojiChance.emoji.split(':')[0])) {
+                    message.react(emojiChance.emoji.split(':')[0]).catch((err) => {
+                      console.log('Could not react to message: ', err);
+                    });
+                  } else {
+                    message.react(emojiNameMap.get(emojiChance.emoji.split(':')[0])).catch((err) => {
+                      console.log('Could not react to message: ', err);
+                    });
+                  }
                 }
-              }
-            });
+              });
+            }
           }
         }
-      }
-    },
-  });
-  // Check to make sure the message is a command
-  if (message.content[0] !== '!') {
-    return;
-  }
-  console.log(`[${formatDateString(new Date())}] `
-    + `${message.author.username} (${message.author.tag})`
-    + ` ${message.guild ? message.guild.id : 'DM'}`
-    + ' - '
-    + message.content);
-  try {
-    onTextHooks.map((onTextFunc) => {
-      onTextFunc(message, bot);
+      },
     });
+    // Check to make sure the message is a command
+    if (message.content[0] !== '!') {
+      return;
+    }
+    console.log(`[${formatDateString(new Date())}] `
+      + `${message.author.username} (${message.author.tag})`
+      + ` ${message.guild ? message.guild.id : 'DM'}`
+      + ' - '
+      + message.content);
+    try {
+      onTextHooks.map((onTextFunc) => {
+        onTextFunc(message, bot);
+      });
+    } catch (err) {
+      console.log(err);
+      message.channel.send(
+        `Ran into unexpected error. Check error log.\n${err.message}`
+      );
+    }
   } catch (err) {
     console.log(err);
-    message.channel.send(
-      `Ran into unexpected error. Check error log.\n${err.message}`
-    );
   }
 });
 
 bot.on('messageReactionAdd', (reaction, user) => {
-  onEvent({ event: 'reaction', data: reaction, user, guild: reaction.message.guild, bot });
+  try {
+    onEvent({ event: 'reaction', data: reaction, user, guild: reaction.message.guild, bot });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 bot.on('guildMemberUpdate', (oldMember, newMember) => {
-  onEvent({
-    event: 'guildMemberUpdate',
-    data: { oldMember, newMember },
-    user: newMember.user,
-    guild: newMember.guild,
-    bot,
-  });
-});
-
-bot.on('voiceStateUpdate', (oldVoiceState, newVoiceState) => {
-  onEvent({
-    event: 'voiceStateUpdate',
-    data: { oldVoiceState, newVoiceState },
-    user: newVoiceState.member.user,
-    guild: newVoiceState.guild,
-    bot,
-  });
+  try {
+    onEvent({
+      event: 'voiceStateUpdate',
+      data: { oldVoiceState, newVoiceState },
+      user: newVoiceState.member.user,
+      guild: newVoiceState.guild,
+      bot,
+    });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 bot.on('presenceUpdate', (oldPresence, newPresence) => {
-  onEvent({
-    event: 'presenceUpdate',
-    data: { oldPresence, newPresence },
-    user: newPresence.member.user,
-    guild: newPresence.guild,
-    bot,
-  });
+  try {
+    onEvent({
+      event: 'presenceUpdate',
+      data: { oldPresence, newPresence },
+      user: newPresence.member.user,
+      guild: newPresence.guild,
+      bot,
+    });
+  } catch (err) {
+    console.log(err);
+  }
 });
 
 bot.on('error', console.error);

@@ -121,8 +121,6 @@ const handleDiscordCommand = (interaction, bot) => {
 const onText = (discordTrigger, bot) => {
   if (isDiscordCommand(discordTrigger)) {
     handleDiscordCommand(discordTrigger, bot);
-  } else {
-    handleDiscordMessage(discordTrigger, bot);
   }
 };
 

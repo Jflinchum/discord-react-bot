@@ -448,8 +448,6 @@ const handleDiscordCommand = async (interaction) => {
 const onText = (discordTrigger) => {
   if (isDiscordCommand(discordTrigger)) {
     handleDiscordCommand(discordTrigger);
-  } else {
-    handleDiscordMessage(discordTrigger);
   }
 };
 

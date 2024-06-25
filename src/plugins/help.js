@@ -39,8 +39,6 @@ const handleDiscordCommand = (interaction) => {
 const onText = (discordTrigger) => {
   if (isDiscordCommand(discordTrigger)) {
     handleDiscordCommand(discordTrigger);
-  } else {
-    handleDiscordMessage(discordTrigger);
   }
 };
 
