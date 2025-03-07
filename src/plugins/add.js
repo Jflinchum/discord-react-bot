@@ -259,7 +259,7 @@ const handleDiscordCommand = (interaction) => {
     
     const potentialUri = file || attachment.url;
     if (validUrl.isUri(potentialUri)) {
-      const exten = potentialUri.substr((potentialUri.lastIndexOf('.') + 1));
+      const exten = potentialUri.substr((potentialUri.lastIndexOf('.') + 1))?.split('?')?.[0];
       if (
         (!exten || !exten.match(/^[a-z]+$/i)) &&
         !(potentialUri.includes('www.youtube.com') || potentialUri.includes('youtu.be'))
