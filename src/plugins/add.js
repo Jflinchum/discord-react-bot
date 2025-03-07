@@ -205,10 +205,10 @@ const handleDiscordCommand = (interaction) => {
     if (validUrl.isUri(potentialUri)) {
       const exten = potentialUri.substr((potentialUri.lastIndexOf('.') + 1))?.split('?')?.[0];
       if (
-        (!exten || !exten.match(/^[a-z]+$/i)) &&
+        (!exten || !exten.match(/^[a-z0-9]+$/i)) &&
         !(potentialUri.includes('www.youtube.com') || potentialUri.includes('youtu.be'))
       ) {
-        interaction.reply('Could not find file extension');
+        interaction.reply('Could not find file extension.');
         return;
       }
       add(fileName, potentialUri, exten, interaction, timeStart, timeStop);
