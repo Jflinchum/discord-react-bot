@@ -188,62 +188,6 @@ const addText = (fileName, text, message) => {
   });
 };
 
-const handleDiscordMessage = (message) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-  // Get any attachments associated with message
-  const attach = message.attachments.values();
-
-  if (botCommand === '!add' || botCommand === '!a') {
-    if (cmd.length < 2) {
-      message.channel.send(USAGE);
-      return;
-    }
-    let url, fileName, exten, timeStart, timeStop;
-    if (attach.length > 0) {
-      // Handling attachment images
-      fileName = cmd[1];
-      url = attach[0].url;
-      timeStart = cmd.length >= 3 && cmd[2];
-      timeStop = cmd.length >= 4 && cmd[3];
-    } else {
-      // If the image is contained in url
-      fileName = cmd.length >= 3 && cmd[2];
-      url = cmd[1];
-      timeStart = cmd.length >= 4 && cmd[3];
-      timeStop = cmd.length >= 5 && cmd[4];
-    }
-    // If the user is only uploading a string
-    if (url[0] === '"') {
-      let string = cmd.slice(1, cmd.length - 1).join(' ');
-      if (string[string.length - 1] !== '"') {
-        message.channel.send(USAGE);
-        return;
-      }
-      string = string.slice(1, string.length - 1);
-      fileName = cmd[cmd.length - 1];
-      if (!fileName) {
-        message.channel.send(USAGE);
-        return;
-      }
-
-      addText(fileName, string, message);
-    } else {
-      if (!fileName) {
-        message.channel.send(USAGE);
-        return;
-      }
-
-      exten = url.substr((url.lastIndexOf('.') + 1));
-      if (!exten) {
-        message.channel.send('Could not find file extension');
-      }
-
-      add(fileName, url, exten, message, timeStart, timeStop);
-    }
-  }
-};
-
 const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'add') {
     const file = interaction.options.get('url_or_text')?.value;

@@ -61,17 +61,6 @@ const rename = (oldName, newName, message) => {
   }
 };
 
-const handleDiscordMessage = (message) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-
-  if (botCommand === '!rename' || botCommand === '!rn') {
-    const oldFile = cmd[1];
-    const newFile = cmd[2];
-    rename(oldFile, newFile, message);
-  }
-};
-
 const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'rename') {
     const oldFile = interaction.options.get('old_name')?.value;

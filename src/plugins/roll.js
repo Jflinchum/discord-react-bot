@@ -64,20 +64,6 @@ const roll = (amount, sides, message) => {
   });
 };
 
-const handleDiscordMessage = (message) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-  if (botCommand === '!roll') {
-    if (cmd.length < 3) {
-      message.channel.send(ROLL_USAGE);
-      return;
-    }
-    const amount = cmd[1];
-    const sides = cmd[2];
-    roll(parseInt(amount, 10), parseSides(sides), message);
-  }
-};
-
 const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'roll') {
     const amount = interaction.options[0].value;

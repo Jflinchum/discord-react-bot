@@ -388,44 +388,6 @@ const play = ({ channel, media, message, author }) => {
   }
 };
 
-const handleDiscordMessage = (message) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-  if (botCommand === '!play' || botCommand === '!pl') {
-    let media;
-    let channel;
-    if (cmd.length <= 2) {
-      // For attachments
-      const attach = message.attachments.values();
-      if (attach.length > 0) {
-        media = attach[0];
-        channel = cmd[1];
-      } else {
-        media = cmd[1];
-        cmd.splice(2, cmd.length).join(' ');
-      }
-    } else {
-      media = cmd[1];
-      channel = cmd.splice(2, cmd.length).join(' ');
-    }
-    if (!media) {
-      message.channel.send(USAGEPLAY);
-      return;
-    }
-    play({ channel, media, message, author: message.author });
-  } else if (botCommand === '!queue' || botCommand === '!q') {
-    queue(message);
-  } else if (botCommand === '!skip' || botCommand === '!s') {
-    const number = cmd[1];
-    skip({
-      number,
-      guild: message.guild,
-      message,
-      author: message.author,
-    });
-  }
-};
-
 const handleDiscordCommand = async (interaction) => {
   if (interaction.commandName === 'play') {
     const media = interaction.options.get('sound_clip')?.value;

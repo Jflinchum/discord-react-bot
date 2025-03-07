@@ -109,23 +109,6 @@ const printConfig = (message) => {
   });
 };
 
-const handleDiscordMessage = (message) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-
-  if (botCommand === '!set') {
-    if (cmd.length < 2) {
-      message.channel.send(USAGE);
-      return;
-    }
-    const property = cmd[1];
-    const value = cmd[2];
-    set(property, value, message);
-  } else if (botCommand === '!config') {
-    printConfig(message);
-  }
-};
-
 const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'config') {
     const subCommandName = interaction.options[0]?.name;

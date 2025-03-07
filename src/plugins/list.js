@@ -130,30 +130,6 @@ const list = ({ type, message, emojis, cronJobs, page, bot }) => {
   sendTextBlock({ text: response, message, page });
 };
 
-const handleDiscordMessage = (message, bot) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-
-  if (botCommand === '!list' || botCommand === '!l') {
-    // Listing files
-    let fileType, page;
-    if (isNaN(cmd[1])) {
-      fileType = cmd[1];
-      page = cmd[2];
-    } else {
-      page = cmd[1];
-    }
-    list({
-      type: fileType,
-      message,
-      emojis: bot.emojiTriggers,
-      cronJobs: bot.cronJobs,
-      page,
-      bot,
-    });
-  }
-};
-
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'list') {
     const category = interaction.options.get('category')?.value;

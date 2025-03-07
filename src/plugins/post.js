@@ -82,21 +82,6 @@ const post = async (fileName, message) => {
   }
 };
 
-const handleDiscordMessage = (message, bot) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-  if (botCommand === '!post' || botCommand === '!p') {
-    // Posting an image
-    const fileName = cmd[1];
-    if (!fileName) {
-      message.channel.send(USAGE);
-      return;
-    }
-
-    post(fileName, message, bot);
-  }
-};
-
 const handleDiscordCommand = async (interaction, bot) => {
   if (interaction.commandName === 'post') {
     const fileName = interaction.options.get('file_name')?.value;

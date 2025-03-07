@@ -73,19 +73,6 @@ const remove = ({ fileName, message, emojis, cb }) => {
   }
 };
 
-const handleDiscordMessage = (message, bot) => {
-  const cmd = splitArgsWithQuotes(message.content);
-  const botCommand = cmd[0];
-
-  if (botCommand === '!remove' || botCommand === '!r') {
-    // Delete any stored reactions
-    const fileName = (cmd[1] || '').replace(/"/g, '');
-    remove({ fileName, message, emojis: bot.emojiTriggers, cb: () => {
-      bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
-    }});
-  }
-};
-
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'remove') {
     const fileName = interaction.options.get('file_name')?.value;

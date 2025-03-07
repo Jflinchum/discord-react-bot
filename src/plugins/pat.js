@@ -99,26 +99,6 @@ const printPats = (message) => {
   });
 };
 
-const handleDiscordMessage = (message, bot) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-
-  if (botCommand === '!pat') {
-    if (cmd.length < 2) {
-      message.channel.send(USAGE);
-      return;
-    } else if (!cmd[1].startsWith('<@') || cmd[1].startsWith('<@&')) {
-      // Make sure it starts with the user mention but not a role mention
-      message.channel.send(USAGE);
-      return;
-    }
-    const person = getDiscordId(cmd[1]);
-    pat(person, message, bot);
-  } else if (botCommand === '!myPats') {
-    printPats(message, bot);
-  }
-};
-
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'pat') {
     const person = interaction.options.get('user').value;

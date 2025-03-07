@@ -21,16 +21,6 @@ const help = (message, page) => {
   sendTextBlock({text: helpText, message, page});
 };
 
-const handleDiscordMessage = (message) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-  if (botCommand === '!help' || botCommand === '!h') {
-    // Post a help page
-    const page = cmd[1];
-    help(message, page);
-  }
-};
-
 const handleDiscordCommand = (interaction) => {
   if (interaction.commandName === 'help')
     help(interaction, interaction?.options[0]?.value);

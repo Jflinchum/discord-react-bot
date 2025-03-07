@@ -21,58 +21,6 @@ const trigger = ({text, reaction, chance, cb}) => {
   addJson({ path: EMOJI_PATH, key: text, value: json, cb });
 };
 
-const handleDiscordMessage = (message, bot) => {
-  const cmd = message.content.split(' ');
-  const botCommand = cmd[0];
-
-  if (botCommand === '!trigger') {
-    let text = cmd[3];
-    let emoji = cmd[1];
-    let chance = cmd[2];
-    if (!text || !emoji || !chance) {
-      message.channel.send(USAGE);
-      return;
-    }
-    // If the user is only uploading a string
-    if (text[0] === '"') {
-      let string = cmd.slice(3, cmd.length).join(' ');
-      if (string[string.length - 1] !== '"') {
-        message.channel.send(USAGE);
-        return;
-      }
-      text = string.slice(1, string.length - 1);
-      if (!emoji) {
-        message.channel.send(USAGE);
-        return;
-      } else if (isNaN(chance)) {
-        message.channel.send(USAGE);
-        return;
-      }
-    } else {
-      message.channel.send(USAGE);
-      return;
-    }
-    if (!EMOJI_REGEX.test(emoji)) {
-      // If it is a custom emoji, parse the id of the string
-      emoji = emoji.slice(emoji.lastIndexOf(':') + 1, -1);
-    }
-    message.react(emoji).then(() => {
-      trigger({
-        text: text.toLowerCase(),
-        reaction: emoji,
-        chance,
-        message,
-        cb: () => {
-          bot.emojiTriggers = JSON.parse(fs.readFileSync(EMOJI_PATH));
-        },
-      });
-    }).catch((err) => {
-      console.log('Could not react with emoji: ', err);
-      message.channel.send('Could not find emoji');
-    });
-  }
-};
-
 const handleDiscordCommand = (interaction, bot) => {
   if (interaction.commandName === 'trigger') {
     let emoji = interaction.options.get('emoji').value;
