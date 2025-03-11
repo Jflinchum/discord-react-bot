@@ -1,0 +1,18 @@
+services:
+  discordBotService:
+    build: .
+    image: discordbot
+    environment:
+      DISCORD_TOKEN: ""
+    volumes:
+      - "hostmachine/exampledirectory/reactions:/tmp/repo/reactions"
+    restart: unless-stopped
+    develop:
+      watch:
+        - action: sync+restart
+          path: ./src
+          target: /tmp/repo/src
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: package.json

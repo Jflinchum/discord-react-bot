@@ -9,6 +9,13 @@ A react bot for discord that can download and store files locally and post them 
 * Generates a markov chain message based off of a user's message history
 
 ## How to run
+#### Docker
+* Install Docker
+* Run `docker build -t discordbot .`
+* Edit the `compose.yaml` file to include the discord token for the bot you've created
+* Run `docker compose -f compose.yaml up --watch`
+
+#### Local Machine
 * Install dependencies with `npm install`
   * Some other dependencies may need to be installed on your machine manually. Check [node-gyp](https://github.com/nodejs/node-gyp) and [fluent-ffmpeg](https://github.com/fluent-ffmpeg/node-fluent-ffmpeg).
 * Put your bot token under the environment variable DISCORD_TOKEN
