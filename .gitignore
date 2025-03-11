@@ -80,3 +80,6 @@ credentials.json
 token.json
 reminders.json
 achievements.js
+
+# Docker stuff
+compose.yaml
